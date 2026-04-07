@@ -21,7 +21,8 @@
 		"all": "Todos",
 		"none": "Ninguno",
 		"refresh": "Actualizar",
-		"remove": "Eliminar"
+		"remove": "Eliminar",
+		"adding": "Añadiendo..."
 	},
 	"auth": {
 		"login": "Iniciar sesión",
@@ -193,7 +194,12 @@
 		"posterPickerCancel": "Cancelar",
 		"logoPicker": "Elige un logo",
 		"logoPickerLoading": "Cargando logos...",
-		"logoPickerNone": "No se encontraron logos. Prueba a actualizar las imágenes primero."
+		"logoPickerNone": "No se encontraron logos. Prueba a actualizar las imágenes primero.",
+		"jellyfinProfiles": "Perfiles del servidor Jellyfin",
+		"jellyfinProfilesDesc": "Usuarios encontrados en tu servidor Jellyfin. Añádelos como perfiles rastreados sin necesidad de que inicien sesión.",
+		"noJellyfinUsers": "No se encontraron usuarios de Jellyfin",
+		"tracked": "Rastreado",
+		"addProfile": "Añadir perfil"
 	},
 	"filters": {
 		"all": "Todos los estados",

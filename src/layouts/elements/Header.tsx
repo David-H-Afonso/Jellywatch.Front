@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -13,6 +13,12 @@ export const Header: React.FC = () => {
 	const dispatch = useAppDispatch()
 	const user = useAppSelector(selectCurrentUser)
 	const isAdmin = useAppSelector(selectIsAdmin)
+	const [menuOpen, setMenuOpen] = useState(false)
+
+	// Close menu on route change
+	useEffect(() => {
+		setMenuOpen(false)
+	}, [location.pathname])
 
 	const handleLogout = () => {
 		dispatch(logoutUser())
@@ -27,7 +33,15 @@ export const Header: React.FC = () => {
 				<Link to='/' className='header-logo'>
 					Jellywatch
 				</Link>
-				<nav className='header-nav'>
+				<button
+					className={`header-hamburger ${menuOpen ? 'header-hamburger--open' : ''}`}
+					onClick={() => setMenuOpen(!menuOpen)}
+					aria-label='Toggle menu'>
+					<span />
+					<span />
+					<span />
+				</button>
+				<nav className={`header-nav ${menuOpen ? 'header-nav--open' : ''}`}>
 					<Link to='/' className={`nav-link ${isActive('/') ? 'active' : ''}`}>
 						{t('nav.dashboard')}
 					</Link>
@@ -45,8 +59,15 @@ export const Header: React.FC = () => {
 							{t('nav.admin')}
 						</Link>
 					)}
+					<div className='header-user header-user--mobile'>
+						<LanguageSwitcher />
+						{user && <span className='user-name'>{user.username}</span>}
+						<button className='logout-btn' onClick={handleLogout}>
+							{t('auth.logout')}
+						</button>
+					</div>
 				</nav>
-				<div className='header-user'>
+				<div className='header-user header-user--desktop'>
 					<LanguageSwitcher />
 					{user && <span className='user-name'>{user.username}</span>}
 					<button className='logout-btn' onClick={handleLogout}>
@@ -54,6 +75,7 @@ export const Header: React.FC = () => {
 					</button>
 				</div>
 			</div>
+			{menuOpen && <div className='header-backdrop' onClick={() => setMenuOpen(false)} />}
 		</header>
 	)
 }

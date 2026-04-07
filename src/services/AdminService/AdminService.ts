@@ -11,6 +11,8 @@ import type {
 	PosterOptionDto,
 	ProfileDto,
 	PagedResult,
+	JellyfinUserDto,
+	AddProfileRequest,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -139,5 +141,17 @@ export const refreshAllMetadata = async (): Promise<{ count: number }> => {
 export const refreshAllImages = async (): Promise<{ count: number }> => {
 	return await customFetch<{ count: number }>(apiRoutes.admin.refreshAllImages, {
 		method: 'POST',
+	})
+}
+
+export const getJellyfinUsers = async (): Promise<JellyfinUserDto[]> => {
+	return await customFetch<JellyfinUserDto[]>(apiRoutes.admin.jellyfinUsers)
+}
+
+export const addProfileFromJellyfin = async (request: AddProfileRequest): Promise<ProfileDto> => {
+	return await customFetch<ProfileDto>(apiRoutes.admin.addProfile, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(request),
 	})
 }

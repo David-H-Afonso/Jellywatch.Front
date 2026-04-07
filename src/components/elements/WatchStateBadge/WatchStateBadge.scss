@@ -36,3 +36,11 @@
 		color: #f87171;
 	}
 }
+
+@media (max-width: 480px) {
+	.watch-state-badge.badge--sm {
+		padding: 0.1rem 0.3rem;
+		font-size: 0.55rem;
+		letter-spacing: 0;
+	}
+}

@@ -39,3 +39,20 @@
 		color: var(--text-secondary, #94a3b8);
 	}
 }
+
+@media (max-width: 768px) {
+	.pagination {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+
+		&__info {
+			width: 100%;
+			text-align: center;
+		}
+
+		&__controls {
+			width: 100%;
+			justify-content: center;
+		}
+	}
+}

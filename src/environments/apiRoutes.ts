@@ -54,6 +54,8 @@ export const apiRoutes = {
 	admin: {
 		users: '/api/admin/users',
 		allProfiles: '/api/admin/profiles',
+		jellyfinUsers: '/api/admin/jellyfin-users',
+		addProfile: '/api/admin/add-profile',
 		importQueue: '/api/admin/import-queue',
 		media: '/api/admin/media',
 		mediaById: (id: number) => `/api/admin/media/${id}`,

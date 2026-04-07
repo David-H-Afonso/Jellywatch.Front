@@ -472,3 +472,115 @@
 		justify-content: flex-end;
 	}
 }
+
+// ─── Mobile ─────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+	.series-detail {
+		padding: 1rem;
+
+		&__poster-wrap,
+		&__poster {
+			width: 160px;
+			min-width: 160px;
+		}
+
+		&__info h1 {
+			font-size: 1.3rem;
+		}
+
+		&__meta {
+			gap: 0.5rem;
+			font-size: 0.8rem;
+		}
+
+		&__title-row {
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+
+		&__seasons-header {
+			flex-wrap: wrap;
+		}
+	}
+
+	.season-header {
+		padding: 0.5rem 0.75rem;
+		font-size: 0.85rem;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.episode-row {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		padding: 0.5rem;
+
+		&__still-slot,
+		&__still,
+		&__still-placeholder {
+			width: 60px;
+			height: 34px;
+		}
+
+		&__name {
+			flex-basis: calc(100% - 110px);
+			order: 0;
+		}
+
+		&__rating {
+			margin-left: auto;
+		}
+	}
+}
+
+@media (max-width: 480px) {
+	.series-detail {
+		&__hero {
+			gap: 1rem;
+		}
+
+		&__poster-wrap,
+		&__poster {
+			width: 140px;
+			min-width: 140px;
+		}
+
+		&__info h1 {
+			font-size: 1.15rem;
+		}
+	}
+
+	.episode-row {
+		gap: 0.35rem;
+		padding: 0.4rem 0.5rem;
+
+		&__still-slot {
+			width: 56px;
+			height: 32px;
+			flex-shrink: 0;
+		}
+
+		&__still,
+		&__still-placeholder {
+			width: 56px;
+			height: 32px;
+		}
+
+		&__number {
+			min-width: 24px;
+			font-size: 0.75rem;
+		}
+
+		&__name {
+			flex-basis: 100%;
+			order: 1;
+			white-space: normal;
+			font-size: 0.8rem;
+		}
+
+		&__tmdb-rating {
+			font-size: 0.7rem;
+			margin-left: auto;
+		}
+	}
+}

@@ -61,3 +61,15 @@ export interface PropagationRuleCreateDto {
 	targetProfileId: number
 	isActive?: boolean
 }
+
+export interface JellyfinUserDto {
+	id: string
+	name: string
+	isAdministrator: boolean
+	alreadyTracked: boolean
+}
+
+export interface AddProfileRequest {
+	jellyfinUserId: string
+	displayName: string
+}

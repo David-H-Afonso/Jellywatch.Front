@@ -114,3 +114,45 @@
 		color: var(--color-text-secondary);
 	}
 }
+
+// ─── Mobile ─────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+	.movie-detail {
+		padding: 1rem;
+
+		&__poster {
+			width: 180px;
+			min-width: 180px;
+		}
+
+		&__info h1 {
+			font-size: 1.3rem;
+		}
+
+		&__meta {
+			gap: 0.5rem;
+			font-size: 0.8rem;
+		}
+
+		&__title-row {
+			gap: 0.5rem;
+		}
+	}
+}
+
+@media (max-width: 480px) {
+	.movie-detail {
+		&__hero {
+			gap: 1rem;
+		}
+
+		&__poster {
+			width: 140px;
+			min-width: 140px;
+		}
+
+		&__info h1 {
+			font-size: 1.15rem;
+		}
+	}
+}

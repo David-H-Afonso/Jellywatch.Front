@@ -42,7 +42,13 @@ import {
 	removePropagationRule,
 } from '@/store/features/settings'
 import { SyncButton, Pagination } from '@/components/elements'
-import { triggerFullSync, getAllProfiles, rePropagate } from '@/services/AdminService/AdminService'
+import {
+	triggerFullSync,
+	getAllProfiles,
+	rePropagate,
+	getJellyfinUsers,
+	addProfileFromJellyfin,
+} from '@/services/AdminService/AdminService'
 import { SyncJobType, SyncJobStatus } from '@/models/api/Enums'
 
 const SYNC_JOB_TYPE_LABEL: Record<number, string> = Object.fromEntries(
@@ -52,8 +58,26 @@ const SYNC_JOB_TYPE_LABEL: Record<number, string> = Object.fromEntries(
 const SYNC_JOB_STATUS_LABEL: Record<number, string> = Object.fromEntries(
 	Object.entries(SyncJobStatus).map(([k, v]) => [v, k])
 ) as Record<number, string>
-import type { ProfileDto } from '@/models/api'
+import type { ProfileDto, JellyfinUserDto } from '@/models/api'
 import './Admin.scss'
+
+const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode }> = ({
+	title,
+	children,
+}) => {
+	const [open, setOpen] = useState(false)
+	return (
+		<section className='admin-section'>
+			<button className='admin-section__toggle' onClick={() => setOpen((o) => !o)}>
+				<span className='admin-section__title'>{title}</span>
+				<span className={`admin-section__chevron${open ? ' admin-section__chevron--open' : ''}`}>
+					▾
+				</span>
+			</button>
+			{open && <div className='admin-section__body'>{children}</div>}
+		</section>
+	)
+}
 
 const Admin: React.FC = () => {
 	const { t } = useTranslation()
@@ -97,6 +121,8 @@ const Admin: React.FC = () => {
 	const [syncJobsPage, setSyncJobsPage] = useState(1)
 	const [webhookLogsPage, setWebhookLogsPage] = useState(1)
 	const [pageSize, setPageSize] = useState(10)
+	const [jellyfinUsers, setJellyfinUsers] = useState<JellyfinUserDto[]>([])
+	const [addingProfileId, setAddingProfileId] = useState<string | null>(null)
 
 	useEffect(() => {
 		dispatch(fetchUsers())
@@ -109,6 +135,9 @@ const Admin: React.FC = () => {
 		if (isAdmin) {
 			getAllProfiles()
 				.then(setAllProfiles)
+				.catch(() => {})
+			getJellyfinUsers()
+				.then(setJellyfinUsers)
 				.catch(() => {})
 		}
 	}, [isAdmin])
@@ -215,6 +244,21 @@ const Admin: React.FC = () => {
 		dispatch(doRemoveFromBlacklist(id))
 	}
 
+	const handleAddProfile = async (userId: string, displayName: string) => {
+		setAddingProfileId(userId)
+		try {
+			await addProfileFromJellyfin({ jellyfinUserId: userId, displayName })
+			setJellyfinUsers((prev) =>
+				prev.map((u) => (u.id === userId ? { ...u, alreadyTracked: true } : u))
+			)
+			getAllProfiles()
+				.then(setAllProfiles)
+				.catch(() => {})
+		} finally {
+			setAddingProfileId(null)
+		}
+	}
+
 	if (loading && mediaLibrary.length === 0 && blacklist.length === 0) {
 		return <div className='loading-state'>{t('common.loading')}</div>
 	}
@@ -237,9 +281,7 @@ const Admin: React.FC = () => {
 			{settingsError && <div className='admin-page__error'>{settingsError}</div>}
 
 			{/* Settings */}
-			<section className='admin-section'>
-				<h2>{t('settings.title')}</h2>
-
+			<CollapsibleSection title={t('settings.title')}>
 				{settingsLoading ? (
 					<div className='loading-state'>{t('common.loading')}</div>
 				) : (
@@ -377,11 +419,10 @@ const Admin: React.FC = () => {
 						</div>
 					</>
 				)}
-			</section>
+			</CollapsibleSection>
 
 			{/* Users */}
-			<section className='admin-section'>
-				<h2>{t('admin.users')}</h2>
+			<CollapsibleSection title={t('admin.users')}>
 				{users.length === 0 ? (
 					<p className='empty-text'>{t('admin.noUsers')}</p>
 				) : (
@@ -406,11 +447,48 @@ const Admin: React.FC = () => {
 						</tbody>
 					</table>
 				)}
-			</section>
+			</CollapsibleSection>
+
+			{/* Jellyfin Profiles */}
+			<CollapsibleSection title={t('admin.jellyfinProfiles')}>
+				<p className='settings-section__desc'>{t('admin.jellyfinProfilesDesc')}</p>
+				{jellyfinUsers.length === 0 ? (
+					<p className='empty-text'>{t('admin.noJellyfinUsers')}</p>
+				) : (
+					<table className='admin-table'>
+						<thead>
+							<tr>
+								<th>{t('auth.username')}</th>
+								<th>Admin</th>
+								<th>{t('admin.tracked')}</th>
+								<th>{t('admin.actions')}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{jellyfinUsers.map((u) => (
+								<tr key={u.id}>
+									<td>{u.name}</td>
+									<td>{u.isAdministrator ? '✓' : '—'}</td>
+									<td>{u.alreadyTracked ? '✓' : '—'}</td>
+									<td>
+										{!u.alreadyTracked && (
+											<button
+												className='btn-primary btn-sm'
+												onClick={() => handleAddProfile(u.id, u.name)}
+												disabled={addingProfileId === u.id}>
+												{addingProfileId === u.id ? t('common.adding') : t('admin.addProfile')}
+											</button>
+										)}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				)}
+			</CollapsibleSection>
 
 			{/* Sync Controls */}
-			<section className='admin-section'>
-				<h2>{t('admin.syncControls')}</h2>
+			<CollapsibleSection title={t('admin.syncControls')}>
 				<div className='sync-controls'>
 					<SyncButton onSync={triggerFullSync} withLabel className='btn-primary-outline' />
 					<div className='sync-controls__profile'>
@@ -418,7 +496,7 @@ const Admin: React.FC = () => {
 							value={syncProfileId}
 							onChange={(e) => setSyncProfileId(e.target.value ? Number(e.target.value) : '')}>
 							<option value=''>{t('profile.selectProfile')}</option>
-							{profiles.map((p) => (
+							{profileList.map((p) => (
 								<option key={p.id} value={p.id}>
 									{p.displayName}
 								</option>
@@ -441,11 +519,10 @@ const Admin: React.FC = () => {
 						{bulkRefreshing ? t('admin.bulkRefreshing') : t('admin.refreshAllImages')}
 					</button>
 				</div>
-			</section>
+			</CollapsibleSection>
 
 			{/* Media Library */}
-			<section className='admin-section'>
-				<h2>{t('admin.mediaLibrary')}</h2>
+			<CollapsibleSection title={t('admin.mediaLibrary')}>
 				{mediaLibrary.length === 0 ? (
 					<p className='empty-text'>{t('admin.noItems')}</p>
 				) : (
@@ -509,11 +586,10 @@ const Admin: React.FC = () => {
 						onPageChange={setMediaPage}
 					/>
 				)}
-			</section>
+			</CollapsibleSection>
 
 			{/* Blacklist */}
-			<section className='admin-section'>
-				<h2>{t('admin.blacklist')}</h2>
+			<CollapsibleSection title={t('admin.blacklist')}>
 				<form className='blacklist-form' onSubmit={handleAddToBlacklist}>
 					<input
 						type='text'
@@ -570,11 +646,10 @@ const Admin: React.FC = () => {
 						</tbody>
 					</table>
 				)}
-			</section>
+			</CollapsibleSection>
 
 			{/* Sync Jobs */}
-			<section className='admin-section'>
-				<h2>{t('admin.syncJobs')}</h2>
+			<CollapsibleSection title={t('admin.syncJobs')}>
 				{syncJobs.length === 0 ? (
 					<p className='empty-text'>{t('admin.noItems')}</p>
 				) : (
@@ -616,11 +691,10 @@ const Admin: React.FC = () => {
 						onPageChange={setSyncJobsPage}
 					/>
 				)}
-			</section>
+			</CollapsibleSection>
 
 			{/* Import Queue */}
-			<section className='admin-section'>
-				<h2>{t('admin.importQueue')}</h2>
+			<CollapsibleSection title={t('admin.importQueue')}>
 				{importQueue.length === 0 ? (
 					<p className='empty-text'>{t('admin.noItems')}</p>
 				) : (
@@ -657,11 +731,10 @@ const Admin: React.FC = () => {
 						onPageChange={setImportQueuePage}
 					/>
 				)}
-			</section>
+			</CollapsibleSection>
 
 			{/* Webhook Logs */}
-			<section className='admin-section'>
-				<h2>{t('admin.webhookLogs')}</h2>
+			<CollapsibleSection title={t('admin.webhookLogs')}>
 				{webhookLogs.length === 0 ? (
 					<p className='empty-text'>{t('admin.noLogs')}</p>
 				) : (
@@ -696,7 +769,7 @@ const Admin: React.FC = () => {
 						onPageChange={setWebhookLogsPage}
 					/>
 				)}
-			</section>
+			</CollapsibleSection>
 		</div>
 	)
 }

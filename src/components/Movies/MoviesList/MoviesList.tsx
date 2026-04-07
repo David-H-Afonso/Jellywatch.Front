@@ -39,14 +39,15 @@ const MoviesList: React.FC = () => {
 	const [sortDesc, setSortDesc] = useState(false)
 	const [page, setPage] = useState(1)
 	const [importOpen, setImportOpen] = useState(false)
+	const [pageSize, setPageSize] = useState(20)
 
 	const buildParams = useCallback((): MediaQueryParameters => {
-		const params: MediaQueryParameters = { page, pageSize: 20, sortBy, sortDescending: sortDesc }
+		const params: MediaQueryParameters = { page, pageSize, sortBy, sortDescending: sortDesc }
 		if (search) params.search = search
 		if (stateFilter) params.state = stateFilter
 		if (activeProfileId) params.profileId = activeProfileId
 		return params
-	}, [page, search, stateFilter, sortBy, sortDesc, activeProfileId])
+	}, [page, search, stateFilter, sortBy, sortDesc, activeProfileId, pageSize])
 
 	useEffect(() => {
 		dispatch(fetchMovies(buildParams()))
@@ -127,6 +128,17 @@ const MoviesList: React.FC = () => {
 					}}>
 					{sortDesc ? '↓' : '↑'}
 				</button>
+				<select
+					className='state-filter'
+					value={pageSize}
+					onChange={(e) => {
+						setPageSize(Number(e.target.value))
+						setPage(1)
+					}}>
+					<option value={20}>20</option>
+					<option value={50}>50</option>
+					<option value={100}>100</option>
+				</select>
 			</div>
 
 			{error && <div className='error-message'>{error}</div>}

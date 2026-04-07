@@ -51,9 +51,42 @@
 	border-radius: 8px;
 	border: 1px solid var(--color-border);
 
-	h2 {
-		margin: 0 0 1rem;
+	&__toggle {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		color: inherit;
+		text-align: left;
+
+		&:hover .admin-section__title {
+			color: var(--color-primary);
+		}
+	}
+
+	&__title {
 		font-size: 1.15rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	&__chevron {
+		color: var(--color-text-secondary);
+		font-size: 1.1rem;
+		flex-shrink: 0;
+		transition: transform 0.2s ease;
+
+		&--open {
+			transform: rotate(180deg);
+		}
+	}
+
+	&__body {
+		margin-top: 1rem;
 	}
 }
 
@@ -345,5 +378,74 @@
 				outline-offset: -1px;
 			}
 		}
+	}
+}
+
+// ─── Mobile ─────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+	.admin-page {
+		padding: 1rem;
+
+		&__header {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.75rem;
+		}
+
+		&__page-size {
+			width: 100%;
+			justify-content: flex-start;
+		}
+	}
+
+	.admin-section {
+		padding: 0.75rem;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+
+		h2 {
+			font-size: 1rem;
+		}
+	}
+
+	.admin-table {
+		min-width: 600px;
+	}
+
+	.sync-controls {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.75rem;
+
+		&__profile {
+			flex-wrap: wrap;
+
+			select {
+				width: 100%;
+			}
+		}
+	}
+
+	.blacklist-form {
+		flex-direction: column;
+
+		input {
+			min-width: unset;
+		}
+	}
+
+	.add-rule__form {
+		flex-direction: column;
+		align-items: stretch;
+
+		select {
+			min-width: unset !important;
+			width: 100%;
+		}
+	}
+
+	.provider-languages {
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 }
