@@ -43,6 +43,15 @@ import {
 } from '@/store/features/settings'
 import { SyncButton, Pagination } from '@/components/elements'
 import { triggerFullSync, getAllProfiles, rePropagate } from '@/services/AdminService/AdminService'
+import { SyncJobType, SyncJobStatus } from '@/models/api/Enums'
+
+const SYNC_JOB_TYPE_LABEL: Record<number, string> = Object.fromEntries(
+	Object.entries(SyncJobType).map(([k, v]) => [v, k])
+) as Record<number, string>
+
+const SYNC_JOB_STATUS_LABEL: Record<number, string> = Object.fromEntries(
+	Object.entries(SyncJobStatus).map(([k, v]) => [v, k])
+) as Record<number, string>
 import type { ProfileDto } from '@/models/api'
 import './Admin.scss'
 
@@ -584,11 +593,12 @@ const Admin: React.FC = () => {
 							{syncJobs.map((j) => (
 								<tr key={j.id}>
 									<td>{j.id}</td>
-									<td>{j.type}</td>
+									<td>{SYNC_JOB_TYPE_LABEL[j.type] ?? j.type}</td>
 									<td>{j.profileName ?? '—'}</td>
 									<td>
-										<span className={`status-chip status-chip--${String(j.status).toLowerCase()}`}>
-											{j.status}
+										<span
+											className={`status-chip status-chip--${(SYNC_JOB_STATUS_LABEL[j.status] ?? String(j.status)).toLowerCase()}`}>
+											{SYNC_JOB_STATUS_LABEL[j.status] ?? j.status}
 										</span>
 									</td>
 									<td>{j.itemsProcessed}</td>
