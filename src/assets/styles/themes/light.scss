@@ -1,0 +1,104 @@
+// Light Theme — Optional alternative
+// Defines ALL CSS custom properties used across components
+
+@mixin light-theme {
+	// Applied via [data-theme='light']
+	// =========================================================================
+	// NEUTRALS
+	// =========================================================================
+	--white: #ffffff;
+	--black: #000000;
+	--gray-50: #f9fafb;
+	--gray-100: #f3f4f6;
+	--gray-200: #e5e7eb;
+	--gray-300: #d1d5db;
+	--gray-400: #9ca3af;
+	--gray-500: #6b7280;
+	--gray-600: #4b5563;
+	--gray-700: #374151;
+	--gray-800: #1f2937;
+	--gray-900: #111827;
+
+	// =========================================================================
+	// BACKGROUND & SURFACE
+	// =========================================================================
+	--bg-primary: #f9fafb;
+	--bg-secondary: #ffffff;
+	--bg-tertiary: #f3f4f6;
+
+	// =========================================================================
+	// TEXT
+	// =========================================================================
+	--text-primary: #111827;
+	--text-secondary: #4b5563;
+	--text-tertiary: #9ca3af;
+	--text-muted: #d1d5db;
+	--text-inverse: #ffffff;
+
+	// =========================================================================
+	// BRAND / ACCENT
+	// =========================================================================
+	--color-primary: #7c3aed;
+	--color-primary-hover: #6d28d9;
+	--color-primary-light: rgba(124, 58, 237, 0.1);
+	--primary: var(--color-primary);
+	--primary-hover: var(--color-primary-hover);
+
+	// =========================================================================
+	// SEMANTIC
+	// =========================================================================
+	--color-success: #059669;
+	--color-warning: #d97706;
+	--color-error: #dc2626;
+	--color-error-bg: rgba(220, 38, 38, 0.08);
+	--color-info: #0891b2;
+
+	// =========================================================================
+	// BORDER
+	// =========================================================================
+	--border-color: #e5e7eb;
+	--border-color-light: #f3f4f6;
+
+	// =========================================================================
+	// COMPONENT ALIASES
+	// =========================================================================
+	--color-text: var(--text-primary);
+	--color-text-secondary: var(--text-secondary);
+	--color-bg: var(--bg-tertiary);
+	--color-surface: var(--bg-secondary);
+	--color-surface-hover: #f3f4f6;
+	--color-border: var(--border-color);
+
+	// =========================================================================
+	// INTERACTIVE ELEMENTS
+	// =========================================================================
+	--interactive: var(--color-primary);
+	--interactive-hover: var(--color-primary-hover);
+
+	// =========================================================================
+	// INPUT & FORM
+	// =========================================================================
+	--input-bg: #ffffff;
+	--input-border: var(--gray-300);
+	--input-border-focus: var(--color-primary);
+	--input-text: var(--text-primary);
+	--input-placeholder: var(--gray-400);
+
+	// =========================================================================
+	// CARDS
+	// =========================================================================
+	--card-bg: #ffffff;
+	--card-border: var(--border-color-light);
+	--card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+	--card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+	// =========================================================================
+	// HEADER
+	// =========================================================================
+	--header-background: #ffffff;
+	--header-text: var(--text-primary);
+}
+
+[data-theme='light'] {
+	@include light-theme;
+}

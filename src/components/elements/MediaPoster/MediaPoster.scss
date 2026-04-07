@@ -1,0 +1,17 @@
+.media-poster {
+	border-radius: 8px;
+	object-fit: cover;
+
+	&--fallback {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-tertiary, #16213e);
+		border: 1px solid var(--border-color, #2d3748);
+	}
+
+	&__emoji {
+		font-size: 2rem;
+		opacity: 0.5;
+	}
+}

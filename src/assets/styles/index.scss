@@ -1,3 +1,165 @@
 @forward 'variables';
-
 @use 'variables' as *;
+
+// Theme system imported from variables → themes/index.scss
+
+// =============================================================================
+// GLOBAL RESET
+// =============================================================================
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 16px;
+	scroll-behavior: smooth;
+	overflow-x: hidden;
+}
+
+body {
+	font-family:
+		'Inter',
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		sans-serif;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 1.6;
+	color: var(--text-primary);
+	background-color: var(--bg-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow-x: hidden;
+	width: 100%;
+	max-width: 100vw;
+}
+
+// =============================================================================
+// TYPOGRAPHY
+// =============================================================================
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-weight: 600;
+	line-height: 1.2;
+	color: var(--text-primary);
+}
+
+h1 {
+	font-size: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+}
+
+h4 {
+	font-size: 1.125rem;
+}
+
+a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+
+// =============================================================================
+// SCROLLBAR (dark theme friendly)
+// =============================================================================
+
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--border-color);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+// =============================================================================
+// UTILITY CLASSES
+// =============================================================================
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.text-muted {
+	color: var(--text-secondary);
+}
+
+// =============================================================================
+// FORM BASE STYLES
+// =============================================================================
+
+.form-input,
+.form-select,
+.form-textarea {
+	width: 100%;
+	padding: 0.65rem 0.85rem;
+	border: 1px solid var(--input-border);
+	border-radius: 6px;
+	font-size: 0.95rem;
+	font-family: inherit;
+	background-color: var(--input-bg);
+	color: var(--input-text);
+	transition: border-color $transition-fast;
+
+	&:focus {
+		outline: none;
+		border-color: var(--input-border-focus);
+	}
+
+	&::placeholder {
+		color: var(--input-placeholder);
+	}
+}
+
+// =============================================================================
+// LOADING / ERROR STATES
+// =============================================================================
+
+.loading-state {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem;
+	color: var(--text-secondary);
+}
+
+.error-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 3rem;
+	color: var(--text-secondary);
+}

@@ -1,1 +1,1 @@
-export { customFetch } from './customFetch'
+export { customFetch, initCustomFetch, purgePersistedState } from './customFetch'

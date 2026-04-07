@@ -1,1 +1,1 @@
-export { useExample } from './useExample'
+export {}

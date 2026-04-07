@@ -1,0 +1,38 @@
+.rating-display {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.rating-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 6px;
+	font-size: 0.8rem;
+	background: var(--bg-tertiary, #16213e);
+	border: 1px solid var(--border-color, #2d3748);
+}
+
+.rating-label {
+	font-weight: 600;
+	opacity: 0.7;
+}
+
+.rating-score {
+	font-weight: 700;
+	color: var(--text-primary, #e2e8f0);
+}
+
+.rating--tmdb .rating-score {
+	color: #01b4e4;
+}
+
+.rating--imdb .rating-score {
+	color: #f5c518;
+}
+
+.rating--rt .rating-score {
+	color: #fa320a;
+}

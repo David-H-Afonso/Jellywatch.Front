@@ -1,0 +1,16 @@
+.language-switcher {
+	background: var(--bg-tertiary, #16213e);
+	border: 1px solid var(--border-color, #2d3748);
+	color: var(--text-secondary, #94a3b8);
+	padding: 0.3rem 0.5rem;
+	border-radius: 6px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s;
+
+	&:hover {
+		border-color: var(--color-primary, #a78bfa);
+		color: var(--text-primary, #e2e8f0);
+	}
+}

@@ -1,1 +1,6 @@
-export { getExampleService } from './ExampleService'
+export { authService, userService } from './AuthService/AuthService'
+export * from './MediaService/MediaService'
+export * from './ProfileService/ProfileService'
+export * from './NoteService/NoteService'
+export * from './SettingsService/SettingsService'
+export * from './AdminService/AdminService'

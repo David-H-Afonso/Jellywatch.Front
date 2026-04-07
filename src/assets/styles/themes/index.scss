@@ -1,0 +1,32 @@
+// Import all available themes
+@use './light.scss' as light;
+@use './dark.scss' as dark;
+
+// Default theme — dark (media tracking app, applied to :root as fallback)
+:root {
+	@include dark.dark-theme;
+}
+
+// Smooth theme transitions
+* {
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease;
+}
+
+// Prevent transitions during initial load (FOUC prevention)
+html.preload * {
+	transition: none !important;
+	animation: none !important;
+}
+
+html {
+	height: 100%;
+}
+
+body {
+	height: 100%;
+	background-color: var(--bg-primary);
+	color: var(--text-primary);
+}

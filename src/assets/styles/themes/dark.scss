@@ -1,0 +1,104 @@
+// Dark Theme — Default for Jellywatch (media tracking app)
+// Defines ALL CSS custom properties used across components
+
+@mixin dark-theme {
+	// Applied via [data-theme='dark'] and :root
+	// =========================================================================
+	// NEUTRALS (inverted for dark)
+	// =========================================================================
+	--white: #ffffff;
+	--black: #000000;
+	--gray-50: #18181b;
+	--gray-100: #27272a;
+	--gray-200: #3f3f46;
+	--gray-300: #52525b;
+	--gray-400: #71717a;
+	--gray-500: #a1a1aa;
+	--gray-600: #d4d4d8;
+	--gray-700: #e4e4e7;
+	--gray-800: #f4f4f5;
+	--gray-900: #fafafa;
+
+	// =========================================================================
+	// BACKGROUND & SURFACE
+	// =========================================================================
+	--bg-primary: #0f0f23;
+	--bg-secondary: #1a1a2e;
+	--bg-tertiary: #16213e;
+
+	// =========================================================================
+	// TEXT
+	// =========================================================================
+	--text-primary: #e2e8f0;
+	--text-secondary: #94a3b8;
+	--text-tertiary: #71717a;
+	--text-muted: #4a5568;
+	--text-inverse: var(--gray-50);
+
+	// =========================================================================
+	// BRAND / ACCENT
+	// =========================================================================
+	--color-primary: #a78bfa;
+	--color-primary-hover: #8b5cf6;
+	--color-primary-light: rgba(167, 139, 250, 0.15);
+	--primary: var(--color-primary);
+	--primary-hover: var(--color-primary-hover);
+
+	// =========================================================================
+	// SEMANTIC
+	// =========================================================================
+	--color-success: #27ae60;
+	--color-warning: #f59e0b;
+	--color-error: #e74c3c;
+	--color-error-bg: rgba(231, 76, 60, 0.15);
+	--color-info: #06b6d4;
+
+	// =========================================================================
+	// BORDER
+	// =========================================================================
+	--border-color: #2d3748;
+	--border-color-light: #1f2937;
+
+	// =========================================================================
+	// COMPONENT ALIASES  (used by detail/settings/admin pages)
+	// =========================================================================
+	--color-text: var(--text-primary);
+	--color-text-secondary: var(--text-secondary);
+	--color-bg: var(--bg-tertiary);
+	--color-surface: var(--bg-secondary);
+	--color-surface-hover: #232340;
+	--color-border: var(--border-color);
+
+	// =========================================================================
+	// INTERACTIVE ELEMENTS
+	// =========================================================================
+	--interactive: var(--color-primary);
+	--interactive-hover: var(--color-primary-hover);
+
+	// =========================================================================
+	// INPUT & FORM
+	// =========================================================================
+	--input-bg: var(--bg-tertiary);
+	--input-border: var(--border-color);
+	--input-border-focus: var(--color-primary);
+	--input-text: var(--text-primary);
+	--input-placeholder: var(--text-muted);
+
+	// =========================================================================
+	// CARDS
+	// =========================================================================
+	--card-bg: var(--bg-secondary);
+	--card-border: var(--border-color);
+	--card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+	--card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+
+	// =========================================================================
+	// HEADER
+	// =========================================================================
+	--header-background: var(--bg-secondary);
+	--header-text: var(--text-primary);
+}
+
+[data-theme='dark'] {
+	@include dark-theme;
+}

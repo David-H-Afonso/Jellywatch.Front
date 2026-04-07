@@ -1,51 +1,118 @@
-/**
- * HTTP methods supported by the custom fetch utility
- */
+import { environment } from '@/environments'
+import { router } from '@/navigation/router'
+
+type AnyStore = { getState(): any; dispatch(action: any): any }
+type AnyPersistor = { purge(): Promise<any> }
+
+type FetchRefs = {
+	store: AnyStore | null
+	persistor: AnyPersistor | null
+	forceLogout: (() => { type: string }) | null
+	handlingUnauthorized: boolean
+	pending: Set<AbortController>
+}
+
+const refs: FetchRefs = ((globalThis as any).__customFetchRefs ??= {
+	store: null,
+	persistor: null,
+	forceLogout: null,
+	handlingUnauthorized: false,
+	pending: new Set<AbortController>(),
+})
+
+export function initCustomFetch(
+	store: AnyStore,
+	persistor: AnyPersistor,
+	forceLogout: () => { type: string }
+) {
+	refs.store = store
+	refs.persistor = persistor
+	refs.forceLogout = forceLogout
+	refs.handlingUnauthorized = false
+}
+
+export function purgePersistedState(): void {
+	refs.persistor?.purge().catch(console.error)
+}
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
-/**
- * Configuration options for customFetch requests
- */
+const handleUnauthorizedAccess = () => {
+	if (refs.handlingUnauthorized) return
+	refs.handlingUnauthorized = true
+
+	for (const controller of refs.pending) {
+		try {
+			controller.abort('Session expired')
+		} catch {
+			/* already aborted */
+		}
+	}
+	refs.pending.clear()
+
+	const onLoginPage = (globalThis.location?.hash ?? '').includes('/login')
+	if (onLoginPage) {
+		refs.handlingUnauthorized = false
+		return
+	}
+
+	console.warn('Session expired - redirecting to login')
+
+	if (refs.store && refs.forceLogout) {
+		refs.store.dispatch(refs.forceLogout())
+	}
+
+	refs.persistor?.purge().catch(console.error)
+	sessionStorage.clear()
+	try {
+		localStorage.clear()
+	} catch {
+		/* ignore */
+	}
+
+	setTimeout(() => {
+		refs.handlingUnauthorized = false
+		router.navigate('/login')
+	}, 100)
+}
+
 type CustomFetchOptions = {
-	/** HTTP method for the request */
 	method?: HttpMethod
-	/** Request headers as key-value pairs */
 	headers?: Record<string, string>
-	/** Request body data (automatically serialized for JSON) */
 	body?: any
-	/** URL query parameters to append to the endpoint */
-	params?: Record<string, string | number | boolean>
-	/** AbortSignal for request cancellation */
+	params?: Record<string, string | number | boolean | number[]>
 	signal?: AbortSignal
-	/** Request timeout in milliseconds */
 	timeout?: number
-	/** Custom base URL to prepend to relative URLs */
 	baseURL?: string
 }
 
-/**
- * Builds URL query string from parameters object
- * @param queryParameters - Object containing query parameters
- * @returns Formatted query string with leading '?' or empty string
- */
-const buildQueryString = (queryParameters?: Record<string, string | number | boolean>): string => {
+const buildQueryString = (
+	queryParameters?: Record<string, string | number | boolean | number[]>
+): string => {
 	if (!queryParameters || Object.keys(queryParameters).length === 0) {
 		return ''
 	}
 
-	const encodeURIComponent = window.encodeURIComponent
-	const queryPairs = Object.entries(queryParameters)
-		.filter(([_, value]) => value !== null && value !== undefined)
-		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+	const queryPairs: string[] = []
+	Object.entries(queryParameters)
+		.filter(([, value]) => value !== null && value !== undefined)
+		.forEach(([key, value]) => {
+			if (Array.isArray(value)) {
+				value.forEach((item) => {
+					queryPairs.push(
+						`${globalThis.encodeURIComponent(key)}=${globalThis.encodeURIComponent(String(item))}`
+					)
+				})
+			} else {
+				queryPairs.push(
+					`${globalThis.encodeURIComponent(key)}=${globalThis.encodeURIComponent(String(value))}`
+				)
+			}
+		})
 
 	return queryPairs.length > 0 ? `?${queryPairs.join('&')}` : ''
 }
 
-/**
- * Determines if the request body should be JSON serialized
- * @param requestBody - The body data to check
- * @returns True if body should be JSON serialized
- */
 const shouldSerializeAsJson = (requestBody: any): boolean => {
 	return (
 		typeof requestBody === 'object' &&
@@ -57,38 +124,24 @@ const shouldSerializeAsJson = (requestBody: any): boolean => {
 	)
 }
 
-/**
- * Processes the response based on its content type
- * @param httpResponse - The fetch Response object
- * @returns Parsed response data
- */
 const parseResponseData = async (httpResponse: Response): Promise<any> => {
 	const responseContentType = httpResponse.headers.get('content-type') || ''
 
 	if (responseContentType.includes('application/json')) {
 		return await httpResponse.json()
 	}
-
 	if (responseContentType.includes('text/')) {
 		return await httpResponse.text()
 	}
-
 	if (
 		responseContentType.includes('application/octet-stream') ||
 		responseContentType.includes('image/')
 	) {
 		return await httpResponse.blob()
 	}
-
-	// Default to text for unknown content types
 	return await httpResponse.text()
 }
 
-/**
- * Creates a timeout promise that rejects after specified milliseconds
- * @param timeoutMs - Timeout duration in milliseconds
- * @returns Promise that rejects with timeout error
- */
 const createTimeoutPromise = (timeoutMs: number): Promise<never> => {
 	return new Promise((_, reject) => {
 		setTimeout(() => {
@@ -97,28 +150,14 @@ const createTimeoutPromise = (timeoutMs: number): Promise<never> => {
 	})
 }
 
-/**
- * Universal HTTP client for making API requests with automatic JSON handling,
- * query parameter encoding, and comprehensive error handling
- *
- * @template T - Expected response data type
- * @param endpoint - URL endpoint (absolute or relative)
- * @param requestOptions - Configuration options for the request
- * Request options:
- * - method: HTTP method for the request (default: 'GET')
- * - headers: Request headers as key-value pairs (default: {})
- * - body: Request body data (default: undefined)
- * - params: URL query parameters to append to the endpoint (default: undefined)
- * - signal: AbortSignal for request cancellation (default: undefined)
- * - timeout: Request timeout in milliseconds (default: undefined)
- * - baseURL: Custom base URL to prepend to relative URLs (default: '')
- *
- * @returns Promise resolving to typed response data
- */
 export const customFetch = async <T = any>(
 	endpoint: string,
 	requestOptions: CustomFetchOptions = {}
 ): Promise<T> => {
+	if (refs.handlingUnauthorized) {
+		throw new Error('Request cancelled')
+	}
+
 	const {
 		method = 'GET',
 		headers: customHeaders = {},
@@ -126,20 +165,33 @@ export const customFetch = async <T = any>(
 		params: queryParams,
 		signal: abortSignal,
 		timeout: timeoutMs,
-		baseURL: baseUrl = '',
+		baseURL: baseUrl = environment.baseUrl,
 	} = requestOptions
 
-	// Construct the complete URL with base URL and query parameters
 	const completeUrl = baseUrl + endpoint + buildQueryString(queryParams)
+	const token = refs.store?.getState().auth.token
 
-	// Prepare fetch configuration
-	const fetchConfiguration: RequestInit = {
-		method,
-		headers: { ...customHeaders },
-		signal: abortSignal,
+	const controller = new AbortController()
+	refs.pending.add(controller)
+
+	const signalToUse = controller.signal
+	if (abortSignal) {
+		if (abortSignal.aborted) {
+			controller.abort(abortSignal.reason)
+		} else {
+			abortSignal.addEventListener('abort', () => controller.abort(abortSignal.reason))
+		}
 	}
 
-	// Handle request body serialization for non-GET requests
+	const fetchConfiguration: RequestInit = {
+		method,
+		headers: {
+			...customHeaders,
+			...(token && { Authorization: `Bearer ${token}` }),
+		},
+		signal: signalToUse,
+	}
+
 	if (requestBody !== undefined && method !== 'GET' && method !== 'HEAD') {
 		if (shouldSerializeAsJson(requestBody)) {
 			fetchConfiguration.body = JSON.stringify(requestBody)
@@ -153,31 +205,32 @@ export const customFetch = async <T = any>(
 	}
 
 	try {
-		// Create fetch promise
 		const fetchPromise = fetch(completeUrl, fetchConfiguration)
-
-		// Handle timeout if specified
 		const httpResponse = timeoutMs
 			? await Promise.race([fetchPromise, createTimeoutPromise(timeoutMs)])
 			: await fetchPromise
-
-		// Parse response data based on content type
 		const responseData = await parseResponseData(httpResponse)
 
-		// Handle HTTP error status codes
 		if (!httpResponse.ok) {
+			if (httpResponse.status === 401) {
+				handleUnauthorizedAccess()
+				throw new Error('Session expired. Please login again.')
+			}
 			const errorMessage =
 				typeof responseData === 'string' ? responseData : JSON.stringify(responseData)
-
 			throw new Error(`HTTP ${httpResponse.status} ${httpResponse.statusText}: ${errorMessage}`)
 		}
 
 		return responseData as T
 	} catch (fetchError) {
-		// Re-throw with enhanced error context
+		if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+			throw new Error('Request cancelled')
+		}
 		if (fetchError instanceof Error) {
 			throw new Error(`Request failed for ${method} ${completeUrl}: ${fetchError.message}`)
 		}
 		throw fetchError
+	} finally {
+		refs.pending.delete(controller)
 	}
 }

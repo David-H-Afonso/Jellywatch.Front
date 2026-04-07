@@ -1,0 +1,116 @@
+.movie-detail {
+	padding: 1.5rem;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	&__back {
+		margin-bottom: 1rem;
+
+		a {
+			color: var(--color-primary);
+			text-decoration: none;
+			font-size: 0.9rem;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+
+	&__hero {
+		display: flex;
+		gap: 2rem;
+
+		@media (max-width: 768px) {
+			flex-direction: column;
+			align-items: center;
+		}
+	}
+
+	&__poster {
+		width: 260px;
+		min-width: 260px;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	&__info {
+		flex: 1;
+
+		h1 {
+			margin: 0 0 0.25rem;
+			font-size: 1.8rem;
+		}
+	}
+
+	&__title-row {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	&__original {
+		color: var(--color-text-secondary);
+		font-style: italic;
+		margin: 0 0 0.75rem;
+		font-size: 0.9rem;
+	}
+
+	&__meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+
+		span {
+			&::after {
+				content: '·';
+				margin-left: 0.75rem;
+			}
+
+			&:last-child::after {
+				content: '';
+			}
+		}
+	}
+
+	&__toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1.25rem;
+		margin: 1rem 0;
+		border: 2px solid var(--color-border);
+		border-radius: 6px;
+		background: var(--color-surface);
+		color: var(--color-text);
+		font-size: 0.9rem;
+		cursor: pointer;
+		transition:
+			background 0.2s,
+			border-color 0.2s;
+
+		&:hover {
+			background: var(--color-surface-hover);
+		}
+
+		&--seen {
+			background: var(--color-success, #27ae60);
+			border-color: var(--color-success, #27ae60);
+			color: #fff;
+
+			&:hover {
+				opacity: 0.9;
+			}
+		}
+	}
+
+	&__overview {
+		margin-top: 1rem;
+		line-height: 1.6;
+		color: var(--color-text-secondary);
+	}
+}

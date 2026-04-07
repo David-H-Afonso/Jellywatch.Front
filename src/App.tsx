@@ -1,8 +1,7 @@
 import './App.scss'
-import Home from '@/components/Home/containers/Home'
 
 function App() {
-	return <Home />
+	return <div>Jellywatch</div>
 }
 
 export default App

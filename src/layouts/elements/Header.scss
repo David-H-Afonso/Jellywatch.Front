@@ -1,1 +1,71 @@
-@use '@/assets/styles' as *;
+.app-header {
+	background: var(--bg-secondary, #1a1a2e);
+	border-bottom: 1px solid var(--border-color, #2d3748);
+	padding: 0 1.5rem;
+	height: 56px;
+	display: flex;
+	align-items: center;
+}
+
+.header-content {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	max-width: 1400px;
+	margin: 0 auto;
+	gap: 2rem;
+}
+
+.header-logo {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: var(--color-primary, #a78bfa);
+	text-decoration: none;
+}
+
+.header-nav {
+	display: flex;
+	gap: 1rem;
+	flex: 1;
+}
+
+.nav-link {
+	color: var(--text-secondary, #94a3b8);
+	text-decoration: none;
+	font-size: 0.9rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	transition: color 0.2s;
+
+	&:hover,
+	&.active {
+		color: var(--text-primary, #e2e8f0);
+	}
+}
+
+.header-user {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.user-name {
+	color: var(--text-secondary, #94a3b8);
+	font-size: 0.85rem;
+}
+
+.logout-btn {
+	background: transparent;
+	border: 1px solid var(--border-color, #2d3748);
+	color: var(--text-secondary, #94a3b8);
+	padding: 0.35rem 0.75rem;
+	border-radius: 6px;
+	font-size: 0.8rem;
+	cursor: pointer;
+	transition: all 0.2s;
+
+	&:hover {
+		border-color: var(--color-primary, #a78bfa);
+		color: var(--text-primary, #e2e8f0);
+	}
+}
