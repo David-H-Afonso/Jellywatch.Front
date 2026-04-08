@@ -48,6 +48,7 @@ import {
 	rePropagate,
 	getJellyfinUsers,
 	addProfileFromJellyfin,
+	purgeProfileMedia,
 } from '@/services/AdminService/AdminService'
 import { SyncJobType, SyncJobStatus } from '@/models/api/Enums'
 
@@ -123,6 +124,7 @@ const Admin: React.FC = () => {
 	const [pageSize, setPageSize] = useState(10)
 	const [jellyfinUsers, setJellyfinUsers] = useState<JellyfinUserDto[]>([])
 	const [addingProfileId, setAddingProfileId] = useState<string | null>(null)
+	const [purgingProfileId, setPurgingProfileId] = useState<number | null>(null)
 
 	useEffect(() => {
 		dispatch(fetchUsers())
@@ -259,6 +261,16 @@ const Admin: React.FC = () => {
 		}
 	}
 
+	const handlePurgeProfile = async (profile: ProfileDto) => {
+		if (!confirm(t('admin.confirmPurge', { name: profile.displayName }))) return
+		setPurgingProfileId(profile.id)
+		try {
+			await purgeProfileMedia(profile.id)
+		} finally {
+			setPurgingProfileId(null)
+		}
+	}
+
 	if (loading && mediaLibrary.length === 0 && blacklist.length === 0) {
 		return <div className='loading-state'>{t('common.loading')}</div>
 	}
@@ -279,6 +291,9 @@ const Admin: React.FC = () => {
 
 			{error && <div className='admin-page__error'>{error}</div>}
 			{settingsError && <div className='admin-page__error'>{settingsError}</div>}
+
+			{/* ── System ── */}
+			<h2 className='admin-page__group-title'>{t('admin.groupSystem')}</h2>
 
 			{/* Settings */}
 			<CollapsibleSection title={t('settings.title')}>
@@ -421,6 +436,9 @@ const Admin: React.FC = () => {
 				)}
 			</CollapsibleSection>
 
+			{/* ── Users & Profiles ── */}
+			<h2 className='admin-page__group-title'>{t('admin.groupUsers')}</h2>
+
 			{/* Users */}
 			<CollapsibleSection title={t('admin.users')}>
 				{users.length === 0 ? (
@@ -442,6 +460,39 @@ const Admin: React.FC = () => {
 									<td>{u.username}</td>
 									<td>{u.isAdmin ? '✓' : '—'}</td>
 									<td>{new Date(u.createdAt).toLocaleDateString()}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				)}
+			</CollapsibleSection>
+
+			{/* Profiles */}
+			<CollapsibleSection title={t('admin.profiles')}>
+				{allProfiles.length === 0 ? (
+					<p className='empty-text'>{t('admin.noProfiles')}</p>
+				) : (
+					<table className='admin-table'>
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>{t('auth.username')}</th>
+								<th>{t('admin.actions')}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{allProfiles.map((p) => (
+								<tr key={p.id}>
+									<td>{p.id}</td>
+									<td>{p.displayName}</td>
+									<td>
+										<button
+											className='btn-danger btn-sm'
+											onClick={() => handlePurgeProfile(p)}
+											disabled={purgingProfileId === p.id}>
+											{purgingProfileId === p.id ? t('admin.purging') : t('admin.purgeMedia')}
+										</button>
+									</td>
 								</tr>
 							))}
 						</tbody>
@@ -520,6 +571,9 @@ const Admin: React.FC = () => {
 					</button>
 				</div>
 			</CollapsibleSection>
+
+			{/* ── Library ── */}
+			<h2 className='admin-page__group-title'>{t('admin.groupLibrary')}</h2>
 
 			{/* Media Library */}
 			<CollapsibleSection title={t('admin.mediaLibrary')}>
@@ -647,6 +701,9 @@ const Admin: React.FC = () => {
 					</table>
 				)}
 			</CollapsibleSection>
+
+			{/* ── Logs & Jobs ── */}
+			<h2 className='admin-page__group-title'>{t('admin.groupLogs')}</h2>
 
 			{/* Sync Jobs */}
 			<CollapsibleSection title={t('admin.syncJobs')}>

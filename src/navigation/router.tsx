@@ -7,6 +7,9 @@ import SeriesDetail from '@/components/Series/SeriesDetail/SeriesDetail'
 import MoviesList from '@/components/Movies/MoviesList/MoviesList'
 import MovieDetail from '@/components/Movies/MovieDetail/MovieDetail'
 import Activity from '@/components/Activity/Activity'
+import Wrapped from '@/components/Wrapped/Wrapped'
+import Calendar from '@/components/Calendar/Calendar'
+import DataManager from '@/components/DataManager/DataManager'
 import { Login, ProtectedRoute, PublicRoute } from '@/components/Auth'
 import { RouteError, NotFound } from '@/components/errors'
 
@@ -58,6 +61,21 @@ export const router = createHashRouter([
 	{
 		path: '/activity',
 		element: protectedRoute(<Activity />),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/wrapped',
+		element: protectedRoute(<Wrapped />),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/calendar',
+		element: protectedRoute(<Calendar />),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/data',
+		element: protectedRoute(<DataManager />),
 		errorElement: <RouteError />,
 	},
 	{

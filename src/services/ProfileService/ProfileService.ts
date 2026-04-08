@@ -5,7 +5,8 @@ import type {
 	ProfileDetailDto,
 	ActivityDto,
 	PagedResult,
-	QueryParameters,
+	ActivityQueryParameters,
+	ProfileBlockedItemDto,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -20,10 +21,39 @@ export const getProfileDetail = async (id: number): Promise<ProfileDetailDto> =>
 
 export const getProfileActivity = async (
 	profileId: number,
-	params?: QueryParameters
+	params?: ActivityQueryParameters
 ): Promise<PagedResult<ActivityDto>> => {
 	return await customFetch<PagedResult<ActivityDto>>(apiRoutes.profile.activity(profileId), {
 		method: 'GET',
 		params: params as Record<string, string | number | boolean>,
 	})
+}
+
+export const removeMediaFromProfile = async (
+	profileId: number,
+	mediaItemId: number
+): Promise<void> => {
+	await customFetch<void>(apiRoutes.profile.removeMedia(profileId, mediaItemId), {
+		method: 'DELETE',
+	})
+}
+
+export const blockMediaForProfile = async (
+	profileId: number,
+	mediaItemId: number
+): Promise<void> => {
+	await customFetch<void>(apiRoutes.profile.blockMedia(profileId, mediaItemId), { method: 'POST' })
+}
+
+export const unblockMediaForProfile = async (
+	profileId: number,
+	mediaItemId: number
+): Promise<void> => {
+	await customFetch<void>(apiRoutes.profile.unblockMedia(profileId, mediaItemId), {
+		method: 'DELETE',
+	})
+}
+
+export const getProfileBlocks = async (profileId: number): Promise<ProfileBlockedItemDto[]> => {
+	return await customFetch<ProfileBlockedItemDto[]>(apiRoutes.profile.blocks(profileId))
 }

@@ -44,7 +44,10 @@
 		"movies": "Películas",
 		"settings": "Configuración",
 		"activity": "Actividad",
-		"admin": "Admin"
+		"admin": "Admin",
+		"wrapped": "Resumen",
+		"calendar": "Calendario",
+		"data": "Datos"
 	},
 	"dashboard": {
 		"title": "Panel",
@@ -57,10 +60,31 @@
 		"moviesSeen": "Películas vistas",
 		"episodesSeen": "Episodios vistos",
 		"noActivity": "Sin actividad reciente",
-		"noCurrentlyWatching": "No hay nada en reproducción"
+		"noCurrentlyWatching": "No hay nada en reproducción",
+		"upcoming": "Próximos episodios",
+		"today": "Hoy",
+		"tomorrow": "Mañana",
+		"inDays": "En {{count}} días",
+		"nextWeek": "Próx. semana",
+		"inWeeks": "En {{count}} sem."
 	},
 	"activity": {
-		"title": "Historial"
+		"title": "Historial",
+		"searchPlaceholder": "Buscar por título...",
+		"allTypes": "Todos los tipos",
+		"episodesOnly": "Episodios",
+		"moviesOnly": "Películas",
+		"newestFirst": "Más recientes",
+		"oldestFirst": "Más antiguos",
+		"userRating": "Tu puntuación",
+		"markedAt": "Marcado",
+		"date": {
+			"all": "Todo",
+			"7d": "7 días",
+			"30d": "30 días",
+			"90d": "90 días",
+			"custom": "Personalizado"
+		}
 	},
 	"series": {
 		"title": "Series",
@@ -100,6 +124,12 @@
 		"markSeasonUnseen": "Marcar temporada como no vista",
 		"markAllSeen": "Marcar todo como visto",
 		"markAllUnseen": "Marcar todo como no visto"
+	},
+	"episodeToggle": {
+		"watchedAt": "Elegir fecha de visionado",
+		"watchedNow": "Visto ahora",
+		"watchedRelease": "Visto en estreno",
+		"watchedCustom": "Elegir fecha..."
 	},
 	"profile": {
 		"profiles": "Perfiles",
@@ -170,6 +200,11 @@
 		"mediaLibrary": "Biblioteca de medios",
 		"deleteMedia": "Eliminar de la biblioteca",
 		"confirmDelete": "¿Eliminar \"{{title}}\" de la biblioteca? Podrá ser reimportada en la siguiente sincronización.",
+		"removeFromList": "Eliminar de mi lista",
+		"confirmRemoveFromList": "¿Eliminar \"{{title}}\" de tu lista? Tu historial de visionado de este título será borrado.",
+		"blockMedia": "Poner en lista negra",
+		"unblockMedia": "Quitar de lista negra",
+		"confirmBlockMedia": "¿Poner \"{{title}}\" en la lista negra? Se eliminará de tu lista y no volverá a aparecer.",
 		"blacklist": "Lista negra",
 		"addToBlacklist": "Añadir",
 		"noBlacklist": "No hay elementos en la lista negra",
@@ -199,7 +234,17 @@
 		"jellyfinProfilesDesc": "Usuarios encontrados en tu servidor Jellyfin. Añádelos como perfiles rastreados sin necesidad de que inicien sesión.",
 		"noJellyfinUsers": "No se encontraron usuarios de Jellyfin",
 		"tracked": "Rastreado",
-		"addProfile": "Añadir perfil"
+		"addProfile": "Añadir perfil",
+		"groupSystem": "Sistema",
+		"groupUsers": "Usuarios y perfiles",
+		"groupLibrary": "Biblioteca",
+		"groupLogs": "Logs y trabajos",
+		"profiles": "Perfiles",
+		"noProfiles": "No se encontraron perfiles",
+		"purgeMedia": "Purgar todos los datos",
+		"purging": "Purgando...",
+		"confirmPurge": "¿Purgar TODOS los datos de visionado de \"{{name}}\"? Se eliminarán todos los estados, eventos y bloqueos. Esta acción no se puede deshacer.",
+		"confirmDeleteMedia": "¿Eliminar {{title}} de la biblioteca? Esta acción no se puede deshacer."
 	},
 	"filters": {
 		"all": "Todos los estados",
@@ -228,5 +273,95 @@
 		"title": "Título",
 		"type": "Tipo",
 		"status": "Estado"
+	},
+	"wrapped": {
+		"title": "Resumen anual",
+		"episodes": "episodios",
+		"movies": "películas",
+		"series": "series",
+		"watchTime": "tiempo visto",
+		"daysActive": "días activos",
+		"longestStreak": "racha de días",
+		"busiestDay": "Tu día más activo fue el {{date}} con {{count}} contenidos vistos",
+		"monthlyActivity": "Actividad mensual",
+		"mostActiveMonth": "{{month}} fue tu mes más activo con {{count}} contenidos vistos",
+		"seriesWatched": "Series",
+		"moviesWatched": "Películas",
+		"firstWatch": "Primer visionado del año",
+		"topSeries": "Series más vistas",
+		"topMovies": "Películas destacadas",
+		"topNetworks": "Plataformas más vistas",
+		"noData": "No hay actividad registrada para este año.",
+		"months": {
+			"january": "Enero",
+			"february": "Febrero",
+			"march": "Marzo",
+			"april": "Abril",
+			"may": "Mayo",
+			"june": "Junio",
+			"july": "Julio",
+			"august": "Agosto",
+			"september": "Septiembre",
+			"october": "Octubre",
+			"november": "Noviembre",
+			"december": "Diciembre"
+		}
+	},
+	"calendar": {
+		"title": "Calendario",
+		"noEvents": "Nada visto este día.",
+		"filter": {
+			"all": "Todo",
+			"series": "Series",
+			"movie": "Películas"
+		},
+		"days": {
+			"mon": "Lun",
+			"tue": "Mar",
+			"wed": "Mié",
+			"thu": "Jue",
+			"fri": "Vie",
+			"sat": "Sáb",
+			"sun": "Dom"
+		}
+	},
+	"dataManager": {
+		"title": "Gestor de Datos",
+		"export": "Exportar",
+		"exportDescription": "Descarga todos tus datos de visualización como archivo CSV.",
+		"downloadCsv": "Descargar CSV",
+		"import": "Importar",
+		"importDescription": "Sube un archivo CSV para importar datos de visualización. Puedes previsualizar los datos antes de importar.",
+		"preview": "Vista previa",
+		"totalRows": "Filas totales",
+		"validRows": "Filas válidas",
+		"duplicateRows": "Duplicados",
+		"errors": "Errores",
+		"colType": "Tipo",
+		"colTitle": "Título",
+		"colState": "Estado",
+		"colRating": "Nota",
+		"colStatus": "Estado",
+		"duplicate": "Duplicado",
+		"notFound": "No está en la biblioteca",
+		"notFoundRows": "No encontrados",
+		"willBeAdded": "Se añadirá desde TMDB",
+		"new": "Nuevo",
+		"skipDuplicates": "Omitir duplicados",
+		"overwriteDates": "Sobrescribir fechas existentes",
+		"importButton": "Importar {{count}} filas",
+		"importComplete": "Importación completada",
+		"imported": "Importados",
+		"skipped": "Omitidos",
+		"importAnother": "Importar otro archivo",
+		"blacklist": "Contenido bloqueado",
+		"blacklistDescription": "Contenido que has bloqueado — no aparecerá en tu biblioteca.",
+		"blacklistEmpty": "No hay contenido bloqueado.",
+		"blacklistLoading": "Cargando...",
+		"blacklistProfile": "Perfil",
+		"blacklistAllProfiles": "Todos los perfiles",
+		"blacklistRemovedSuccess": "Desbloqueado correctamente.",
+		"colProfile": "Perfil",
+		"colBlocked": "Bloqueado el"
 	}
 }

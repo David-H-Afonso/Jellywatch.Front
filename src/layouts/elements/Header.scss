@@ -21,8 +21,11 @@
 .header-logo {
 	font-size: 1.25rem;
 	font-weight: 700;
-	color: var(--color-primary, #a78bfa);
 	text-decoration: none;
+	background: linear-gradient(135deg, #aa5cc3, #00a4dc);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
 }
 
 .header-hamburger {
@@ -99,11 +102,14 @@
 	background: transparent;
 	border: 1px solid var(--border-color, #2d3748);
 	color: var(--text-secondary, #94a3b8);
-	padding: 0.35rem 0.75rem;
+	padding: 0.35rem;
 	border-radius: 6px;
-	font-size: 0.8rem;
 	cursor: pointer;
 	transition: all 0.2s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
 
 	&:hover {
 		border-color: var(--color-primary, #a78bfa);

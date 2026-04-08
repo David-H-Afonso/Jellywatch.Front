@@ -18,3 +18,10 @@ export interface MediaQueryParameters extends QueryParameters {
 	state?: string
 	profileId?: number
 }
+
+export interface ActivityQueryParameters extends QueryParameters {
+	mediaType?: string
+	mediaItemId?: number
+	dateFrom?: string
+	dateTo?: string
+}

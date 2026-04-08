@@ -37,7 +37,7 @@ const seriesSlice = createSlice({
 		resetState: () => initialState,
 		updateEpisodeWatchState: (
 			state,
-			action: PayloadAction<{ episodeId: number; state: WatchState }>
+			action: PayloadAction<{ episodeId: number; state: WatchState; watchedAt?: string | null }>
 		) => {
 			if (!state.currentSeries) return
 			for (const season of state.currentSeries.seasons) {
@@ -45,6 +45,7 @@ const seriesSlice = createSlice({
 				if (ep) {
 					const wasSeen = ep.state === 2
 					ep.state = action.payload.state
+					if (action.payload.watchedAt !== undefined) ep.watchedAt = action.payload.watchedAt
 					const nowSeen = action.payload.state === 2
 					if (wasSeen && !nowSeen) season.episodesSeen = Math.max(0, season.episodesSeen - 1)
 					if (!wasSeen && nowSeen) season.episodesSeen++

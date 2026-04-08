@@ -42,11 +42,26 @@
 		color: var(--color-error, #e74c3c);
 		border-radius: 6px;
 	}
+
+	&__group-title {
+		font-size: 0.8rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-text-secondary);
+		margin: 1.25rem 0 0.4rem;
+		padding-bottom: 0.3rem;
+		border-bottom: 1px solid var(--color-border);
+
+		&:first-of-type {
+			margin-top: 0;
+		}
+	}
 }
 
 .admin-section {
-	margin-bottom: 2rem;
-	padding: 1.25rem;
+	margin-bottom: 0.5rem;
+	padding: 0.85rem 1rem;
 	background: var(--color-surface);
 	border-radius: 8px;
 	border: 1px solid var(--color-border);
@@ -69,7 +84,7 @@
 	}
 
 	&__title {
-		font-size: 1.15rem;
+		font-size: 1.05rem;
 		font-weight: 600;
 		color: var(--color-text);
 	}
@@ -86,7 +101,7 @@
 	}
 
 	&__body {
-		margin-top: 1rem;
+		margin-top: 0.75rem;
 	}
 }
 

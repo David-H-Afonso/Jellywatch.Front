@@ -130,14 +130,15 @@ const parseResponseData = async (httpResponse: Response): Promise<any> => {
 	if (responseContentType.includes('application/json')) {
 		return await httpResponse.json()
 	}
-	if (responseContentType.includes('text/')) {
-		return await httpResponse.text()
-	}
 	if (
+		responseContentType.includes('text/csv') ||
 		responseContentType.includes('application/octet-stream') ||
 		responseContentType.includes('image/')
 	) {
 		return await httpResponse.blob()
+	}
+	if (responseContentType.includes('text/')) {
+		return await httpResponse.text()
 	}
 	return await httpResponse.text()
 }

@@ -16,6 +16,13 @@ export const apiRoutes = {
 			`/api/profile/${profileId}/seasons/${seasonId}/state`,
 		seriesState: (profileId: number, seriesId: number) =>
 			`/api/profile/${profileId}/series/${seriesId}/state`,
+		removeMedia: (profileId: number, mediaItemId: number) =>
+			`/api/profile/${profileId}/media/${mediaItemId}`,
+		blockMedia: (profileId: number, mediaItemId: number) =>
+			`/api/profile/${profileId}/media/${mediaItemId}/block`,
+		unblockMedia: (profileId: number, mediaItemId: number) =>
+			`/api/profile/${profileId}/media/${mediaItemId}/block`,
+		blocks: (profileId: number) => `/api/profile/${profileId}/blocks`,
 	},
 	series: {
 		base: '/api/media/series',
@@ -68,11 +75,23 @@ export const apiRoutes = {
 		refreshAllImages: '/api/admin/media/refresh-all-images',
 		blacklist: '/api/admin/blacklist',
 		blacklistById: (id: number) => `/api/admin/blacklist/${id}`,
+		profileBlocks: '/api/admin/profile-blocks',
+		purgeProfileMedia: (profileId: number) => `/api/admin/profiles/${profileId}/media`,
 	},
 	asset: {
 		image: (mediaItemId: number, imageType: string) => `/api/asset/${mediaItemId}/${imageType}`,
 		refresh: (mediaItemId: number) => `/api/asset/refresh/${mediaItemId}`,
 		customPoster: (mediaItemId: number) => `/api/asset/custom/${mediaItemId}/poster`,
+	},
+	stats: {
+		wrapped: (profileId: number) => `/api/stats/${profileId}/wrapped`,
+		calendar: (profileId: number) => `/api/stats/${profileId}/calendar`,
+		upcoming: (profileId: number) => `/api/stats/${profileId}/upcoming`,
+	},
+	data: {
+		export: (profileId: number) => `/api/data/${profileId}/export`,
+		importPreview: (profileId: number) => `/api/data/${profileId}/import/preview`,
+		import: (profileId: number) => `/api/data/${profileId}/import`,
 	},
 	mediaSearch: {
 		tmdb: '/api/media/search/tmdb',

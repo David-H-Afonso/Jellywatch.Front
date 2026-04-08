@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId } from '@/store/features/auth/selector'
 import {
@@ -33,13 +33,26 @@ const MoviesList: React.FC = () => {
 	const isDataFresh = useAppSelector(selectMoviesIsDataFresh)
 	const activeProfileId = useAppSelector(selectActiveProfileId)
 
+	const [searchParams, setSearchParams] = useSearchParams()
 	const [search, setSearch] = useState('')
 	const [stateFilter, setStateFilter] = useState<string>('')
 	const [sortBy, setSortBy] = useState('title')
 	const [sortDesc, setSortDesc] = useState(false)
-	const [page, setPage] = useState(1)
 	const [importOpen, setImportOpen] = useState(false)
 	const [pageSize, setPageSize] = useState(20)
+
+	const page = Number(searchParams.get('page')) || 1
+	const setPage = useCallback(
+		(p: number) => {
+			setSearchParams((prev) => {
+				const next = new URLSearchParams(prev)
+				if (p <= 1) next.delete('page')
+				else next.set('page', String(p))
+				return next
+			})
+		},
+		[setSearchParams]
+	)
 
 	const buildParams = useCallback((): MediaQueryParameters => {
 		const params: MediaQueryParameters = { page, pageSize, sortBy, sortDescending: sortDesc }
@@ -169,7 +182,7 @@ const MoviesList: React.FC = () => {
 							<div className='movie-card__footer'>
 								<WatchStateBadge state={m.state} size='sm' />
 								{m.userRating != null && (
-									<span className='movie-card__rating'>★ {m.userRating}</span>
+									<span className='movie-card__rating'>★ {(m.userRating / 2).toFixed(1)}</span>
 								)}
 							</div>
 						</div>

@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { WatchState } from '@/models/api/Enums'
 import './EpisodeToggle.scss'
 
 interface Props {
 	state: WatchState
 	isManualOverride: boolean
-	onToggle: (newState: WatchState) => void
+	onToggle: (newState: WatchState, timestamp?: string) => void
 	disabled?: boolean
+	airDate?: string | null
 }
 
 const SeenIcon = () => (
@@ -47,17 +49,72 @@ const WontWatchIcon = () => (
 	</svg>
 )
 
+const CalendarIcon = () => (
+	<svg viewBox='0 0 24 24' width='12' height='12' fill='currentColor' opacity='.6'>
+		<path d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z' />
+	</svg>
+)
+
 export const EpisodeToggle: React.FC<Props> = ({
 	state,
 	isManualOverride,
 	onToggle,
 	disabled = false,
+	airDate,
 }) => {
+	const { t } = useTranslation()
+	const [showDateMenu, setShowDateMenu] = useState(false)
+	const [showCustomDate, setShowCustomDate] = useState(false)
+	const [customDate, setCustomDate] = useState('')
+	const menuRef = useRef<HTMLDivElement>(null)
+
+	const closeMenu = useCallback(() => {
+		setShowDateMenu(false)
+		setShowCustomDate(false)
+		setCustomDate('')
+	}, [])
+
+	useEffect(() => {
+		if (!showDateMenu) return
+		const handler = (e: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) closeMenu()
+		}
+		document.addEventListener('mousedown', handler)
+		return () => document.removeEventListener('mousedown', handler)
+	}, [showDateMenu, closeMenu])
+
 	const handleClick = () => {
 		if (disabled) return
-		// WontWatch acts like Unseen for the main toggle: clicking marks as Seen
-		const next = state === WatchState.Seen ? WatchState.Unseen : WatchState.Seen
-		onToggle(next)
+		if (state === WatchState.Seen) {
+			onToggle(WatchState.Unseen)
+		} else {
+			onToggle(WatchState.Seen, new Date().toISOString())
+		}
+	}
+
+	const handleDateClick = (e: React.MouseEvent) => {
+		e.stopPropagation()
+		if (disabled || state === WatchState.Seen) return
+		setShowDateMenu(true)
+	}
+
+	const handleDateOption = (option: 'now' | 'release' | 'custom') => {
+		if (option === 'now') {
+			onToggle(WatchState.Seen, new Date().toISOString())
+			closeMenu()
+		} else if (option === 'release' && airDate) {
+			onToggle(WatchState.Seen, new Date(airDate).toISOString())
+			closeMenu()
+		} else if (option === 'custom') {
+			setShowCustomDate(true)
+		}
+	}
+
+	const handleCustomDateConfirm = () => {
+		if (customDate) {
+			onToggle(WatchState.Seen, new Date(customDate).toISOString())
+		}
+		closeMenu()
 	}
 
 	const handleWontWatch = () => {
@@ -84,6 +141,15 @@ export const EpisodeToggle: React.FC<Props> = ({
 				title={title}>
 				{state === WatchState.Seen ? <SeenIcon /> : <UnseenIcon />}
 			</button>
+			{state !== WatchState.Seen && (
+				<button
+					className='episode-toggle__date-trigger'
+					onClick={handleDateClick}
+					disabled={disabled}
+					title={t('episodeToggle.watchedAt')}>
+					<CalendarIcon />
+				</button>
+			)}
 			<button
 				className={`episode-toggle__skip ${state === WatchState.WontWatch ? 'episode-toggle__skip--active' : ''}`}
 				onClick={handleWontWatch}
@@ -91,6 +157,47 @@ export const EpisodeToggle: React.FC<Props> = ({
 				title="Won't watch">
 				<WontWatchIcon />
 			</button>
+
+			{showDateMenu && (
+				<div className='episode-toggle__date-menu' ref={menuRef}>
+					{!showCustomDate ? (
+						<>
+							<button
+								className='episode-toggle__date-option'
+								onClick={() => handleDateOption('now')}>
+								{t('episodeToggle.watchedNow')}
+							</button>
+							{airDate && (
+								<button
+									className='episode-toggle__date-option'
+									onClick={() => handleDateOption('release')}>
+									{t('episodeToggle.watchedRelease')} ({new Date(airDate).toLocaleDateString()})
+								</button>
+							)}
+							<button
+								className='episode-toggle__date-option'
+								onClick={() => handleDateOption('custom')}>
+								{t('episodeToggle.watchedCustom')}
+							</button>
+						</>
+					) : (
+						<div className='episode-toggle__custom-date'>
+							<input
+								type='date'
+								value={customDate}
+								onChange={(e) => setCustomDate(e.target.value)}
+								autoFocus
+							/>
+							<button
+								className='episode-toggle__date-option episode-toggle__date-option--confirm'
+								onClick={handleCustomDateConfirm}
+								disabled={!customDate}>
+								{t('common.confirm')}
+							</button>
+						</div>
+					)}
+				</div>
+			)}
 		</span>
 	)
 }

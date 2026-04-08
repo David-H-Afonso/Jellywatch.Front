@@ -54,6 +54,15 @@ export const Header: React.FC = () => {
 					<Link to='/activity' className={`nav-link ${isActive('/activity') ? 'active' : ''}`}>
 						{t('nav.activity')}
 					</Link>
+					<Link to='/wrapped' className={`nav-link ${isActive('/wrapped') ? 'active' : ''}`}>
+						{t('nav.wrapped')}
+					</Link>
+					<Link to='/calendar' className={`nav-link ${isActive('/calendar') ? 'active' : ''}`}>
+						{t('nav.calendar')}
+					</Link>
+					<Link to='/data' className={`nav-link ${isActive('/data') ? 'active' : ''}`}>
+						{t('nav.data')}
+					</Link>
 					{isAdmin && (
 						<Link to='/admin' className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>
 							{t('nav.admin')}
@@ -62,16 +71,40 @@ export const Header: React.FC = () => {
 					<div className='header-user header-user--mobile'>
 						<LanguageSwitcher />
 						{user && <span className='user-name'>{user.username}</span>}
-						<button className='logout-btn' onClick={handleLogout}>
-							{t('auth.logout')}
+						<button className='logout-btn' onClick={handleLogout} title={t('auth.logout')}>
+							<svg
+								viewBox='0 0 24 24'
+								width='16'
+								height='16'
+								fill='none'
+								stroke='currentColor'
+								strokeWidth='2'
+								strokeLinecap='round'
+								strokeLinejoin='round'>
+								<path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
+								<polyline points='16 17 21 12 16 7' />
+								<line x1='21' y1='12' x2='9' y2='12' />
+							</svg>
 						</button>
 					</div>
 				</nav>
 				<div className='header-user header-user--desktop'>
 					<LanguageSwitcher />
 					{user && <span className='user-name'>{user.username}</span>}
-					<button className='logout-btn' onClick={handleLogout}>
-						{t('auth.logout')}
+					<button className='logout-btn' onClick={handleLogout} title={t('auth.logout')}>
+						<svg
+							viewBox='0 0 24 24'
+							width='16'
+							height='16'
+							fill='none'
+							stroke='currentColor'
+							strokeWidth='2'
+							strokeLinecap='round'
+							strokeLinejoin='round'>
+							<path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
+							<polyline points='16 17 21 12 16 7' />
+							<line x1='21' y1='12' x2='9' y2='12' />
+						</svg>
 					</button>
 				</div>
 			</div>

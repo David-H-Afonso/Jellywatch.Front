@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { getProfileDetail, getProfileActivity } from '@/services/ProfileService/ProfileService'
-import type { QueryParameters } from '@/models/api'
+import type { ActivityQueryParameters } from '@/models/api'
 
 export const fetchProfileDetail = createAsyncThunk(
 	'profile/fetchProfileDetail',
@@ -17,7 +17,7 @@ export const fetchProfileDetail = createAsyncThunk(
 export const fetchProfileActivity = createAsyncThunk(
 	'profile/fetchProfileActivity',
 	async (
-		{ profileId, params }: { profileId: number; params?: QueryParameters },
+		{ profileId, params }: { profileId: number; params?: ActivityQueryParameters },
 		{ rejectWithValue }
 	) => {
 		try {

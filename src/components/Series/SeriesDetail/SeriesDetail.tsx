@@ -36,8 +36,19 @@ import {
 	setSeriesAllState,
 } from '@/services/MediaService/MediaService'
 import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
+import {
+	removeMediaFromProfile,
+	blockMediaForProfile,
+	unblockMediaForProfile,
+} from '@/services/ProfileService/ProfileService'
 import type { SeasonDto } from '@/models/api'
 import './SeriesDetail.scss'
+
+const CalendarIcon = () => (
+	<svg viewBox='0 0 24 24' width='12' height='12' fill='currentColor' opacity='.6'>
+		<path d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z' />
+	</svg>
+)
 
 const SeriesDetail: React.FC = () => {
 	const { id } = useParams<{ id: string }>()
@@ -57,9 +68,17 @@ const SeriesDetail: React.FC = () => {
 	const [showLogoPicker, setShowLogoPicker] = useState(false)
 	const [savingRating, setSavingRating] = useState(false)
 	const posterInputRef = useRef<HTMLInputElement>(null)
-	const adminMenuRef = useRef<HTMLDivElement>(null)
-	const [showAdminMenu, setShowAdminMenu] = useState(false)
+	const menuRef = useRef<HTMLDivElement>(null)
+	const [showMenu, setShowMenu] = useState(false)
 	const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+	const [showConfirmRemove, setShowConfirmRemove] = useState(false)
+	const [showConfirmBlock, setShowConfirmBlock] = useState(false)
+	const [posterVersion, setPosterVersion] = useState(0)
+	const [datePickerTarget, setDatePickerTarget] = useState<
+		{ type: 'season'; seasonId: number } | { type: 'series' } | null
+	>(null)
+	const [customDate, setCustomDate] = useState('')
+	const datePickerRef = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {
 		if (id) {
@@ -71,14 +90,49 @@ const SeriesDetail: React.FC = () => {
 	}, [dispatch, id, activeProfileId])
 
 	useEffect(() => {
-		if (!showAdminMenu) return
+		if (series) {
+			const name = (i18n.language === 'es' && series.spanishTranslation?.title) || series.title
+			document.title = `${name} — Jellywatch`
+		}
+		return () => {
+			document.title = 'Jellywatch'
+		}
+	}, [series, i18n.language])
+
+	useEffect(() => {
+		if (!showMenu) return
 		const handler = (e: MouseEvent) => {
-			if (adminMenuRef.current && !adminMenuRef.current.contains(e.target as Node))
-				setShowAdminMenu(false)
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false)
 		}
 		document.addEventListener('mousedown', handler)
 		return () => document.removeEventListener('mousedown', handler)
-	}, [showAdminMenu])
+	}, [showMenu])
+
+	useEffect(() => {
+		if (!datePickerTarget) return
+		const handler = (e: MouseEvent) => {
+			if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+				setDatePickerTarget(null)
+				setCustomDate('')
+			}
+		}
+		document.addEventListener('mousedown', handler)
+		return () => document.removeEventListener('mousedown', handler)
+	}, [datePickerTarget])
+
+	const handleDatePickerOption = (option: 'now' | 'custom', date?: string) => {
+		if (!datePickerTarget) return
+		const ts =
+			option === 'now' ? new Date().toISOString() : date ? new Date(date).toISOString() : undefined
+		if (!ts) return
+		if (datePickerTarget.type === 'season') {
+			handleSeasonState(datePickerTarget.seasonId, WatchState.Seen, ts)
+		} else {
+			handleSeriesState(WatchState.Seen, ts)
+		}
+		setDatePickerTarget(null)
+		setCustomDate('')
+	}
 
 	const toggleSeason = (seasonId: number) => {
 		setExpandedSeasons((prev) => {
@@ -92,18 +146,24 @@ const SeriesDetail: React.FC = () => {
 		})
 	}
 
-	const handleEpisodeToggle = async (episodeId: number, newState: WatchState) => {
+	const handleEpisodeToggle = async (
+		episodeId: number,
+		newState: WatchState,
+		timestamp?: string
+	) => {
 		if (!activeProfileId) return
-		dispatch(updateEpisodeWatchState({ episodeId, state: newState }))
+		const newWatchedAt =
+			newState === WatchState.Seen ? (timestamp ?? new Date().toISOString()) : null
+		dispatch(updateEpisodeWatchState({ episodeId, state: newState, watchedAt: newWatchedAt }))
 		dispatch(invalidateCache())
-		await updateEpisodeState(activeProfileId, episodeId, { state: newState })
+		await updateEpisodeState(activeProfileId, episodeId, { state: newState, timestamp })
 	}
 
-	const handleSeasonState = async (seasonId: number, state: WatchState) => {
+	const handleSeasonState = async (seasonId: number, state: WatchState, timestamp?: string) => {
 		if (!activeProfileId || !series) return
 		dispatch(updateSeasonWatchStates({ seasonId, state }))
 		dispatch(invalidateCache())
-		await setSeasonState(activeProfileId, seasonId, state)
+		await setSeasonState(activeProfileId, seasonId, state, timestamp)
 	}
 
 	const handleSeasonWontWatch = async (seasonId: number) => {
@@ -117,11 +177,11 @@ const SeriesDetail: React.FC = () => {
 		await setSeasonState(activeProfileId, seasonId, newState)
 	}
 
-	const handleSeriesState = async (state: WatchState) => {
+	const handleSeriesState = async (state: WatchState, timestamp?: string) => {
 		if (!activeProfileId || !series) return
 		dispatch(updateAllWatchStates(state))
 		dispatch(invalidateCache())
-		await setSeriesAllState(activeProfileId, series.id, state)
+		await setSeriesAllState(activeProfileId, series.id, state, timestamp)
 	}
 
 	const handleRate = async (rating: number | null) => {
@@ -153,6 +213,24 @@ const SeriesDetail: React.FC = () => {
 		} catch {
 			// Forbidden for non-admins — button is hidden anyway
 		}
+	}
+
+	const handleRemoveFromList = async () => {
+		if (!activeProfileId || !series) return
+		await removeMediaFromProfile(activeProfileId, series.mediaItemId)
+		navigate('/series')
+	}
+
+	const handleBlock = async () => {
+		if (!activeProfileId || !series) return
+		await blockMediaForProfile(activeProfileId, series.mediaItemId)
+		navigate('/series')
+	}
+
+	const handleUnblock = async () => {
+		if (!activeProfileId || !series) return
+		await unblockMediaForProfile(activeProfileId, series.mediaItemId)
+		if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
 	}
 
 	const handleRefreshMetadata = async () => {
@@ -187,6 +265,7 @@ const SeriesDetail: React.FC = () => {
 
 	const handlePosterSelected = () => {
 		setShowPosterPicker(false)
+		setPosterVersion((v) => v + 1)
 		if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
 	}
 
@@ -196,7 +275,7 @@ const SeriesDetail: React.FC = () => {
 		try {
 			setUploadError(null)
 			await uploadCustomPoster(series.mediaItemId, file)
-			// Force browser to reload the poster image by busting the cache
+			setPosterVersion((v) => v + 1)
 			if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
 		} catch (err) {
 			setUploadError(err instanceof Error ? err.message : t('common.error'))
@@ -219,7 +298,10 @@ const SeriesDetail: React.FC = () => {
 	}
 
 	const useSpanish = i18n.language === 'es' && series.spanishTranslation
-	const title = (useSpanish ? series.spanishTranslation?.title : null) ?? series.title
+	const title =
+		(i18n.language === 'es'
+			? series.spanishTranslation?.title || series.originalTitle || null
+			: null) || series.title
 	const overview = (useSpanish ? series.spanishTranslation?.overview : null) ?? series.overview
 
 	return (
@@ -235,14 +317,15 @@ const SeriesDetail: React.FC = () => {
 						alt={title}
 						className='series-detail__poster'
 						fallback='📺'
+						cacheBust={posterVersion}
 					/>
 					{uploadError && <p className='series-detail__upload-error'>{uploadError}</p>}
 				</div>
 				<div className='series-detail__info'>
 					<div className='series-detail__title-row'>
 						<h1>{title}</h1>
-						{isAdmin && (
-							<div className='series-detail__admin-menu-wrap' ref={adminMenuRef}>
+						{activeProfileId && (
+							<div className='series-detail__admin-menu-wrap' ref={menuRef}>
 								<input
 									ref={posterInputRef}
 									type='file'
@@ -252,7 +335,7 @@ const SeriesDetail: React.FC = () => {
 								/>
 								<button
 									className='series-detail__menu-btn'
-									onClick={() => setShowAdminMenu((v) => !v)}
+									onClick={() => setShowMenu((v) => !v)}
 									title='More options'>
 									<svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
 										<circle cx='5' cy='12' r='2' />
@@ -260,46 +343,81 @@ const SeriesDetail: React.FC = () => {
 										<circle cx='19' cy='12' r='2' />
 									</svg>
 								</button>
-								{showAdminMenu && (
+								{showMenu && (
 									<div className='series-detail__admin-menu'>
+										{isAdmin && (
+											<button
+												onClick={() => {
+													setShowPosterPicker(true)
+													setShowMenu(false)
+												}}>
+												{t('admin.pickPoster')}
+											</button>
+										)}
 										<button
 											onClick={() => {
-												setShowPosterPicker(true)
-												setShowAdminMenu(false)
+												setShowConfirmRemove(true)
+												setShowMenu(false)
 											}}>
-											{t('admin.pickPoster')}
+											{t('admin.removeFromList')}
 										</button>
-										<button
-											onClick={() => {
-												posterInputRef.current?.click()
-												setShowAdminMenu(false)
-											}}>
-											{t('series.uploadPoster')}
-										</button>
-										<button
-											onClick={() => {
-												handleRefreshImages()
-												setShowAdminMenu(false)
-											}}
-											disabled={refreshing || refreshingImages}>
-											{refreshingImages ? t('admin.refreshingMedia') : t('admin.refreshImages')}
-										</button>
-										<button
-											onClick={() => {
-												handleRefreshMetadata()
-												setShowAdminMenu(false)
-											}}
-											disabled={refreshing || refreshingImages}>
-											{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
-										</button>
-										<button
-											className='series-detail__admin-menu__delete'
-											onClick={() => {
-												setShowConfirmDelete(true)
-												setShowAdminMenu(false)
-											}}>
-											{t('admin.deleteMedia')}
-										</button>
+										{isAdmin && (
+											<>
+												<button
+													onClick={() => {
+														posterInputRef.current?.click()
+														setShowMenu(false)
+													}}>
+													{t('series.uploadPoster')}
+												</button>
+												<button
+													onClick={() => {
+														handleRefreshImages()
+														setShowMenu(false)
+													}}
+													disabled={refreshing || refreshingImages}>
+													{refreshingImages ? t('admin.refreshingMedia') : t('admin.refreshImages')}
+												</button>
+												<button
+													onClick={() => {
+														handleRefreshMetadata()
+														setShowMenu(false)
+													}}
+													disabled={refreshing || refreshingImages}>
+													{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
+												</button>
+											</>
+										)}
+										<div className='series-detail__admin-menu__separator' />
+										{series.isBlocked ? (
+											<button
+												className='series-detail__admin-menu__delete'
+												onClick={async () => {
+													setShowMenu(false)
+													await handleUnblock()
+												}}>
+												{t('admin.unblockMedia')}
+											</button>
+										) : (
+											<button
+												className='series-detail__admin-menu__delete'
+												onClick={() => {
+													setShowConfirmBlock(true)
+													setShowMenu(false)
+												}}>
+												{t('admin.blockMedia')}
+											</button>
+										)}
+										{isAdmin && (
+											<button
+												className='series-detail__admin-menu__delete'
+												onClick={() => {
+													setShowConfirmDelete(true)
+													setShowMenu(false)
+												}}>
+												{t('admin.deleteMedia')}
+											</button>
+										)}
 									</div>
 								)}
 							</div>
@@ -345,41 +463,92 @@ const SeriesDetail: React.FC = () => {
 										)
 								)
 							return (
-								<button
-									className={`season-bulk-btn season-bulk-btn--${allSeriesComplete ? 'unseen' : 'seen'}`}
-									onClick={() =>
-										handleSeriesState(allSeriesComplete ? WatchState.Unseen : WatchState.Seen)
-									}
-									title={
-										allSeriesComplete ? t('watchState.markAllUnseen') : t('watchState.markAllSeen')
-									}>
-									{allSeriesComplete ? (
-										<svg
-											viewBox='0 0 24 24'
-											width='13'
-											height='13'
-											fill='none'
-											stroke='currentColor'
-											strokeWidth='2.5'
-											strokeLinecap='round'
-											strokeLinejoin='round'>
-											<line x1='18' y1='6' x2='6' y2='18' />
-											<line x1='6' y1='6' x2='18' y2='18' />
-										</svg>
-									) : (
-										<svg
-											viewBox='0 0 24 24'
-											width='13'
-											height='13'
-											fill='none'
-											stroke='currentColor'
-											strokeWidth='2.5'
-											strokeLinecap='round'
-											strokeLinejoin='round'>
-											<polyline points='20 6 9 17 4 12' />
-										</svg>
+								<span className='series-detail__seasons-actions'>
+									<button
+										className={`season-bulk-btn season-bulk-btn--${allSeriesComplete ? 'unseen' : 'seen'}`}
+										onClick={() =>
+											handleSeriesState(allSeriesComplete ? WatchState.Unseen : WatchState.Seen)
+										}
+										title={
+											allSeriesComplete
+												? t('watchState.markAllUnseen')
+												: t('watchState.markAllSeen')
+										}>
+										{allSeriesComplete ? (
+											<svg
+												viewBox='0 0 24 24'
+												width='13'
+												height='13'
+												fill='none'
+												stroke='currentColor'
+												strokeWidth='2.5'
+												strokeLinecap='round'
+												strokeLinejoin='round'>
+												<line x1='18' y1='6' x2='6' y2='18' />
+												<line x1='6' y1='6' x2='18' y2='18' />
+											</svg>
+										) : (
+											<svg
+												viewBox='0 0 24 24'
+												width='13'
+												height='13'
+												fill='none'
+												stroke='currentColor'
+												strokeWidth='2.5'
+												strokeLinecap='round'
+												strokeLinejoin='round'>
+												<polyline points='20 6 9 17 4 12' />
+											</svg>
+										)}
+									</button>
+									{!allSeriesComplete && (
+										<div
+											className='series-detail__date-wrap'
+											ref={datePickerTarget?.type === 'series' ? datePickerRef : undefined}>
+											<button
+												className='series-detail__date-trigger'
+												onClick={() =>
+													setDatePickerTarget(
+														datePickerTarget?.type === 'series' ? null : { type: 'series' }
+													)
+												}
+												title={t('episodeToggle.watchedAt')}>
+												<CalendarIcon />
+											</button>
+											{datePickerTarget?.type === 'series' && (
+												<div className='series-detail__date-menu'>
+													<button
+														className='series-detail__date-option'
+														onClick={() => handleDatePickerOption('now')}>
+														{t('episodeToggle.watchedNow')}
+													</button>
+													{customDate === '' ? (
+														<button
+															className='series-detail__date-option'
+															onClick={() => setCustomDate(' ')}>
+															{t('episodeToggle.watchedCustom')}
+														</button>
+													) : (
+														<div className='series-detail__custom-date'>
+															<input
+																type='date'
+																value={customDate.trim()}
+																onChange={(e) => setCustomDate(e.target.value)}
+																autoFocus
+															/>
+															<button
+																className='series-detail__date-option series-detail__date-option--confirm'
+																onClick={() => handleDatePickerOption('custom', customDate.trim())}
+																disabled={!customDate.trim()}>
+																{t('common.confirm')}
+															</button>
+														</div>
+													)}
+												</div>
+											)}
+										</div>
 									)}
-								</button>
+								</span>
 							)
 						})()}
 				</div>
@@ -464,6 +633,74 @@ const SeriesDetail: React.FC = () => {
 													<polyline points='20 6 9 17 4 12' />
 												</svg>
 											</button>
+											{!seasonAllComplete && (
+												<div
+													className='series-detail__date-wrap series-detail__date-wrap--season'
+													ref={
+														datePickerTarget?.type === 'season' &&
+														datePickerTarget.seasonId === season.id
+															? datePickerRef
+															: undefined
+													}>
+													<button
+														className='series-detail__date-trigger series-detail__date-trigger--small'
+														onClick={(e) => {
+															e.stopPropagation()
+															setDatePickerTarget(
+																datePickerTarget?.type === 'season' &&
+																	datePickerTarget.seasonId === season.id
+																	? null
+																	: { type: 'season', seasonId: season.id }
+															)
+															setCustomDate('')
+														}}
+														title={t('episodeToggle.watchedAt')}>
+														<CalendarIcon />
+													</button>
+													{datePickerTarget?.type === 'season' &&
+														datePickerTarget.seasonId === season.id && (
+															<div className='series-detail__date-menu'>
+																<button
+																	className='series-detail__date-option'
+																	onClick={(e) => {
+																		e.stopPropagation()
+																		handleDatePickerOption('now')
+																	}}>
+																	{t('episodeToggle.watchedNow')}
+																</button>
+																{customDate === '' ? (
+																	<button
+																		className='series-detail__date-option'
+																		onClick={(e) => {
+																			e.stopPropagation()
+																			setCustomDate(' ')
+																		}}>
+																		{t('episodeToggle.watchedCustom')}
+																	</button>
+																) : (
+																	<div
+																		className='series-detail__custom-date'
+																		onClick={(e) => e.stopPropagation()}>
+																		<input
+																			type='date'
+																			value={customDate.trim()}
+																			onChange={(e) => setCustomDate(e.target.value)}
+																			autoFocus
+																		/>
+																		<button
+																			className='series-detail__date-option series-detail__date-option--confirm'
+																			onClick={() =>
+																				handleDatePickerOption('custom', customDate.trim())
+																			}
+																			disabled={!customDate.trim()}>
+																			{t('common.confirm')}
+																		</button>
+																	</div>
+																)}
+															</div>
+														)}
+												</div>
+											)}
 											<button
 												className={`season-bulk-btn season-bulk-btn--skip${allWontWatch ? ' season-bulk-btn--skip-active' : ''}`}
 												onClick={(e) => {
@@ -506,7 +743,10 @@ const SeriesDetail: React.FC = () => {
 										<EpisodeToggle
 											state={ep.state}
 											isManualOverride={ep.isManualOverride}
-											onToggle={(newState) => handleEpisodeToggle(ep.id, newState)}
+											onToggle={(newState, timestamp) =>
+												handleEpisodeToggle(ep.id, newState, timestamp)
+											}
+											airDate={ep.airDate}
 										/>
 										<div className='episode-row__still-slot'>
 											{ep.stillUrl ? (
@@ -523,10 +763,28 @@ const SeriesDetail: React.FC = () => {
 										<span className='episode-row__number'>
 											{t('series.episode', { number: ep.episodeNumber })}
 										</span>
-										<span className='episode-row__name'>{ep.name ?? ''}</span>
+										<span className='episode-row__name'>
+											{ep.name ?? ''}
+											{ep.watchedAt && (
+												<span className='episode-row__watched-at'>
+													{(() => {
+														const d = new Date(ep.watchedAt)
+														return `${d.getDate()} ${d.toLocaleDateString(i18n.language, { month: 'short' })}, ${d.getFullYear()}`
+													})()}
+												</span>
+											)}
+										</span>
+										{ep.airDate && (
+											<span className='episode-row__air-date'>
+												{(() => {
+													const d = new Date(ep.airDate + 'T12:00:00')
+													return `${d.getDate()} ${d.toLocaleDateString(i18n.language, { month: 'short' })}, ${d.getFullYear()}`
+												})()}
+											</span>
+										)}
 										{ep.tmdbRating != null && (
 											<span className='episode-row__tmdb-rating' title='TMDB'>
-												⭐ {ep.tmdbRating.toFixed(1)}
+												★ {ep.tmdbRating.toFixed(1)}
 											</span>
 										)}
 										<span className='episode-row__rating' onClick={(e) => e.stopPropagation()}>
@@ -575,6 +833,46 @@ const SeriesDetail: React.FC = () => {
 									await handleDelete()
 								}}>
 								{t('admin.deleteMedia')}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+			{showConfirmRemove && (
+				<div className='confirm-modal-overlay'>
+					<div className='confirm-modal'>
+						<p>{t('admin.confirmRemoveFromList', { title })}</p>
+						<div className='confirm-modal__actions'>
+							<button className='btn-secondary' onClick={() => setShowConfirmRemove(false)}>
+								{t('common.cancel')}
+							</button>
+							<button
+								className='btn-secondary'
+								onClick={async () => {
+									setShowConfirmRemove(false)
+									await handleRemoveFromList()
+								}}>
+								{t('admin.removeFromList')}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+			{showConfirmBlock && (
+				<div className='confirm-modal-overlay'>
+					<div className='confirm-modal'>
+						<p>{t('admin.confirmBlockMedia', { title })}</p>
+						<div className='confirm-modal__actions'>
+							<button className='btn-secondary' onClick={() => setShowConfirmBlock(false)}>
+								{t('common.cancel')}
+							</button>
+							<button
+								className='series-detail__admin-menu__delete btn-secondary'
+								onClick={async () => {
+									setShowConfirmBlock(false)
+									await handleBlock()
+								}}>
+								{t('admin.blockMedia')}
 							</button>
 						</div>
 					</div>

@@ -105,10 +105,14 @@
 			}
 		}
 
+		&__separator {
+			height: 1px;
+			background: var(--color-border);
+			margin: 0.3rem 0;
+		}
+
 		&__delete {
 			color: var(--color-text-secondary) !important;
-			border-top: 1px solid var(--color-border) !important;
-			margin-top: 0.3rem !important;
 		}
 	}
 
@@ -117,14 +121,18 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
+		min-width: 0;
 	}
 
 	&__info {
 		flex: 1;
+		min-width: 0;
 
 		h1 {
 			margin: 0 0 0.25rem;
 			font-size: 1.8rem;
+			overflow-wrap: break-word;
+			word-break: break-word;
 		}
 	}
 
@@ -176,13 +184,110 @@
 			font-size: 1.3rem;
 		}
 	}
+
+	&__seasons-actions {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	&__date-wrap {
+		position: relative;
+		display: inline-block;
+
+		&--season {
+			display: inline-block;
+		}
+	}
+
+	&__date-trigger {
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		border: 1.5px solid var(--border-color, #2d3748);
+		background: transparent;
+		color: var(--text-secondary, #4a5568);
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		opacity: 0.5;
+		transition: all 0.2s;
+
+		&:hover {
+			border-color: var(--color-primary, #a78bfa);
+			color: var(--color-primary, #a78bfa);
+			opacity: 1;
+		}
+
+		&--small {
+			width: 16px;
+			height: 16px;
+		}
+	}
+
+	&__date-menu {
+		position: absolute;
+		top: calc(100% + 4px);
+		right: 0;
+		min-width: 175px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		z-index: 100;
+		padding: 0.3rem 0;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	}
+
+	&__date-option {
+		width: 100%;
+		text-align: left;
+		background: none;
+		border: none;
+		padding: 0.45rem 0.75rem;
+		color: var(--color-text);
+		cursor: pointer;
+		font-size: 0.8rem;
+		display: block;
+
+		&:hover:not(:disabled) {
+			background: var(--color-surface-hover);
+		}
+
+		&--confirm {
+			color: var(--color-primary);
+			font-weight: 600;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+	}
+
+	&__custom-date {
+		padding: 0.35rem 0.75rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+
+		input[type='date'] {
+			width: 100%;
+			padding: 0.3rem 0.5rem;
+			border: 1px solid var(--color-border);
+			border-radius: 4px;
+			background: var(--color-bg);
+			color: var(--color-text);
+			font-size: 0.8rem;
+		}
+	}
 }
 
 .season-block {
 	margin-bottom: 0.5rem;
 	border: 1px solid var(--color-border);
 	border-radius: 6px;
-	overflow: hidden;
 }
 
 .season-header {
@@ -344,13 +449,32 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		min-width: 0;
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	&__watched-at {
+		font-size: 0.72rem;
+		color: var(--color-text-secondary, #94a3b8);
+		font-style: italic;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	&__air-date {
+		flex-shrink: 0;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		white-space: nowrap;
 	}
 
 	&__tmdb-rating {
 		flex-shrink: 0;
 		font-size: 0.75rem;
-		color: var(--color-text-secondary);
+		color: #01b4e4;
 		white-space: nowrap;
+		font-weight: 600;
 	}
 
 	&__rating {

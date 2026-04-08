@@ -32,6 +32,7 @@ export interface SeriesDetailDto {
 	ratings: ExternalRatingDto[]
 	seasons: SeasonDto[]
 	spanishTranslation: TranslationDto | null
+	isBlocked: boolean
 }
 
 export interface MovieListDto {
@@ -60,6 +61,8 @@ export interface MovieDetailDto {
 	userRating: number | null
 	ratings: ExternalRatingDto[]
 	spanishTranslation: TranslationDto | null
+	isBlocked: boolean
+	watchedAt: string | null
 }
 
 export interface SeasonDto {
@@ -90,6 +93,7 @@ export interface EpisodeDto {
 	state: WatchState
 	isManualOverride: boolean
 	userRating: number | null
+	watchedAt: string | null
 }
 
 export interface PosterOptionDto {
@@ -115,10 +119,14 @@ export interface TranslationDto {
 
 export interface WatchStateUpdateDto {
 	state: WatchState
+	timestamp?: string
 }
 
 export interface ActivityDto {
 	id: number
+	mediaItemId: number
+	seriesId: number | null
+	movieId: number | null
 	mediaTitle: string
 	episodeName: string | null
 	episodeNumber: number | null
@@ -127,7 +135,10 @@ export interface ActivityDto {
 	eventType: WatchEventType
 	source: SyncSource
 	timestamp: string
+	createdAt: string
 	posterPath: string | null
+	userRating: number | null
+	tmdbRating: number | null
 }
 
 // TMDB Search result DTOs — property names match backend JsonPropertyName attributes (snake_case)
@@ -167,4 +178,24 @@ export interface ManualAddResultDto {
 	seriesId?: number
 	movieId?: number
 	title: string
+}
+
+export interface ProfileBlockedItemDto {
+	id: number
+	mediaItemId: number
+	title: string
+	spanishTitle: string | null
+	mediaType: MediaType
+	blockedAt: string
+}
+
+export interface AdminProfileBlockDto {
+	id: number
+	profileId: number
+	profileName: string
+	mediaItemId: number
+	title: string
+	spanishTitle: string | null
+	mediaType: MediaType
+	blockedAt: string
 }

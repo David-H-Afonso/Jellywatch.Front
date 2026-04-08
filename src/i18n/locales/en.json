@@ -44,7 +44,10 @@
 		"movies": "Movies",
 		"settings": "Settings",
 		"activity": "Activity",
-		"admin": "Admin"
+		"admin": "Admin",
+		"wrapped": "Wrapped",
+		"calendar": "Calendar",
+		"data": "Data"
 	},
 	"dashboard": {
 		"title": "Dashboard",
@@ -57,10 +60,31 @@
 		"moviesSeen": "Movies Seen",
 		"episodesSeen": "Episodes Seen",
 		"noActivity": "No recent activity",
-		"noCurrentlyWatching": "Nothing currently being watched"
+		"noCurrentlyWatching": "Nothing currently being watched",
+		"upcoming": "Upcoming Episodes",
+		"today": "Today",
+		"tomorrow": "Tomorrow",
+		"inDays": "In {{count}} days",
+		"nextWeek": "Next week",
+		"inWeeks": "In {{count}} weeks"
 	},
 	"activity": {
-		"title": "Watch History"
+		"title": "Watch History",
+		"searchPlaceholder": "Search by title...",
+		"allTypes": "All types",
+		"episodesOnly": "Episodes",
+		"moviesOnly": "Movies",
+		"newestFirst": "Newest first",
+		"oldestFirst": "Oldest first",
+		"userRating": "Your rating",
+		"markedAt": "Marked",
+		"date": {
+			"all": "All time",
+			"7d": "7 days",
+			"30d": "30 days",
+			"90d": "90 days",
+			"custom": "Custom"
+		}
 	},
 	"series": {
 		"title": "Series",
@@ -100,6 +124,12 @@
 		"markSeasonUnseen": "Mark season as unwatched",
 		"markAllSeen": "Mark all as watched",
 		"markAllUnseen": "Mark all as unwatched"
+	},
+	"episodeToggle": {
+		"watchedAt": "Choose watch date",
+		"watchedNow": "Watched now",
+		"watchedRelease": "Watched on release",
+		"watchedCustom": "Choose date..."
 	},
 	"profile": {
 		"profiles": "Profiles",
@@ -170,6 +200,11 @@
 		"mediaLibrary": "Media Library",
 		"deleteMedia": "Remove from library",
 		"confirmDelete": "Remove \"{{title}}\" from the library? This will allow it to be re-imported on next sync.",
+		"removeFromList": "Remove from my list",
+		"confirmRemoveFromList": "Remove \"{{title}}\" from your list? Your watch history for this title will be deleted.",
+		"blockMedia": "Blacklist for me",
+		"unblockMedia": "Remove from blacklist",
+		"confirmBlockMedia": "Blacklist \"{{title}}\"? It will be removed from your list and won't appear again.",
 		"blacklist": "Blacklist",
 		"addToBlacklist": "Add",
 		"noBlacklist": "No blacklisted items",
@@ -199,7 +234,17 @@
 		"jellyfinProfilesDesc": "Users found on your Jellyfin server. Add them as tracked profiles without requiring a login.",
 		"noJellyfinUsers": "No Jellyfin users found",
 		"tracked": "Tracked",
-		"addProfile": "Add Profile"
+		"addProfile": "Add Profile",
+		"groupSystem": "System",
+		"groupUsers": "Users & Profiles",
+		"groupLibrary": "Library",
+		"groupLogs": "Logs & Jobs",
+		"profiles": "Profiles",
+		"noProfiles": "No profiles found",
+		"purgeMedia": "Purge all media",
+		"purging": "Purging...",
+		"confirmPurge": "Purge ALL watch data for \"{{name}}\"? This will delete all watch states, watch events, and blocks. This cannot be undone.",
+		"confirmDeleteMedia": "Delete {{title}} from the library? This cannot be undone."
 	},
 	"filters": {
 		"all": "All States",
@@ -228,5 +273,95 @@
 		"title": "Title",
 		"type": "Type",
 		"status": "Status"
+	},
+	"wrapped": {
+		"title": "Wrapped",
+		"episodes": "episodes",
+		"movies": "movies",
+		"series": "series",
+		"watchTime": "watch time",
+		"daysActive": "days active",
+		"longestStreak": "day streak",
+		"busiestDay": "Your busiest day was {{date}} with {{count}} items watched",
+		"monthlyActivity": "Monthly Activity",
+		"mostActiveMonth": "{{month}} was your most active month with {{count}} items watched",
+		"seriesWatched": "Series",
+		"moviesWatched": "Movies",
+		"firstWatch": "First Watch of the Year",
+		"topSeries": "Top Series",
+		"topMovies": "Top Movies",
+		"topNetworks": "Top Networks",
+		"noData": "No watch activity found for this year.",
+		"months": {
+			"january": "January",
+			"february": "February",
+			"march": "March",
+			"april": "April",
+			"may": "May",
+			"june": "June",
+			"july": "July",
+			"august": "August",
+			"september": "September",
+			"october": "October",
+			"november": "November",
+			"december": "December"
+		}
+	},
+	"calendar": {
+		"title": "Calendar",
+		"noEvents": "Nothing watched this day.",
+		"filter": {
+			"all": "All",
+			"series": "Series",
+			"movie": "Movies"
+		},
+		"days": {
+			"mon": "Mon",
+			"tue": "Tue",
+			"wed": "Wed",
+			"thu": "Thu",
+			"fri": "Fri",
+			"sat": "Sat",
+			"sun": "Sun"
+		}
+	},
+	"dataManager": {
+		"title": "Data Manager",
+		"export": "Export",
+		"exportDescription": "Download all your watch data as a CSV file.",
+		"downloadCsv": "Download CSV",
+		"import": "Import",
+		"importDescription": "Upload a CSV file to import watch data. You can preview the data before importing.",
+		"preview": "Preview",
+		"totalRows": "Total rows",
+		"validRows": "Valid rows",
+		"duplicateRows": "Duplicates",
+		"errors": "Errors",
+		"colType": "Type",
+		"colTitle": "Title",
+		"colState": "State",
+		"colRating": "Rating",
+		"colStatus": "Status",
+		"duplicate": "Duplicate",
+		"notFound": "Not in library",
+		"notFoundRows": "Not in library",
+		"willBeAdded": "Will be added from TMDB",
+		"new": "New",
+		"skipDuplicates": "Skip duplicates",
+		"overwriteDates": "Overwrite existing dates",
+		"importButton": "Import {{count}} rows",
+		"importComplete": "Import Complete",
+		"imported": "Imported",
+		"skipped": "Skipped",
+		"importAnother": "Import another file",
+		"blacklist": "Blocked content",
+		"blacklistDescription": "Media you have blocked — it won't appear in your library.",
+		"blacklistEmpty": "No blocked content.",
+		"blacklistLoading": "Loading...",
+		"blacklistProfile": "Profile",
+		"blacklistAllProfiles": "All profiles",
+		"blacklistRemovedSuccess": "Unblocked successfully.",
+		"colProfile": "Profile",
+		"colBlocked": "Blocked on"
 	}
 }

@@ -8,6 +8,7 @@ interface Props {
 	alt: string
 	className?: string
 	fallback?: string
+	cacheBust?: number
 }
 
 export const MediaPoster: React.FC<Props> = ({
@@ -16,6 +17,7 @@ export const MediaPoster: React.FC<Props> = ({
 	alt,
 	className = '',
 	fallback = '🎬',
+	cacheBust,
 }) => {
 	const [hasError, setHasError] = useState(false)
 
@@ -27,7 +29,7 @@ export const MediaPoster: React.FC<Props> = ({
 		)
 	}
 
-	const src = `${environment.baseUrl}${environment.apiRoutes.asset.image(mediaItemId, imageType)}`
+	const src = `${environment.baseUrl}${environment.apiRoutes.asset.image(mediaItemId, imageType)}${cacheBust ? `?v=${cacheBust}` : ''}`
 
 	return (
 		<img

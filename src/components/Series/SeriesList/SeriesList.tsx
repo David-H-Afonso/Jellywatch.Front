@@ -183,7 +183,7 @@ const SeriesList: React.FC = () => {
 								)}
 								<div className='series-card__badges'>
 									{s.userRating != null && (
-										<span className='series-card__rating'>★ {s.userRating}</span>
+										<span className='series-card__rating'>★ {(s.userRating / 2).toFixed(1)}</span>
 									)}
 								</div>
 							</div>

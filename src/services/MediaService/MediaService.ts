@@ -81,22 +81,24 @@ export const updateMovieState = async (
 export const setSeasonState = async (
 	profileId: number,
 	seasonId: number,
-	state: WatchStateUpdateDto['state']
+	state: WatchStateUpdateDto['state'],
+	timestamp?: string
 ): Promise<void> => {
 	await customFetch<void>(apiRoutes.profile.seasonState(profileId, seasonId), {
 		method: 'PATCH',
-		body: { state },
+		body: { state, timestamp },
 	})
 }
 
 export const setSeriesAllState = async (
 	profileId: number,
 	seriesId: number,
-	state: WatchStateUpdateDto['state']
+	state: WatchStateUpdateDto['state'],
+	timestamp?: string
 ): Promise<void> => {
 	await customFetch<void>(apiRoutes.profile.seriesState(profileId, seriesId), {
 		method: 'PATCH',
-		body: { state },
+		body: { state, timestamp },
 	})
 }
 

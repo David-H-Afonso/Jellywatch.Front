@@ -13,6 +13,7 @@ import type {
 	PagedResult,
 	JellyfinUserDto,
 	AddProfileRequest,
+	AdminProfileBlockDto,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -132,6 +133,17 @@ export const selectLogo = async (id: number, remoteUrl: string): Promise<void> =
 	})
 }
 
+export const purgeProfileMedia = async (
+	profileId: number
+): Promise<{
+	message: string
+	watchStatesRemoved: number
+	watchEventsRemoved: number
+	blocksRemoved: number
+}> => {
+	return await customFetch(apiRoutes.admin.purgeProfileMedia(profileId), { method: 'DELETE' })
+}
+
 export const refreshAllMetadata = async (): Promise<{ count: number }> => {
 	return await customFetch<{ count: number }>(apiRoutes.admin.refreshAllMetadata, {
 		method: 'POST',
@@ -154,4 +166,8 @@ export const addProfileFromJellyfin = async (request: AddProfileRequest): Promis
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(request),
 	})
+}
+
+export const getAdminProfileBlocks = async (): Promise<AdminProfileBlockDto[]> => {
+	return await customFetch<AdminProfileBlockDto[]>(apiRoutes.admin.profileBlocks)
 }
