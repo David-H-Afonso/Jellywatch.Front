@@ -15,6 +15,8 @@ export interface WrappedDto {
 	mostActiveMonth: string | null
 	mostActiveMonthCount: number
 	topNetworks: TopNetworkDto[]
+	genreBreakdown: GenreBreakdownDto[]
+	monthlyGenreInsights: MonthlyGenreInsightDto[]
 }
 
 export interface MonthlyActivityDto {
@@ -83,6 +85,21 @@ export interface TopNetworkDto {
 	count: number
 }
 
+export interface GenreBreakdownDto {
+	genre: string
+	seriesCount: number
+	movieCount: number
+	totalCount: number
+	minutesWatched: number
+	titles: string[]
+}
+
+export interface MonthlyGenreInsightDto {
+	month: number
+	topGenre: string
+	count: number
+}
+
 export interface CalendarDayDto {
 	date: string
 	events: CalendarEventDto[]
@@ -131,9 +148,13 @@ export interface ImportResultDto {
 
 export interface UpcomingEpisodeDto {
 	mediaItemId: number
+	seriesId: number
 	seriesTitle: string
 	seasonNumber: number
 	episodeNumber: number
 	episodeName: string | null
 	airDate: string
+	airTime: string | null
+	airTimeUtc: string | null
+	batchCount: number
 }

@@ -255,6 +255,7 @@
 		"name": "Nombre",
 		"releaseDate": "Fecha de estreno",
 		"grade": "Mi valoración",
+		"top": "Mejor valorado",
 		"ascending": "Ascendente",
 		"descending": "Descendente"
 	},
@@ -274,6 +275,12 @@
 		"type": "Tipo",
 		"status": "Estado"
 	},
+	"cast": {
+		"title": "Reparto",
+		"episodes": "ep.",
+		"inYourLibrary": "En tu biblioteca",
+		"otherCredits": "Otros créditos"
+	},
 	"wrapped": {
 		"title": "Resumen anual",
 		"episodes": "episodios",
@@ -291,6 +298,12 @@
 		"topSeries": "Series más vistas",
 		"topMovies": "Películas destacadas",
 		"topNetworks": "Plataformas más vistas",
+		"genres": "Desglose por género",
+		"genreCombined": "Todo",
+		"genreSeries": "Series",
+		"genreMovies": "Películas",
+		"genreInsights": "Género favorito por mes",
+		"titles": "títulos",
 		"noData": "No hay actividad registrada para este año.",
 		"months": {
 			"january": "Enero",

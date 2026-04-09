@@ -1,11 +1,11 @@
-﻿import React, { useEffect, useState } from 'react'
+﻿import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId } from '@/store/features/auth/selector'
 import { getWrapped } from '@/services/StatsService/StatsService'
 import { MediaPoster } from '@/components/elements'
-import type { WrappedDto } from '@/models/api'
+import type { WrappedDto, GenreBreakdownDto } from '@/models/api'
 import './Wrapped.scss'
 const MONTH_KEYS = [
 	'january',
@@ -30,6 +30,8 @@ const Wrapped: React.FC = () => {
 	const [error, setError] = useState<string | null>(null)
 	const [year, setYear] = useState(new Date().getFullYear())
 	const [expandedMonth, setExpandedMonth] = useState<number | null>(null)
+	const [genreView, setGenreView] = useState<'combined' | 'series' | 'movies'>('combined')
+	const [hoveredGenre, setHoveredGenre] = useState<GenreBreakdownDto | null>(null)
 
 	useEffect(() => {
 		if (!activeProfileId) return
@@ -50,6 +52,55 @@ const Wrapped: React.FC = () => {
 	const getMonthName = (monthNum: number) => {
 		return t(`wrapped.months.${MONTH_KEYS[monthNum - 1]}`)
 	}
+
+	const GENRE_COLORS = [
+		'#e74c3c',
+		'#3498db',
+		'#2ecc71',
+		'#f39c12',
+		'#9b59b6',
+		'#1abc9c',
+		'#e67e22',
+		'#e91e63',
+		'#00bcd4',
+		'#8bc34a',
+		'#ff5722',
+		'#607d8b',
+	]
+
+	const buildDonutPaths = useCallback(
+		(genres: GenreBreakdownDto[], mode: 'combined' | 'series' | 'movies') => {
+			const getCount = (g: GenreBreakdownDto) =>
+				mode === 'series' ? g.seriesCount : mode === 'movies' ? g.movieCount : g.totalCount
+			const total = genres.reduce((acc, g) => acc + getCount(g), 0)
+			if (total === 0) return []
+			const paths: { d: string; color: string; genre: GenreBreakdownDto; pct: number }[] = []
+			let cumulative = 0
+			const cx = 50,
+				cy = 50,
+				r = 40
+			for (let i = 0; i < genres.length; i++) {
+				const count = getCount(genres[i])
+				if (count === 0) continue
+				const pct = count / total
+				const startAngle = cumulative * 2 * Math.PI - Math.PI / 2
+				cumulative += pct
+				const endAngle = cumulative * 2 * Math.PI - Math.PI / 2
+				const largeArc = pct > 0.5 ? 1 : 0
+				const x1 = cx + r * Math.cos(startAngle)
+				const y1 = cy + r * Math.sin(startAngle)
+				const x2 = cx + r * Math.cos(endAngle)
+				const y2 = cy + r * Math.sin(endAngle)
+				const d =
+					pct >= 1
+						? `M ${cx},${cy - r} A ${r},${r} 0 1,1 ${cx - 0.001},${cy - r} Z`
+						: `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${largeArc},1 ${x2},${y2} Z`
+				paths.push({ d, color: GENRE_COLORS[i % GENRE_COLORS.length], genre: genres[i], pct })
+			}
+			return paths
+		},
+		[]
+	)
 
 	const maxBarValue = data
 		? Math.max(...data.monthlyActivity.map((m) => m.episodeCount + m.movieCount), 1)
@@ -394,6 +445,101 @@ const Wrapped: React.FC = () => {
 										<span className='wrapped__network-name'>{n.network}</span>
 										<span className='wrapped__network-count'>
 											{n.count} {t('wrapped.episodes')}
+										</span>
+									</div>
+								))}
+							</div>
+						</section>
+					)}
+
+					{/* Genre breakdown */}
+					{data!.genreBreakdown.length > 0 && (
+						<section className='wrapped__section'>
+							<h2>{t('wrapped.genres')}</h2>
+							<div className='wrapped__genre-tabs'>
+								{(['combined', 'series', 'movies'] as const).map((mode) => (
+									<button
+										key={mode}
+										className={`wrapped__genre-tab ${genreView === mode ? 'wrapped__genre-tab--active' : ''}`}
+										onClick={() => setGenreView(mode)}>
+										{t(`wrapped.genre${mode.charAt(0).toUpperCase() + mode.slice(1)}`)}
+									</button>
+								))}
+							</div>
+							<div className='wrapped__genre-chart'>
+								<svg viewBox='0 0 100 100' className='wrapped__donut'>
+									{buildDonutPaths(data!.genreBreakdown, genreView).map((seg, i) => (
+										<path
+											key={i}
+											d={seg.d}
+											fill={seg.color}
+											stroke='var(--color-bg)'
+											strokeWidth='0.5'
+											onMouseEnter={() => setHoveredGenre(seg.genre)}
+											onMouseLeave={() => setHoveredGenre(null)}
+											className='wrapped__donut-segment'
+										/>
+									))}
+								</svg>
+								{hoveredGenre && (
+									<div className='wrapped__genre-tooltip'>
+										<strong>{hoveredGenre.genre}</strong>
+										<span>
+											{genreView === 'combined'
+												? `${hoveredGenre.totalCount} ${t('wrapped.episodes')} + ${t('wrapped.movies').toLowerCase()}`
+												: genreView === 'series'
+													? `${hoveredGenre.seriesCount} ${t('wrapped.episodes')}`
+													: `${hoveredGenre.movieCount} ${t('wrapped.movies')}`}
+										</span>
+										<span>{formatHours(hoveredGenre.minutesWatched)}</span>
+										{hoveredGenre.titles.length > 0 && (
+											<div className='wrapped__genre-tooltip-titles'>
+												{hoveredGenre.titles.map((title) => (
+													<span key={title}>{title}</span>
+												))}
+											</div>
+										)}
+									</div>
+								)}
+								<div className='wrapped__genre-legend'>
+									{data!.genreBreakdown.map((g, i) => (
+										<div
+											key={g.genre}
+											className='wrapped__genre-legend-item'
+											onMouseEnter={() => setHoveredGenre(g)}
+											onMouseLeave={() => setHoveredGenre(null)}>
+											<span
+												className='wrapped__genre-legend-dot'
+												style={{ background: GENRE_COLORS[i % GENRE_COLORS.length] }}
+											/>
+											<span>{g.genre}</span>
+											<span className='wrapped__genre-legend-count'>
+												{genreView === 'combined'
+													? g.totalCount
+													: genreView === 'series'
+														? g.seriesCount
+														: g.movieCount}
+											</span>
+										</div>
+									))}
+								</div>
+							</div>
+						</section>
+					)}
+
+					{/* Monthly genre insights */}
+					{data!.monthlyGenreInsights.length > 0 && (
+						<section className='wrapped__section'>
+							<h2>{t('wrapped.genreInsights')}</h2>
+							<div className='wrapped__genre-insights'>
+								{data!.monthlyGenreInsights.map((insight) => (
+									<div key={insight.month} className='wrapped__genre-insight'>
+										<span className='wrapped__genre-insight-month'>
+											{getMonthName(insight.month)}
+										</span>
+										<span className='wrapped__genre-insight-genre'>{insight.topGenre}</span>
+										<span className='wrapped__genre-insight-count'>
+											{insight.count} {t('wrapped.titles')}
 										</span>
 									</div>
 								))}

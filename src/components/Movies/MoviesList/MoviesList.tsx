@@ -34,20 +34,35 @@ const MoviesList: React.FC = () => {
 	const activeProfileId = useAppSelector(selectActiveProfileId)
 
 	const [searchParams, setSearchParams] = useSearchParams()
-	const [search, setSearch] = useState('')
-	const [stateFilter, setStateFilter] = useState<string>('')
-	const [sortBy, setSortBy] = useState('title')
-	const [sortDesc, setSortDesc] = useState(false)
 	const [importOpen, setImportOpen] = useState(false)
-	const [pageSize, setPageSize] = useState(20)
+	const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '')
 
+	// All filter state from URL
 	const page = Number(searchParams.get('page')) || 1
-	const setPage = useCallback(
-		(p: number) => {
+	const search = searchParams.get('q') ?? ''
+	const stateFilter = searchParams.get('state') ?? ''
+	const sortBy = searchParams.get('sort') ?? 'title'
+	const sortDesc = searchParams.get('desc') === '1'
+	const pageSize = Number(searchParams.get('size')) || 20
+
+	const updateParams = useCallback(
+		(updates: Record<string, string | null>, resetPage = true) => {
 			setSearchParams((prev) => {
 				const next = new URLSearchParams(prev)
-				if (p <= 1) next.delete('page')
-				else next.set('page', String(p))
+				for (const [key, value] of Object.entries(updates)) {
+					if (value == null || value === '') {
+						next.delete(key)
+					} else {
+						next.set(key, value)
+					}
+				}
+				if (resetPage && !('page' in updates)) {
+					next.delete('page')
+				}
+				if (next.get('sort') === 'title') next.delete('sort')
+				if (next.get('desc') === '0') next.delete('desc')
+				if (next.get('size') === '20') next.delete('size')
+				if (next.get('page') === '1') next.delete('page')
 				return next
 			})
 		},
@@ -74,12 +89,11 @@ const MoviesList: React.FC = () => {
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault()
-		setPage(1)
-		dispatch(fetchMovies(buildParams()))
+		updateParams({ q: searchInput || null })
 	}
 
 	const handlePageChange = (newPage: number) => {
-		setPage(newPage)
+		updateParams({ page: String(newPage) }, false)
 	}
 
 	const handleAdded = () => {
@@ -106,17 +120,14 @@ const MoviesList: React.FC = () => {
 						type='text'
 						className='search-input'
 						placeholder={t('common.search')}
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
 					/>
 				</form>
 				<select
 					className='state-filter'
 					value={stateFilter}
-					onChange={(e) => {
-						setStateFilter(e.target.value)
-						setPage(1)
-					}}>
+					onChange={(e) => updateParams({ state: e.target.value || null })}>
 					<option value=''>{t('filters.all')}</option>
 					<option value={String(WatchState.Unseen)}>{t('filters.unseen')}</option>
 					<option value={String(WatchState.InProgress)}>{t('filters.inProgress')}</option>
@@ -125,29 +136,21 @@ const MoviesList: React.FC = () => {
 				<select
 					className='state-filter'
 					value={sortBy}
-					onChange={(e) => {
-						setSortBy(e.target.value)
-						setPage(1)
-					}}>
+					onChange={(e) => updateParams({ sort: e.target.value })}>
 					<option value='title'>{t('filters.name')}</option>
 					<option value='release'>{t('filters.releaseDate')}</option>
 					<option value='grade'>{t('filters.grade')}</option>
+					<option value='top'>{t('filters.top')}</option>
 				</select>
 				<button
 					className='btn-secondary btn-sm'
-					onClick={() => {
-						setSortDesc((p) => !p)
-						setPage(1)
-					}}>
+					onClick={() => updateParams({ desc: sortDesc ? '0' : '1' })}>
 					{sortDesc ? '↓' : '↑'}
 				</button>
 				<select
 					className='state-filter'
 					value={pageSize}
-					onChange={(e) => {
-						setPageSize(Number(e.target.value))
-						setPage(1)
-					}}>
+					onChange={(e) => updateParams({ size: e.target.value })}>
 					<option value={20}>20</option>
 					<option value={50}>50</option>
 					<option value={100}>100</option>

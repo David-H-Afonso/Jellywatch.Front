@@ -16,12 +16,14 @@ import {
 	WatchStateBadge,
 	StarRating,
 	PosterPickerModal,
+	CastSection,
 } from '@/components/elements'
 import { WatchState } from '@/models/api/Enums'
 import {
 	updateMovieState,
 	rateMovie,
 	uploadCustomPoster,
+	getMovieCredits,
 } from '@/services/MediaService/MediaService'
 import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
 import {
@@ -377,6 +379,15 @@ const MovieDetail: React.FC = () => {
 							</span>
 						)}
 					</div>
+					{movie.genres && (
+						<div className='movie-detail__genres'>
+							{movie.genres.split(',').map((g) => (
+								<span key={g.trim()} className='movie-detail__genre-tag'>
+									{g.trim()}
+								</span>
+							))}
+						</div>
+					)}
 					{movie.ratings.length > 0 && <RatingDisplay ratings={movie.ratings} />}
 					<StarRating
 						value={movie.userRating ?? null}
@@ -448,6 +459,9 @@ const MovieDetail: React.FC = () => {
 					{overview && <p className='movie-detail__overview'>{overview}</p>}
 				</div>
 			</div>
+
+			<CastSection fetchCredits={() => getMovieCredits(movie.id)} mediaId={movie.id} />
+
 			{showConfirmRemove && (
 				<div className='confirm-modal-overlay'>
 					<div className='confirm-modal'>

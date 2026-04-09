@@ -14,6 +14,7 @@ import { Login, ProtectedRoute, PublicRoute } from '@/components/Auth'
 import { RouteError, NotFound } from '@/components/errors'
 
 const Admin = React.lazy(() => import('@/components/Admin/Admin'))
+const Person = React.lazy(() => import('@/components/Person/Person'))
 
 const protectedRoute = (element: React.ReactNode) => (
 	<ProtectedRoute>
@@ -76,6 +77,15 @@ export const router = createHashRouter([
 	{
 		path: '/data',
 		element: protectedRoute(<DataManager />),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/person/:tmdbPersonId',
+		element: protectedRoute(
+			<React.Suspense fallback={<div>Loading...</div>}>
+				<Person />
+			</React.Suspense>
+		),
 		errorElement: <RouteError />,
 	},
 	{

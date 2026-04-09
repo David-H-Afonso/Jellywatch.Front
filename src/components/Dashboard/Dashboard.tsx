@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectCurrentUser, selectActiveProfileId } from '@/store/features/auth/selector'
 import {
@@ -17,33 +17,62 @@ import './Dashboard.scss'
 
 const formatRelativeDate = (
 	airDate: string,
+	airTime: string | null,
+	airTimeUtc: string | null,
 	t: (key: string, opts?: Record<string, unknown>) => string,
 	locale: string
 ): string => {
-	// Get today's date string in the user's LOCAL timezone (YYYY-MM-DD)
-	const todayStr = new Date().toLocaleDateString('en-CA') // 'en-CA' gives ISO format based on local tz
+	const now = new Date()
 
+	// When we have a full UTC timestamp, derive EVERYTHING from it (date + time)
+	// so the user sees the correct local date, not the network-local date.
+	if (airTimeUtc) {
+		const utcDate = new Date(airTimeUtc)
+		if (!isNaN(utcDate.getTime())) {
+			if (utcDate.getTime() < now.getTime() - 12 * 60 * 60 * 1000) return ''
+
+			const timeStr = ` ${utcDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}`
+
+			// Compute day diff using the user-local calendar dates (noon to avoid DST issues)
+			const airLocal = new Date(utcDate.toLocaleDateString('en-CA') + 'T12:00:00')
+			const todayLocal = new Date(now.toLocaleDateString('en-CA') + 'T12:00:00')
+			const diffDays = Math.round(
+				(airLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24)
+			)
+
+			if (diffDays <= 0) return t('dashboard.today') + timeStr
+			if (diffDays === 1) return t('dashboard.tomorrow') + timeStr
+			if (diffDays >= 2 && diffDays <= 6) {
+				const weekday = airLocal.toLocaleDateString(locale, { weekday: 'long' })
+				return weekday.charAt(0).toUpperCase() + weekday.slice(1) + timeStr
+			}
+			return t('dashboard.inWeeks', { count: Math.round(diffDays / 7) }) + timeStr
+		}
+	}
+
+	// Fallback: no UTC timestamp, use network-local airDate + airTime
+	const todayStr = now.toLocaleDateString('en-CA')
 	if (airDate < todayStr) return ''
-	if (airDate === todayStr) return t('dashboard.today')
 
-	// For day-diff and weekday we parse as noon local time to stay on the correct calendar day
-	// (midnight UTC would drift to the previous day for UTC+1/+2 timezones)
+	const timeStr = airTime ? ` ${airTime}` : ''
+
+	if (airDate === todayStr) return t('dashboard.today') + timeStr
+
 	const airNoon = new Date(airDate + 'T12:00:00')
 	const todayNoon = new Date(todayStr + 'T12:00:00')
 	const diffDays = Math.round((airNoon.getTime() - todayNoon.getTime()) / (1000 * 60 * 60 * 24))
 
-	if (diffDays === 1) return t('dashboard.tomorrow')
+	if (diffDays === 1) return t('dashboard.tomorrow') + timeStr
 	if (diffDays >= 2 && diffDays <= 6) {
 		const weekday = airNoon.toLocaleDateString(locale, { weekday: 'long' })
-		return weekday.charAt(0).toUpperCase() + weekday.slice(1)
+		return weekday.charAt(0).toUpperCase() + weekday.slice(1) + timeStr
 	}
-	if (diffDays === 7) return t('dashboard.inDays', { count: 7 })
-	if (diffDays <= 14) return t('dashboard.nextWeek')
-	return t('dashboard.inWeeks', { count: Math.ceil(diffDays / 7) })
+	return t('dashboard.inWeeks', { count: Math.round(diffDays / 7) }) + timeStr
 }
 
 const Dashboard: React.FC = () => {
 	const { t, i18n } = useTranslation()
+	const navigate = useNavigate()
 	const dispatch = useAppDispatch()
 	const user = useAppSelector(selectCurrentUser)
 	const activeProfileId = useAppSelector(selectActiveProfileId)
@@ -160,14 +189,20 @@ const Dashboard: React.FC = () => {
 						{upcoming.map((ep, i) => (
 							<div
 								key={`${ep.mediaItemId}-${ep.seasonNumber}-${ep.episodeNumber}-${i}`}
-								className='upcoming-card'>
-								<MediaPoster
-									mediaItemId={ep.mediaItemId}
-									alt={ep.seriesTitle}
-									className='upcoming-card__poster'
-								/>
-								<div className='upcoming-card__badge'>
-									{formatRelativeDate(ep.airDate, t, i18n.language)}
+								className='upcoming-card'
+								onClick={() => navigate(`/series/${ep.seriesId}`)}>
+								<div className='upcoming-card__poster-wrap'>
+									<MediaPoster
+										mediaItemId={ep.mediaItemId}
+										alt={ep.seriesTitle}
+										className='upcoming-card__poster'
+									/>
+									<div className='upcoming-card__badge'>
+										{formatRelativeDate(ep.airDate, ep.airTime, ep.airTimeUtc, t, i18n.language)}
+									</div>
+									{ep.batchCount > 1 && (
+										<span className='upcoming-card__batch'>+{ep.batchCount - 1}</span>
+									)}
 								</div>
 								<div className='upcoming-card__info'>
 									<span className='upcoming-card__title'>{ep.seriesTitle}</span>

@@ -12,6 +12,7 @@ export interface SeriesListDto {
 	aggregateState: WatchState
 	releaseDate: string | null
 	userRating: number | null
+	tmdbRating: number | null
 }
 
 export interface SeriesDetailDto {
@@ -29,6 +30,7 @@ export interface SeriesDetailDto {
 	totalSeasons: number | null
 	totalEpisodes: number | null
 	userRating: number | null
+	genres: string | null
 	ratings: ExternalRatingDto[]
 	seasons: SeasonDto[]
 	spanishTranslation: TranslationDto | null
@@ -44,6 +46,7 @@ export interface MovieListDto {
 	state: WatchState
 	releaseDate: string | null
 	userRating: number | null
+	tmdbRating: number | null
 }
 
 export interface MovieDetailDto {
@@ -57,6 +60,7 @@ export interface MovieDetailDto {
 	releaseDate: string | null
 	originalLanguage: string | null
 	runtime: number | null
+	genres: string | null
 	state: WatchState
 	userRating: number | null
 	ratings: ExternalRatingDto[]
@@ -198,4 +202,30 @@ export interface AdminProfileBlockDto {
 	spanishTitle: string | null
 	mediaType: MediaType
 	blockedAt: string
+}
+
+export interface CastMemberDto {
+	tmdbPersonId: number
+	name: string
+	character: string | null
+	profilePath: string | null
+	totalEpisodeCount: number | null
+}
+
+export interface PersonCreditsDto {
+	tmdbPersonId: number
+	name: string
+	profilePath: string | null
+	credits: PersonCreditItemDto[]
+}
+
+export interface PersonCreditItemDto {
+	localMediaItemId: number | null
+	tmdbId: number
+	title: string
+	posterPath: string | null
+	character: string | null
+	mediaType: string
+	releaseDate: string | null
+	voteAverage: number | null
 }

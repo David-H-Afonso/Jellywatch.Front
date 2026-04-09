@@ -1,4 +1,5 @@
 export { Button } from './Button/Button'
+export { CastSection } from './CastSection/CastSection'
 export { WatchStateBadge } from './WatchStateBadge/WatchStateBadge'
 export { RatingDisplay } from './RatingDisplay/RatingDisplay'
 export { ProfileSelector } from './ProfileSelector/ProfileSelector'

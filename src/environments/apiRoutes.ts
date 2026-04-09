@@ -28,6 +28,7 @@ export const apiRoutes = {
 		base: '/api/media/series',
 		byId: (id: number) => `/api/media/series/${id}`,
 		seasons: (id: number) => `/api/media/series/${id}/seasons`,
+		credits: (id: number) => `/api/media/series/${id}/credits`,
 		episodes: (seasonId: number) => `/api/media/series/seasons/${seasonId}/episodes`,
 		rating: (id: number) => `/api/media/series/${id}/rating`,
 		episodeRating: (seriesId: number, episodeId: number) =>
@@ -39,6 +40,10 @@ export const apiRoutes = {
 		base: '/api/media/movies',
 		byId: (id: number) => `/api/media/movies/${id}`,
 		rating: (id: number) => `/api/media/movies/${id}/rating`,
+		credits: (id: number) => `/api/media/movies/${id}/credits`,
+	},
+	person: {
+		credits: (tmdbPersonId: number) => `/api/media/person/${tmdbPersonId}/credits`,
 	},
 	notes: {
 		base: (profileId: number) => `/api/profiles/${profileId}/notes`,

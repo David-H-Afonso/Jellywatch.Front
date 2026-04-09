@@ -14,6 +14,8 @@ import type {
 	TmdbMovieSearchResultDto,
 	ManualAddRequestDto,
 	ManualAddResultDto,
+	CastMemberDto,
+	PersonCreditsDto,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -177,4 +179,16 @@ export const addManually = async (dto: ManualAddRequestDto): Promise<ManualAddRe
 		method: 'POST',
 		body: dto,
 	})
+}
+
+export const getSeriesCredits = async (id: number): Promise<CastMemberDto[]> => {
+	return await customFetch<CastMemberDto[]>(apiRoutes.series.credits(id))
+}
+
+export const getMovieCredits = async (id: number): Promise<CastMemberDto[]> => {
+	return await customFetch<CastMemberDto[]>(apiRoutes.movies.credits(id))
+}
+
+export const getPersonCredits = async (tmdbPersonId: number): Promise<PersonCreditsDto> => {
+	return await customFetch<PersonCreditsDto>(apiRoutes.person.credits(tmdbPersonId))
 }

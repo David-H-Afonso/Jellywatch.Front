@@ -24,6 +24,7 @@ import {
 	WatchStateBadge,
 	PosterPickerModal,
 	StarRating,
+	CastSection,
 } from '@/components/elements'
 import { WatchState } from '@/models/api/Enums'
 import {
@@ -34,6 +35,7 @@ import {
 	rateSeason,
 	setSeasonState,
 	setSeriesAllState,
+	getSeriesCredits,
 } from '@/services/MediaService/MediaService'
 import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
 import {
@@ -436,6 +438,15 @@ const SeriesDetail: React.FC = () => {
 							</span>
 						)}
 					</div>
+					{series.genres && (
+						<div className='series-detail__genres'>
+							{series.genres.split(',').map((g) => (
+								<span key={g.trim()} className='series-detail__genre-tag'>
+									{g.trim()}
+								</span>
+							))}
+						</div>
+					)}
 					{series.ratings.length > 0 && <RatingDisplay ratings={series.ratings} />}
 					<div className='series-detail__user-rating'>
 						<StarRating
@@ -801,6 +812,8 @@ const SeriesDetail: React.FC = () => {
 					</div>
 				))}
 			</div>
+
+			<CastSection fetchCredits={() => getSeriesCredits(series.id)} mediaId={series.id} />
 
 			{showPosterPicker && series && (
 				<PosterPickerModal

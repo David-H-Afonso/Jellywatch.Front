@@ -255,6 +255,7 @@
 		"name": "Name",
 		"releaseDate": "Release Date",
 		"grade": "My Rating",
+		"top": "Top Rated",
 		"ascending": "Ascending",
 		"descending": "Descending"
 	},
@@ -274,6 +275,12 @@
 		"type": "Type",
 		"status": "Status"
 	},
+	"cast": {
+		"title": "Cast",
+		"episodes": "ep.",
+		"inYourLibrary": "In Your Library",
+		"otherCredits": "Other Credits"
+	},
 	"wrapped": {
 		"title": "Wrapped",
 		"episodes": "episodes",
@@ -291,6 +298,12 @@
 		"topSeries": "Top Series",
 		"topMovies": "Top Movies",
 		"topNetworks": "Top Networks",
+		"genres": "Genre Breakdown",
+		"genreCombined": "All",
+		"genreSeries": "Series",
+		"genreMovies": "Movies",
+		"genreInsights": "Monthly Genre Insights",
+		"titles": "titles",
 		"noData": "No watch activity found for this year.",
 		"months": {
 			"january": "January",
