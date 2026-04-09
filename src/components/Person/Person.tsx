@@ -95,8 +95,11 @@ const Person: React.FC = () => {
 		)
 	}
 
-	const localCredits = data.credits
-		.filter((c) => c.localMediaItemId != null)
+	const myCredits = data.credits
+		.filter((c) => c.localMediaItemId != null && c.isInYourLibrary)
+		.sort((a, b) => (b.voteAverage ?? 0) - (a.voteAverage ?? 0))
+	const appCredits = data.credits
+		.filter((c) => c.localMediaItemId != null && !c.isInYourLibrary)
 		.sort((a, b) => (b.voteAverage ?? 0) - (a.voteAverage ?? 0))
 	const otherCredits = data.credits
 		.filter((c) => c.localMediaItemId == null)
@@ -124,11 +127,11 @@ const Person: React.FC = () => {
 					<h1 className='person__name'>{data.name}</h1>
 				</div>
 
-				{localCredits.length > 0 && (
+				{myCredits.length > 0 && (
 					<div className='person__section'>
 						<h2>{t('cast.inYourLibrary')}</h2>
 						<div className='person__grid'>
-							{localCredits.map((credit, i) => {
+							{myCredits.map((credit, i) => {
 								const linkTo =
 									credit.mediaType === 'tv'
 										? `/series/${credit.localMediaItemId}`
@@ -188,6 +191,70 @@ const Person: React.FC = () => {
 											)}
 										</div>
 									</Link>
+								)
+							})}
+						</div>
+					</div>
+				)}
+
+				{appCredits.length > 0 && (
+					<div className='person__section'>
+						<h2>{t('cast.inYourMedia')}</h2>
+						<div className='person__grid'>
+							{appCredits.map((credit, i) => {
+								const linkTo =
+									credit.mediaType === 'tv'
+										? `/series/${credit.localMediaItemId}`
+										: `/movies/${credit.localMediaItemId}`
+								const isMovie = credit.mediaType !== 'tv'
+								return (
+									<div
+										key={`${credit.tmdbId}-${i}`}
+										className='person__credit person__credit--other'>
+										{isMovie ? (
+											<button
+												className='person__credit-poster-btn'
+												onClick={() => handleMovieClick(credit)}>
+												<MediaPoster
+													mediaItemId={credit.localAssetId}
+													alt={credit.title}
+													className='person__credit-poster'
+												/>
+											</button>
+										) : (
+											<Link to={linkTo} className='person__credit-poster-link'>
+												<MediaPoster
+													mediaItemId={credit.localAssetId}
+													alt={credit.title}
+													className='person__credit-poster'
+												/>
+											</Link>
+										)}
+										<div className='person__credit-info'>
+											<span className='person__credit-title'>{credit.title}</span>
+											{credit.character && (
+												<span className='person__credit-character'>{credit.character}</span>
+											)}
+											{credit.releaseDate && (
+												<span className='person__credit-year'>
+													{credit.releaseDate.slice(0, 4)}
+												</span>
+											)}
+											{credit.voteAverage != null && credit.voteAverage > 0 && (
+												<span className='person__credit-rating'>
+													★ {credit.voteAverage.toFixed(1)}
+												</span>
+											)}
+											{profile && (
+												<button
+													className='person__credit-add'
+													onClick={() => setPendingCredit(credit)}
+													title={t('common.add')}>
+													+
+												</button>
+											)}
+										</div>
+									</div>
 								)
 							})}
 						</div>

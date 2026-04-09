@@ -224,6 +224,7 @@ export interface PersonCreditsDto {
 export interface PersonCreditItemDto {
 	localMediaItemId: number | null
 	localAssetId: number | null
+	isInYourLibrary: boolean
 	tmdbId: number
 	title: string
 	posterPath: string | null
