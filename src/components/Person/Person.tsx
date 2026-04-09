@@ -5,7 +5,7 @@ import type { PersonCreditsDto, PersonCreditItemDto } from '@/models/api'
 import { getPersonCredits, getMovieById, addManually } from '@/services/MediaService/MediaService'
 import { MediaPoster } from '@/components/elements'
 import { useAppSelector } from '@/store/hooks'
-import { selectCurrentProfile } from '@/store/features/profile'
+import { selectActiveProfileId } from '@/store/features/auth/selector'
 import './Person.scss'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w185'
@@ -14,7 +14,7 @@ const Person: React.FC = () => {
 	const { tmdbPersonId } = useParams<{ tmdbPersonId: string }>()
 	const { t } = useTranslation()
 	const navigate = useNavigate()
-	const profile = useAppSelector(selectCurrentProfile)
+	const activeProfileId = useAppSelector(selectActiveProfileId)
 	const [data, setData] = useState<PersonCreditsDto | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [pendingCredit, setPendingCredit] = useState<PersonCreditItemDto | null>(null)
@@ -24,7 +24,7 @@ const Person: React.FC = () => {
 		if (!tmdbPersonId) return
 		let cancelled = false
 		setLoading(true)
-		getPersonCredits(Number(tmdbPersonId), profile?.id)
+		getPersonCredits(Number(tmdbPersonId), activeProfileId ?? undefined)
 			.then((d) => {
 				if (!cancelled) setData(d)
 			})
@@ -37,7 +37,7 @@ const Person: React.FC = () => {
 		return () => {
 			cancelled = true
 		}
-	}, [tmdbPersonId, profile?.id])
+	}, [tmdbPersonId, activeProfileId])
 
 	useEffect(() => {
 		if (data?.name) {
@@ -51,7 +51,7 @@ const Person: React.FC = () => {
 	const handleMovieClick = async (credit: PersonCreditItemDto) => {
 		if (credit.localMediaItemId == null) return
 		try {
-			await getMovieById(credit.localMediaItemId, profile?.id)
+			await getMovieById(credit.localMediaItemId, activeProfileId ?? undefined)
 			navigate(`/movies/${credit.localMediaItemId}`)
 		} catch {
 			setPendingCredit(credit)
@@ -59,14 +59,14 @@ const Person: React.FC = () => {
 	}
 
 	const handleConfirmAdd = async () => {
-		if (!pendingCredit || !profile) return
+		if (!pendingCredit || !activeProfileId) return
 		setIsAdding(true)
 		try {
 			const type = pendingCredit.mediaType === 'tv' ? 'series' : 'movie'
 			const result = await addManually({
 				tmdbId: pendingCredit.tmdbId,
 				type,
-				profileId: profile.id,
+				profileId: activeProfileId,
 			})
 			if (type === 'series' && result.seriesId) {
 				navigate(`/series/${result.seriesId}`)
@@ -245,7 +245,7 @@ const Person: React.FC = () => {
 													★ {credit.voteAverage.toFixed(1)}
 												</span>
 											)}
-											{profile && (
+											{activeProfileId != null && (
 												<button
 													className='person__credit-add'
 													onClick={() => setPendingCredit(credit)}
@@ -292,7 +292,7 @@ const Person: React.FC = () => {
 												★ {credit.voteAverage.toFixed(1)}
 											</span>
 										)}
-										{profile && (
+										{activeProfileId != null && (
 											<button
 												className='person__credit-add'
 												onClick={() => setPendingCredit(credit)}
