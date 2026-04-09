@@ -18,6 +18,7 @@ export interface SeriesListDto {
 export interface SeriesDetailDto {
 	id: number
 	mediaItemId: number
+	tmdbId: number | null
 	title: string
 	originalTitle: string | null
 	overview: string | null
@@ -35,6 +36,7 @@ export interface SeriesDetailDto {
 	seasons: SeasonDto[]
 	spanishTranslation: TranslationDto | null
 	isBlocked: boolean
+	isInLibrary: boolean
 }
 
 export interface MovieListDto {
@@ -221,6 +223,7 @@ export interface PersonCreditsDto {
 
 export interface PersonCreditItemDto {
 	localMediaItemId: number | null
+	localAssetId: number | null
 	tmdbId: number
 	title: string
 	posterPath: string | null

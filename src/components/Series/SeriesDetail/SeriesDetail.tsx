@@ -36,6 +36,7 @@ import {
 	setSeasonState,
 	setSeriesAllState,
 	getSeriesCredits,
+	addManually,
 } from '@/services/MediaService/MediaService'
 import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
 import {
@@ -69,6 +70,7 @@ const SeriesDetail: React.FC = () => {
 	const [showPosterPicker, setShowPosterPicker] = useState(false)
 	const [showLogoPicker, setShowLogoPicker] = useState(false)
 	const [savingRating, setSavingRating] = useState(false)
+	const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
 	const posterInputRef = useRef<HTMLInputElement>(null)
 	const menuRef = useRef<HTMLDivElement>(null)
 	const [showMenu, setShowMenu] = useState(false)
@@ -235,6 +237,19 @@ const SeriesDetail: React.FC = () => {
 		if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
 	}
 
+	const handleAddToLibrary = async () => {
+		if (!activeProfileId || !series || !series.tmdbId) return
+		setIsAddingToLibrary(true)
+		try {
+			await addManually({ tmdbId: series.tmdbId, type: 'series', profileId: activeProfileId })
+			if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
+		} catch {
+			// silently ignore
+		} finally {
+			setIsAddingToLibrary(false)
+		}
+	}
+
 	const handleRefreshMetadata = async () => {
 		if (!series) return
 		setRefreshing(true)
@@ -326,104 +341,118 @@ const SeriesDetail: React.FC = () => {
 				<div className='series-detail__info'>
 					<div className='series-detail__title-row'>
 						<h1>{title}</h1>
-						{activeProfileId && (
-							<div className='series-detail__admin-menu-wrap' ref={menuRef}>
-								<input
-									ref={posterInputRef}
-									type='file'
-									accept='image/jpeg,image/png,image/webp'
-									style={{ display: 'none' }}
-									onChange={handlePosterUpload}
-								/>
+						<div style={{ display: 'flex' }}>
+							{activeProfileId && !series.isInLibrary && (
 								<button
-									className='series-detail__menu-btn'
-									onClick={() => setShowMenu((v) => !v)}
-									title='More options'>
-									<svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
-										<circle cx='5' cy='12' r='2' />
-										<circle cx='12' cy='12' r='2' />
-										<circle cx='19' cy='12' r='2' />
-									</svg>
+									className='series-detail__add-btn'
+									onClick={handleAddToLibrary}
+									disabled={isAddingToLibrary}>
+									{isAddingToLibrary ? t('common.loading') : `+ ${t('common.add')}`}
 								</button>
-								{showMenu && (
-									<div className='series-detail__admin-menu'>
-										{isAdmin && (
-											<button
-												onClick={() => {
-													setShowPosterPicker(true)
-													setShowMenu(false)
-												}}>
-												{t('admin.pickPoster')}
-											</button>
-										)}
-										<button
-											onClick={() => {
-												setShowConfirmRemove(true)
-												setShowMenu(false)
-											}}>
-											{t('admin.removeFromList')}
-										</button>
-										{isAdmin && (
-											<>
+							)}
+							{activeProfileId && (
+								<div className='series-detail__admin-menu-wrap' ref={menuRef}>
+									<input
+										ref={posterInputRef}
+										type='file'
+										accept='image/jpeg,image/png,image/webp'
+										style={{ display: 'none' }}
+										onChange={handlePosterUpload}
+									/>
+									<button
+										className='series-detail__menu-btn'
+										onClick={() => setShowMenu((v) => !v)}
+										title='More options'>
+										<svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
+											<circle cx='5' cy='12' r='2' />
+											<circle cx='12' cy='12' r='2' />
+											<circle cx='19' cy='12' r='2' />
+										</svg>
+									</button>
+									{showMenu && (
+										<div className='series-detail__admin-menu'>
+											{isAdmin && (
 												<button
 													onClick={() => {
-														posterInputRef.current?.click()
+														setShowPosterPicker(true)
 														setShowMenu(false)
 													}}>
-													{t('series.uploadPoster')}
+													{t('admin.pickPoster')}
 												</button>
+											)}
+											{series.isInLibrary && (
 												<button
 													onClick={() => {
-														handleRefreshImages()
+														setShowConfirmRemove(true)
 														setShowMenu(false)
-													}}
-													disabled={refreshing || refreshingImages}>
-													{refreshingImages ? t('admin.refreshingMedia') : t('admin.refreshImages')}
+													}}>
+													{t('admin.removeFromList')}
 												</button>
+											)}
+											{isAdmin && (
+												<>
+													<button
+														onClick={() => {
+															posterInputRef.current?.click()
+															setShowMenu(false)
+														}}>
+														{t('series.uploadPoster')}
+													</button>
+													<button
+														onClick={() => {
+															handleRefreshImages()
+															setShowMenu(false)
+														}}
+														disabled={refreshing || refreshingImages}>
+														{refreshingImages
+															? t('admin.refreshingMedia')
+															: t('admin.refreshImages')}
+													</button>
+													<button
+														onClick={() => {
+															handleRefreshMetadata()
+															setShowMenu(false)
+														}}
+														disabled={refreshing || refreshingImages}>
+														{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
+													</button>
+												</>
+											)}
+											<div className='series-detail__admin-menu__separator' />
+											{series.isBlocked ? (
 												<button
-													onClick={() => {
-														handleRefreshMetadata()
+													className='series-detail__admin-menu__delete'
+													onClick={async () => {
 														setShowMenu(false)
-													}}
-													disabled={refreshing || refreshingImages}>
-													{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
+														await handleUnblock()
+													}}>
+													{t('admin.unblockMedia')}
 												</button>
-											</>
-										)}
-										<div className='series-detail__admin-menu__separator' />
-										{series.isBlocked ? (
-											<button
-												className='series-detail__admin-menu__delete'
-												onClick={async () => {
-													setShowMenu(false)
-													await handleUnblock()
-												}}>
-												{t('admin.unblockMedia')}
-											</button>
-										) : (
-											<button
-												className='series-detail__admin-menu__delete'
-												onClick={() => {
-													setShowConfirmBlock(true)
-													setShowMenu(false)
-												}}>
-												{t('admin.blockMedia')}
-											</button>
-										)}
-										{isAdmin && (
-											<button
-												className='series-detail__admin-menu__delete'
-												onClick={() => {
-													setShowConfirmDelete(true)
-													setShowMenu(false)
-												}}>
-												{t('admin.deleteMedia')}
-											</button>
-										)}
-									</div>
-								)}
-							</div>
-						)}
+											) : (
+												<button
+													className='series-detail__admin-menu__delete'
+													onClick={() => {
+														setShowConfirmBlock(true)
+														setShowMenu(false)
+													}}>
+													{t('admin.blockMedia')}
+												</button>
+											)}
+											{isAdmin && (
+												<button
+													className='series-detail__admin-menu__delete'
+													onClick={() => {
+														setShowConfirmDelete(true)
+														setShowMenu(false)
+													}}>
+													{t('admin.deleteMedia')}
+												</button>
+											)}
+										</div>
+									)}
+								</div>
+							)}
+						</div>
 					</div>
 					{series.originalTitle && series.originalTitle !== title && (
 						<p className='series-detail__original'>{series.originalTitle}</p>
@@ -447,6 +476,7 @@ const SeriesDetail: React.FC = () => {
 							))}
 						</div>
 					)}
+
 					{series.ratings.length > 0 && <RatingDisplay ratings={series.ratings} />}
 					<div className='series-detail__user-rating'>
 						<StarRating

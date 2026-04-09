@@ -189,6 +189,11 @@ export const getMovieCredits = async (id: number): Promise<CastMemberDto[]> => {
 	return await customFetch<CastMemberDto[]>(apiRoutes.movies.credits(id))
 }
 
-export const getPersonCredits = async (tmdbPersonId: number): Promise<PersonCreditsDto> => {
-	return await customFetch<PersonCreditsDto>(apiRoutes.person.credits(tmdbPersonId))
+export const getPersonCredits = async (
+	tmdbPersonId: number,
+	profileId?: number
+): Promise<PersonCreditsDto> => {
+	return await customFetch<PersonCreditsDto>(apiRoutes.person.credits(tmdbPersonId), {
+		params: profileId ? { profileId } : undefined,
+	})
 }

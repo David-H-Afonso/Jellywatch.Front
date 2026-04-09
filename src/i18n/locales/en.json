@@ -22,6 +22,7 @@
 		"none": "None",
 		"refresh": "Refresh",
 		"remove": "Remove",
+		"add": "Add",
 		"adding": "Adding..."
 	},
 	"auth": {

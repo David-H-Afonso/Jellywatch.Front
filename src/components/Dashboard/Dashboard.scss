@@ -185,10 +185,10 @@
 	&__value {
 		font-size: 2rem;
 		font-weight: 700;
-		background-image: linear-gradient(135deg, #aa5cc3, #00a4dc);
+		background: linear-gradient(174deg, #aa5cc3, #00a4dc);
+		background-clip: text;
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
-		color: var(--color-primary, #a78bfa);
 	}
 
 	&__label {
