@@ -87,6 +87,7 @@ const seriesSlice = createSlice({
 			if (season) {
 				for (const ep of season.episodes) {
 					ep.state = action.payload.state
+					if (action.payload.state !== 2) ep.watchedAt = null
 				}
 				season.episodesSeen = action.payload.state === 2 ? season.episodes.length : 0
 			}
@@ -96,6 +97,7 @@ const seriesSlice = createSlice({
 			for (const season of state.currentSeries.seasons) {
 				for (const ep of season.episodes) {
 					ep.state = action.payload
+					if (action.payload !== 2) ep.watchedAt = null
 				}
 				season.episodesSeen = action.payload === 2 ? season.episodes.length : 0
 			}
