@@ -82,6 +82,7 @@ export const apiRoutes = {
 		blacklistById: (id: number) => `/api/admin/blacklist/${id}`,
 		profileBlocks: '/api/admin/profile-blocks',
 		purgeProfileMedia: (profileId: number) => `/api/admin/profiles/${profileId}/media`,
+		deleteProfile: (id: number) => `/api/admin/profiles/${id}`,
 	},
 	asset: {
 		image: (mediaItemId: number, imageType: string) => `/api/asset/${mediaItemId}/${imageType}`,

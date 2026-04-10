@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { selectProfiles, selectIsAdmin } from '@/store/features/auth/selector'
+import { selectProfiles, selectIsAdmin, selectCurrentUser } from '@/store/features/auth/selector'
 import {
 	selectProviderSettings,
 	selectPropagationRules,
@@ -13,7 +13,7 @@ import {
 	editPropagationRule,
 	removePropagationRule,
 } from '@/store/features/settings'
-import { getAllProfiles, rePropagate } from '@/services/AdminService/AdminService'
+import { getAllProfiles, rePropagate, deleteProfile } from '@/services/AdminService/AdminService'
 import type { ProfileDto } from '@/models/api'
 import './Settings.scss'
 
@@ -26,7 +26,9 @@ const Settings: React.FC = () => {
 	const error = useAppSelector(selectSettingsError)
 	const profiles = useAppSelector(selectProfiles)
 	const isAdmin = useAppSelector(selectIsAdmin)
+	const currentUser = useAppSelector(selectCurrentUser)
 	const [allProfiles, setAllProfiles] = useState<ProfileDto[]>([])
+	const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null)
 
 	const [newSourceId, setNewSourceId] = useState<number | ''>('')
 	const [newTargetId, setNewTargetId] = useState<number | ''>('')
@@ -54,6 +56,17 @@ const Settings: React.FC = () => {
 			await rePropagate()
 		} finally {
 			setRePropagating(false)
+		}
+	}
+
+	const handleDeleteProfile = async (id: number, name: string) => {
+		if (!confirm(t('settings.confirmDeleteProfile', { name }))) return
+		setDeletingProfileId(id)
+		try {
+			await deleteProfile(id)
+			setAllProfiles((prev) => prev.filter((p) => p.id !== id))
+		} finally {
+			setDeletingProfileId(null)
 		}
 	}
 
@@ -214,6 +227,56 @@ const Settings: React.FC = () => {
 					</div>
 				)}
 			</section>
+
+			{isAdmin && (
+				<section className='settings-section'>
+					<h2>{t('settings.profiles')}</h2>
+					<p className='settings-section__desc'>{t('settings.profilesDescription')}</p>
+
+					{allProfiles.length === 0 ? (
+						<p className='empty-text'>{t('settings.noProfiles')}</p>
+					) : (
+						<table className='rules-table'>
+							<thead>
+								<tr>
+									<th>{t('auth.username')}</th>
+									<th>Jellyfin ID</th>
+									<th />
+								</tr>
+							</thead>
+							<tbody>
+								{allProfiles.map((p) => {
+									const isOwn =
+										p.jellyfinUserId === currentUser?.jellyfinUserId && p.userId === currentUser?.id
+									return (
+										<tr key={p.id}>
+											<td>
+												{p.displayName}
+												{isOwn && (
+													<span className='profile-own-badge'>{t('settings.ownProfile')}</span>
+												)}
+											</td>
+											<td className='profile-jellyfin-id'>{p.jellyfinUserId}</td>
+											<td>
+												{!isOwn && (
+													<button
+														className='delete-btn'
+														onClick={() => handleDeleteProfile(p.id, p.displayName)}
+														disabled={deletingProfileId === p.id}>
+														{deletingProfileId === p.id
+															? t('common.loading')
+															: t('settings.deleteProfile')}
+													</button>
+												)}
+											</td>
+										</tr>
+									)
+								})}
+							</tbody>
+						</table>
+					)}
+				</section>
+			)}
 		</div>
 	)
 }

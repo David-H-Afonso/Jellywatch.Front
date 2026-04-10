@@ -26,6 +26,10 @@ export const getAllProfiles = async (): Promise<ProfileDto[]> => {
 	return await customFetch<ProfileDto[]>(apiRoutes.admin.allProfiles)
 }
 
+export const deleteProfile = async (id: number): Promise<void> => {
+	await customFetch<void>(apiRoutes.admin.deleteProfile(id), { method: 'DELETE' })
+}
+
 export const getImportQueue = async (
 	page = 1,
 	pageSize = 10

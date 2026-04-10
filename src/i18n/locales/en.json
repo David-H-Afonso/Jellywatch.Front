@@ -184,7 +184,13 @@
 		"inactive": "Inactive",
 		"rePropagate": "Re-propagate all",
 		"rePropagating": "Re-propagating...",
-		"rePropagateHint": "Force all existing watch states from source profiles to be propagated to target profiles. Use this after changing rules or after the initial setup."
+		"rePropagateHint": "Force all existing watch states from source profiles to be propagated to target profiles. Use this after changing rules or after the initial setup.",
+		"profiles": "Profiles",
+		"profilesDescription": "Manage tracked profiles. Deleting a profile removes all its watch history. If the Jellyfin user logs in again, their profile will be recreated automatically.",
+		"noProfiles": "No profiles found",
+		"ownProfile": "(you)",
+		"deleteProfile": "Delete profile",
+		"confirmDeleteProfile": "Delete profile \"{{name}}\"? All watch history will be permanently removed."
 	},
 	"admin": {
 		"title": "Admin Panel",

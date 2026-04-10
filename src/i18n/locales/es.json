@@ -184,7 +184,13 @@
 		"inactive": "Inactivo",
 		"rePropagate": "Re-propagar todo",
 		"rePropagating": "Repropagando...",
-		"rePropagateHint": "Fuerza que todos los estados de visionado existentes de los perfiles fuente se propaguen a los perfiles destino. Úsalo después de cambiar reglas o tras la configuración inicial."
+		"rePropagateHint": "Fuerza que todos los estados de visionado existentes de los perfiles fuente se propaguen a los perfiles destino. Úsalo después de cambiar reglas o tras la configuración inicial.",
+		"profiles": "Perfiles",
+		"profilesDescription": "Gestiona los perfiles rastreados. Eliminar un perfil borra todo su historial de visionado. Si el usuario de Jellyfin vuelve a iniciar sesión, su perfil se recreará automáticamente.",
+		"noProfiles": "No se encontraron perfiles",
+		"ownProfile": "(tú)",
+		"deleteProfile": "Eliminar perfil",
+		"confirmDeleteProfile": "¿Eliminar el perfil \"{{name}}\"? Todo el historial de visionado será eliminado permanentemente."
 	},
 	"admin": {
 		"title": "Panel de administración",
