@@ -1,0 +1,53 @@
+{
+	"items": [
+		{
+			"id": 1,
+			"title": "Breaking Bad",
+			"overview": "A chemistry teacher turned drug lord.",
+			"posterPath": "/poster1.jpg",
+			"genres": "Drama,Thriller",
+			"status": "Ended",
+			"totalSeasons": 5,
+			"totalEpisodes": 62,
+			"state": 1,
+			"episodesSeen": 30,
+			"userRating": 5.0,
+			"mediaItemId": 100,
+			"ratings": [{ "provider": 0, "score": 9.5 }]
+		},
+		{
+			"id": 2,
+			"title": "The Wire",
+			"overview": "Baltimore drug scene.",
+			"posterPath": "/poster2.jpg",
+			"genres": "Drama,Crime",
+			"status": "Ended",
+			"totalSeasons": 5,
+			"totalEpisodes": 60,
+			"state": 0,
+			"episodesSeen": 0,
+			"userRating": null,
+			"mediaItemId": 101,
+			"ratings": [{ "provider": 0, "score": 9.3 }]
+		},
+		{
+			"id": 3,
+			"title": "Better Call Saul",
+			"overview": "The story of Jimmy McGill.",
+			"posterPath": "/poster3.jpg",
+			"genres": "Drama,Crime",
+			"status": "Ended",
+			"totalSeasons": 6,
+			"totalEpisodes": 63,
+			"state": 2,
+			"episodesSeen": 63,
+			"userRating": 4.5,
+			"mediaItemId": 102,
+			"ratings": [{ "provider": 0, "score": 8.9 }]
+		}
+	],
+	"page": 1,
+	"pageSize": 20,
+	"totalCount": 3,
+	"totalPages": 1
+}

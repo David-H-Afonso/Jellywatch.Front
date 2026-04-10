@@ -1,0 +1,42 @@
+{
+	"items": [
+		{
+			"id": 1,
+			"mediaTitle": "Breaking Bad",
+			"episodeName": "Pilot",
+			"seasonNumber": 1,
+			"episodeNumber": 1,
+			"eventType": 0,
+			"mediaType": 0,
+			"seriesId": 1,
+			"movieId": null,
+			"watchedAt": "2025-01-10T20:00:00Z",
+			"posterPath": "/poster1.jpg",
+			"state": 2,
+			"mediaItemId": 100,
+			"tmdbRating": 9.5,
+			"userRating": 5.0
+		},
+		{
+			"id": 2,
+			"mediaTitle": "Inception",
+			"episodeName": null,
+			"seasonNumber": null,
+			"episodeNumber": null,
+			"eventType": 0,
+			"mediaType": 1,
+			"seriesId": null,
+			"movieId": 10,
+			"watchedAt": "2025-01-09T18:00:00Z",
+			"posterPath": "/movie1.jpg",
+			"state": 2,
+			"mediaItemId": 200,
+			"tmdbRating": 8.4,
+			"userRating": 4.5
+		}
+	],
+	"page": 1,
+	"pageSize": 20,
+	"totalCount": 2,
+	"totalPages": 1
+}
