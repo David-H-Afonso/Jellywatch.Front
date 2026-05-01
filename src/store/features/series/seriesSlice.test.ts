@@ -175,7 +175,7 @@ describe('seriesSlice – episode/season/series watch state reducers', () => {
 			],
 		})
 		const prev: SeriesState = { ...initial, currentSeries: multi }
-		const state = seriesReducer(prev, updateAllWatchStates(2))
+		const state = seriesReducer(prev, updateAllWatchStates({ state: 2 }))
 		expect(state.currentSeries!.seasons.every((s) => s.episodesSeen === 1)).toBe(true)
 	})
 })

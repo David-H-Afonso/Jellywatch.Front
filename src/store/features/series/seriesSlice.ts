@@ -80,26 +80,35 @@ const seriesSlice = createSlice({
 		},
 		updateSeasonWatchStates: (
 			state,
-			action: PayloadAction<{ seasonId: number; state: WatchState }>
+			action: PayloadAction<{ seasonId: number; state: WatchState; watchedAt?: string }>
 		) => {
 			if (!state.currentSeries) return
 			const season = state.currentSeries.seasons.find((s) => s.id === action.payload.seasonId)
 			if (season) {
 				for (const ep of season.episodes) {
 					ep.state = action.payload.state
-					if (action.payload.state !== 2) ep.watchedAt = null
+					ep.watchedAt =
+						action.payload.state === 2
+							? (action.payload.watchedAt ?? new Date().toISOString())
+							: null
 				}
 				season.episodesSeen = action.payload.state === 2 ? season.episodes.length : 0
 			}
 		},
-		updateAllWatchStates: (state, action: PayloadAction<WatchState>) => {
+		updateAllWatchStates: (
+			state,
+			action: PayloadAction<{ state: WatchState; watchedAt?: string }>
+		) => {
 			if (!state.currentSeries) return
 			for (const season of state.currentSeries.seasons) {
 				for (const ep of season.episodes) {
-					ep.state = action.payload
-					if (action.payload !== 2) ep.watchedAt = null
+					ep.state = action.payload.state
+					ep.watchedAt =
+						action.payload.state === 2
+							? (action.payload.watchedAt ?? new Date().toISOString())
+							: null
 				}
-				season.episodesSeen = action.payload === 2 ? season.episodes.length : 0
+				season.episodesSeen = action.payload.state === 2 ? season.episodes.length : 0
 			}
 		},
 	},

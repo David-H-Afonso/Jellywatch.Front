@@ -124,7 +124,10 @@
 		"markSeasonSeen": "Marcar temporada como vista",
 		"markSeasonUnseen": "Marcar temporada como no vista",
 		"markAllSeen": "Marcar todo como visto",
-		"markAllUnseen": "Marcar todo como no visto"
+		"markAllUnseen": "Marcar todo como no visto",
+		"markSeasonAtFirstEpisode": "Marcar temporada vista en fecha del primer episodio",
+		"markSeasonAtLastEpisode": "Marcar temporada vista en fecha del último episodio",
+		"markSeriesAtLastEpisode": "Marcar toda la serie vista en fecha del último episodio"
 	},
 	"episodeToggle": {
 		"watchedAt": "Elegir fecha de visionado",

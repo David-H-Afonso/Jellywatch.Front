@@ -124,7 +124,10 @@
 		"markSeasonSeen": "Mark season as watched",
 		"markSeasonUnseen": "Mark season as unwatched",
 		"markAllSeen": "Mark all as watched",
-		"markAllUnseen": "Mark all as unwatched"
+		"markAllUnseen": "Mark all as unwatched",
+		"markSeasonAtFirstEpisode": "Mark season watched at first episode date",
+		"markSeasonAtLastEpisode": "Mark season watched at last episode date",
+		"markSeriesAtLastEpisode": "Mark whole series watched at last episode date"
 	},
 	"episodeToggle": {
 		"watchedAt": "Choose watch date",

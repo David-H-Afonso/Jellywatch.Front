@@ -165,7 +165,7 @@ const SeriesDetail: React.FC = () => {
 
 	const handleSeasonState = async (seasonId: number, state: WatchState, timestamp?: string) => {
 		if (!activeProfileId || !series) return
-		dispatch(updateSeasonWatchStates({ seasonId, state }))
+		dispatch(updateSeasonWatchStates({ seasonId, state, watchedAt: timestamp }))
 		dispatch(invalidateCache())
 		await setSeasonState(activeProfileId, seasonId, state, timestamp)
 	}
@@ -183,7 +183,7 @@ const SeriesDetail: React.FC = () => {
 
 	const handleSeriesState = async (state: WatchState, timestamp?: string) => {
 		if (!activeProfileId || !series) return
-		dispatch(updateAllWatchStates(state))
+		dispatch(updateAllWatchStates({ state, watchedAt: timestamp }))
 		dispatch(invalidateCache())
 		await setSeriesAllState(activeProfileId, series.id, state, timestamp)
 	}
@@ -562,7 +562,28 @@ const SeriesDetail: React.FC = () => {
 														className='series-detail__date-option'
 														onClick={() => handleDatePickerOption('now')}>
 														{t('episodeToggle.watchedNow')}
-													</button>
+													</button>{' '}
+													{(() => {
+														const dates = series.seasons
+															.flatMap((s) => s.episodes.map((ep) => ep.airDate))
+															.filter((d): d is string => !!d)
+															.sort()
+														const lastDate = dates[dates.length - 1] ?? null
+														return lastDate ? (
+															<button
+																className='series-detail__date-option'
+																onClick={() => {
+																	handleSeriesState(
+																		WatchState.Seen,
+																		new Date(lastDate + 'T12:00:00Z').toISOString()
+																	)
+																	setDatePickerTarget(null)
+																	setCustomDate('')
+																}}>
+																{t('watchState.markSeriesAtLastEpisode')}
+															</button>
+														) : null
+													})()}{' '}
 													{customDate === '' ? (
 														<button
 															className='series-detail__date-option'
@@ -709,6 +730,50 @@ const SeriesDetail: React.FC = () => {
 																	}}>
 																	{t('episodeToggle.watchedNow')}
 																</button>
+																{(() => {
+																	const dates = season.episodes
+																		.map((ep) => ep.airDate)
+																		.filter((d): d is string => !!d)
+																		.sort()
+																	const firstDate = dates[0] ?? null
+																	const lastDate = dates[dates.length - 1] ?? null
+																	return (
+																		<>
+																			{firstDate && (
+																				<button
+																					className='series-detail__date-option'
+																					onClick={(e) => {
+																						e.stopPropagation()
+																						handleSeasonState(
+																							season.id,
+																							WatchState.Seen,
+																							new Date(firstDate + 'T12:00:00Z').toISOString()
+																						)
+																						setDatePickerTarget(null)
+																						setCustomDate('')
+																					}}>
+																					{t('watchState.markSeasonAtFirstEpisode')}
+																				</button>
+																			)}
+																			{lastDate && (
+																				<button
+																					className='series-detail__date-option'
+																					onClick={(e) => {
+																						e.stopPropagation()
+																						handleSeasonState(
+																							season.id,
+																							WatchState.Seen,
+																							new Date(lastDate + 'T12:00:00Z').toISOString()
+																						)
+																						setDatePickerTarget(null)
+																						setCustomDate('')
+																					}}>
+																					{t('watchState.markSeasonAtLastEpisode')}
+																				</button>
+																			)}
+																		</>
+																	)
+																})()}
 																{customDate === '' ? (
 																	<button
 																		className='series-detail__date-option'
