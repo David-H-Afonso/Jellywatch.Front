@@ -39,6 +39,7 @@ import {
 	addManually,
 } from '@/services/MediaService/MediaService'
 import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
+import { refreshSeriesWatchDates } from '@/services/AdminService/AdminService'
 import {
 	removeMediaFromProfile,
 	blockMediaForProfile,
@@ -67,6 +68,7 @@ const SeriesDetail: React.FC = () => {
 	const [uploadError, setUploadError] = useState<string | null>(null)
 	const [refreshing, setRefreshing] = useState(false)
 	const [refreshingImages, setRefreshingImages] = useState(false)
+	const [refreshingDates, setRefreshingDates] = useState(false)
 	const [showPosterPicker, setShowPosterPicker] = useState(false)
 	const [showLogoPicker, setShowLogoPicker] = useState(false)
 	const [savingRating, setSavingRating] = useState(false)
@@ -276,6 +278,19 @@ const SeriesDetail: React.FC = () => {
 		}
 	}
 
+	const handleRefreshWatchDates = async () => {
+		if (!series || !activeProfileId) return
+		setRefreshingDates(true)
+		try {
+			await refreshSeriesWatchDates(series.id, activeProfileId)
+			if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
+		} catch {
+			// Forbidden for non-admins — button is hidden anyway
+		} finally {
+			setRefreshingDates(false)
+		}
+	}
+
 	const handlePosterPickerClose = () => {
 		setShowPosterPicker(false)
 	}
@@ -415,6 +430,16 @@ const SeriesDetail: React.FC = () => {
 														}}
 														disabled={refreshing || refreshingImages}>
 														{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
+													</button>
+													<button
+														onClick={() => {
+															handleRefreshWatchDates()
+															setShowMenu(false)
+														}}
+														disabled={refreshingDates}>
+														{refreshingDates
+															? t('admin.refreshingDates')
+															: t('admin.refreshWatchDates')}
 													</button>
 												</>
 											)}

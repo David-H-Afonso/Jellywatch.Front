@@ -290,7 +290,7 @@ describe('seriesSlice – edge cases', () => {
 	})
 
 	it('updateAllWatchStates does nothing when currentSeries is null', () => {
-		const state = seriesReducer(initial, updateAllWatchStates(2))
+		const state = seriesReducer(initial, updateAllWatchStates({ state: 2 }))
 		expect(state.currentSeries).toBeNull()
 	})
 

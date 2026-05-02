@@ -60,6 +60,8 @@ export const apiRoutes = {
 		triggerProfile: (profileId: number) => `/api/sync/trigger/${profileId}`,
 		reconcile: (profileId: number) => `/api/sync/reconcile/${profileId}`,
 		rePropagate: '/api/sync/re-propagate',
+		refreshWatchDates: (seriesId: number, profileId: number) =>
+			`/api/sync/refresh-watch-dates/${seriesId}?profileId=${profileId}`,
 		jobs: '/api/sync/jobs',
 		webhookLogs: '/api/sync/webhook-logs',
 	},

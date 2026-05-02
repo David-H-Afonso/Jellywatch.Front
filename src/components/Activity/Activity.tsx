@@ -7,6 +7,7 @@ import {
 	selectProfileActivity,
 	selectProfileActivityPagination,
 	selectProfileLoading,
+	selectProfileError,
 } from '@/store/features/profile'
 import { fetchProfileActivity } from '@/store/features/profile'
 import { ProfileSelector, WatchStateBadge, Pagination, MediaPoster } from '@/components/elements'
@@ -22,6 +23,7 @@ const Activity: React.FC = () => {
 	const activity = useAppSelector(selectProfileActivity)
 	const pagination = useAppSelector(selectProfileActivityPagination)
 	const loading = useAppSelector(selectProfileLoading)
+	const error = useAppSelector(selectProfileError)
 	const [searchParams, setSearchParams] = useSearchParams()
 
 	// Read filters from URL params
@@ -196,7 +198,9 @@ const Activity: React.FC = () => {
 
 			{loading && <div className='loading-state'>{t('common.loading')}</div>}
 
-			{!loading && activity.length === 0 && (
+			{!loading && error && <p className='error-state'>{error}</p>}
+
+			{!loading && !error && activity.length === 0 && (
 				<p className='empty-state'>{t('dashboard.noActivity')}</p>
 			)}
 

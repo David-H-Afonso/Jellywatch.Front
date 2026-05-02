@@ -70,6 +70,16 @@ export const triggerProfileSync = async (profileId: number): Promise<void> => {
 	await customFetch<void>(apiRoutes.sync.triggerProfile(profileId), { method: 'POST' })
 }
 
+export const refreshSeriesWatchDates = async (
+	seriesId: number,
+	profileId: number
+): Promise<{ updated: number; message: string }> => {
+	return await customFetch<{ updated: number; message: string }>(
+		apiRoutes.sync.refreshWatchDates(seriesId, profileId),
+		{ method: 'POST' }
+	)
+}
+
 export const getMediaLibrary = async (
 	page = 1,
 	pageSize = 10

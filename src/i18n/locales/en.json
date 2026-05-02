@@ -224,6 +224,8 @@
 		"actions": "Actions",
 		"refreshMedia": "Refresh metadata",
 		"refreshingMedia": "Refreshing...",
+		"refreshWatchDates": "Refresh watched dates",
+		"refreshingDates": "Refreshing dates...",
 		"forceTmdbId": "Force TMDB ID",
 		"refreshImages": "Refresh images",
 		"refreshAllMetadata": "Refresh all metadata",
