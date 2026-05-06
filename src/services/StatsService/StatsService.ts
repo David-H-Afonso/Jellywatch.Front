@@ -26,14 +26,30 @@ export const getCalendar = async (
 	})
 }
 
-export const exportData = async (profileId: number): Promise<void> => {
+export type ExportType = 'full' | 'partial'
+
+export interface ExportOptions {
+	prefix?: string
+	suffix?: string
+	exportType?: ExportType
+}
+
+export const buildExportFileName = (options: ExportOptions = {}): string => {
+	const { prefix = '', suffix = '', exportType = 'full' } = options
+	const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+	const parts = [prefix.trim(), date, exportType]
+	if (suffix.trim()) parts.push(suffix.trim())
+	return `${parts.filter(Boolean).join('-')}.csv`
+}
+
+export const exportData = async (profileId: number, options: ExportOptions = {}): Promise<void> => {
 	const response = await customFetch<Blob>(apiRoutes.data.export(profileId))
 	const blob =
 		response instanceof Blob ? response : new Blob([String(response)], { type: 'text/csv' })
 	const url = URL.createObjectURL(blob)
 	const link = document.createElement('a')
 	link.href = url
-	link.download = `jellywatch-export-${profileId}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.csv`
+	link.download = buildExportFileName(options)
 	document.body.appendChild(link)
 	link.click()
 	document.body.removeChild(link)

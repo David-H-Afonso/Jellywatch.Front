@@ -1,8 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/store/hooks'
-import { selectActiveProfileId, selectIsAdmin } from '@/store/features/auth/selector'
-import { exportData, importPreview, importData } from '@/services/StatsService/StatsService'
+import {
+	selectActiveProfileId,
+	selectIsAdmin,
+	selectCurrentUser,
+} from '@/store/features/auth/selector'
+import {
+	exportData,
+	importPreview,
+	importData,
+	buildExportFileName,
+	type ExportType,
+} from '@/services/StatsService/StatsService'
 import { getProfileBlocks, unblockMediaForProfile } from '@/services/ProfileService/ProfileService'
 import { getAdminProfileBlocks } from '@/services/AdminService/AdminService'
 import { MediaType } from '@/models/api/Enums'
@@ -18,6 +28,7 @@ const DataManager: React.FC = () => {
 	const { t, i18n } = useTranslation()
 	const activeProfileId = useAppSelector(selectActiveProfileId)
 	const isAdmin = useAppSelector(selectIsAdmin)
+	const currentUser = useAppSelector(selectCurrentUser)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const [preview, setPreview] = useState<ImportPreviewDto | null>(null)
@@ -28,6 +39,16 @@ const DataManager: React.FC = () => {
 	const [skipDuplicates, setSkipDuplicates] = useState(true)
 	const [overwriteDates, setOverwriteDates] = useState(false)
 	const [exporting, setExporting] = useState(false)
+
+	const [filePrefix, setFilePrefix] = useState('')
+	const [fileSuffix, setFileSuffix] = useState('')
+	const [exportType, setExportType] = useState<ExportType>('full')
+
+	useEffect(() => {
+		if (currentUser && filePrefix === '') {
+			setFilePrefix(`${currentUser.id}-${currentUser.username}`)
+		}
+	}, [currentUser])
 
 	const [blocks, setBlocks] = useState<ProfileBlockedItemDto[] | AdminProfileBlockDto[] | null>(
 		null
@@ -59,7 +80,6 @@ const DataManager: React.FC = () => {
 		if (activeProfileId) {
 			void loadBlocks()
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [activeProfileId, isAdmin])
 
 	const handleUnblock = async (unblockProfileId: number, mediaItemId: number) => {
@@ -71,7 +91,7 @@ const DataManager: React.FC = () => {
 		if (!activeProfileId) return
 		setExporting(true)
 		try {
-			await exportData(activeProfileId)
+			await exportData(activeProfileId, { prefix: filePrefix, suffix: fileSuffix, exportType })
 		} catch (err: unknown) {
 			setError(err instanceof Error ? err.message : t('common.error'))
 		} finally {
@@ -143,6 +163,59 @@ const DataManager: React.FC = () => {
 			<section className='data-manager__section'>
 				<h2 className='data-manager__section-title'>{t('dataManager.export')}</h2>
 				<p className='data-manager__description'>{t('dataManager.exportDescription')}</p>
+
+				<div className='data-manager__filename-controls'>
+					<div className='data-manager__filename-row'>
+						<label className='data-manager__filename-label'>{t('dataManager.prefix')}</label>
+						<input
+							type='text'
+							className='data-manager__filename-input'
+							value={filePrefix}
+							onChange={(e) => setFilePrefix(e.target.value)}
+						/>
+					</div>
+					<div className='data-manager__filename-row'>
+						<label className='data-manager__filename-label'>{t('dataManager.suffix')}</label>
+						<input
+							type='text'
+							className='data-manager__filename-input'
+							value={fileSuffix}
+							onChange={(e) => setFileSuffix(e.target.value)}
+						/>
+					</div>
+					<div className='data-manager__filename-row'>
+						<label className='data-manager__filename-label'>{t('dataManager.exportType')}</label>
+						<div className='data-manager__filename-type'>
+							<label className='data-manager__radio'>
+								<input
+									type='radio'
+									name='exportType'
+									value='full'
+									checked={exportType === 'full'}
+									onChange={() => setExportType('full')}
+								/>
+								{t('dataManager.exportTypeFull')}
+							</label>
+							<label className='data-manager__radio'>
+								<input
+									type='radio'
+									name='exportType'
+									value='partial'
+									checked={exportType === 'partial'}
+									onChange={() => setExportType('partial')}
+								/>
+								{t('dataManager.exportTypePartial')}
+							</label>
+						</div>
+					</div>
+					<p className='data-manager__filename-preview'>
+						<span>{t('dataManager.fileNamePreview')}:</span>{' '}
+						<code>
+							{buildExportFileName({ prefix: filePrefix, suffix: fileSuffix, exportType })}
+						</code>
+					</p>
+				</div>
+
 				<button
 					className='data-manager__btn data-manager__btn--primary'
 					onClick={handleExport}
