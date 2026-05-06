@@ -42,6 +42,7 @@ import {
 	removePropagationRule,
 } from '@/store/features/settings'
 import { SyncButton, Pagination } from '@/components/elements'
+import BackupScheduleAdmin from '@/components/DataManager/BackupScheduleAdmin'
 import {
 	triggerFullSync,
 	getAllProfiles,
@@ -827,6 +828,16 @@ const Admin: React.FC = () => {
 					/>
 				)}
 			</CollapsibleSection>
+
+			{/* ── Backups ── */}
+			{isAdmin && (
+				<>
+					<h2 className='admin-page__group-title'>{t('admin.groupBackups')}</h2>
+					<CollapsibleSection title={t('backupScheduleAdmin.title')}>
+						<BackupScheduleAdmin />
+					</CollapsibleSection>
+				</>
+			)}
 		</div>
 	)
 }

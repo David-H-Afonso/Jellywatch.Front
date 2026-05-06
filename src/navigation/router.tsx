@@ -10,8 +10,6 @@ import Activity from '@/components/Activity/Activity'
 import Wrapped from '@/components/Wrapped/Wrapped'
 import Calendar from '@/components/Calendar/Calendar'
 import DataManager from '@/components/DataManager/DataManager'
-const BackupSchedule = React.lazy(() => import('@/components/DataManager/BackupSchedule'))
-const BackupScheduleAdmin = React.lazy(() => import('@/components/DataManager/BackupScheduleAdmin'))
 import { Login, ProtectedRoute, PublicRoute } from '@/components/Auth'
 import { RouteError, NotFound } from '@/components/errors'
 
@@ -79,24 +77,6 @@ export const router = createHashRouter([
 	{
 		path: '/data',
 		element: protectedRoute(<DataManager />),
-		errorElement: <RouteError />,
-	},
-	{
-		path: '/backup-schedule',
-		element: protectedRoute(
-			<React.Suspense fallback={<div>Loading...</div>}>
-				<BackupSchedule />
-			</React.Suspense>
-		),
-		errorElement: <RouteError />,
-	},
-	{
-		path: '/backup-schedule-admin',
-		element: protectedRoute(
-			<React.Suspense fallback={<div>Loading...</div>}>
-				<BackupScheduleAdmin />
-			</React.Suspense>
-		),
 		errorElement: <RouteError />,
 	},
 	{

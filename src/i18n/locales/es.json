@@ -253,6 +253,7 @@
 		"groupUsers": "Usuarios y perfiles",
 		"groupLibrary": "Biblioteca",
 		"groupLogs": "Logs y trabajos",
+		"groupBackups": "Copias de seguridad",
 		"profiles": "Perfiles",
 		"noProfiles": "No se encontraron perfiles",
 		"purgeMedia": "Purgar todos los datos",

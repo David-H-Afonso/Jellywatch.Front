@@ -253,6 +253,7 @@
 		"groupUsers": "Users & Profiles",
 		"groupLibrary": "Library",
 		"groupLogs": "Logs & Jobs",
+		"groupBackups": "Backups",
 		"profiles": "Profiles",
 		"noProfiles": "No profiles found",
 		"purgeMedia": "Purge all media",

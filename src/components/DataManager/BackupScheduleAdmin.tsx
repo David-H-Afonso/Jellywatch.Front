@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
 	getAdminUserSchedules,
@@ -39,6 +39,12 @@ const UserRow: React.FC<UserRowProps> = ({ entry, onUpdated }) => {
 		setMessage({ text, type })
 		setTimeout(() => setMessage(null), 5000)
 	}
+
+	const localTimeEquivalent = useMemo(() => {
+		const d = new Date()
+		d.setUTCHours(backupHour, backupMinute, 0, 0)
+		return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+	}, [backupHour, backupMinute])
 
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -172,6 +178,11 @@ const UserRow: React.FC<UserRowProps> = ({ entry, onUpdated }) => {
 										))}
 									</select>
 									<span className='backup-schedule__time-utc'>UTC</span>
+									<span
+										className='backup-schedule__time-local'
+										title={t('backupSchedule.timeLocalTooltip')}>
+										≈ {localTimeEquivalent} {t('backupSchedule.timeLocalShort')}
+									</span>
 								</div>
 							</div>
 

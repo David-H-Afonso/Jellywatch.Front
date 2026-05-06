@@ -64,20 +64,6 @@ export const Header: React.FC = () => {
 						{t('nav.data')}
 					</Link>
 					{isAdmin && (
-						<Link
-							to='/backup-schedule'
-							className={`nav-link ${isActive('/backup-schedule') ? 'active' : ''}`}>
-							{t('nav.backupSchedule')}
-						</Link>
-					)}
-					{isAdmin && (
-						<Link
-							to='/backup-schedule-admin'
-							className={`nav-link ${isActive('/backup-schedule-admin') ? 'active' : ''}`}>
-							{t('nav.backupScheduleAdmin')}
-						</Link>
-					)}
-					{isAdmin && (
 						<Link to='/admin' className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>
 							{t('nav.admin')}
 						</Link>
