@@ -49,7 +49,8 @@
 		"wrapped": "Wrapped",
 		"calendar": "Calendar",
 		"data": "Data",
-		"backupSchedule": "Backup Schedule"
+		"backupSchedule": "Backup Schedule",
+		"backupScheduleAdmin": "User Backups"
 	},
 	"dashboard": {
 		"title": "Dashboard",
@@ -425,5 +426,11 @@
 		"infoNote1": "One CSV file is exported <strong>per profile</strong> to the destination path.",
 		"infoNote2": "Files older than the retention limit (per profile) are <strong>deleted automatically</strong>.",
 		"infoNote3": "The backup service checks the schedule <strong>every minute</strong> on the server."
+	},
+	"backupScheduleAdmin": {
+		"title": "User Backup Schedules",
+		"subtitle": "Manage backup schedules for all users. Expand a user to view and edit their settings.",
+		"enabled": "Enabled",
+		"disabled": "Disabled"
 	}
 }

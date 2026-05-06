@@ -108,6 +108,9 @@ export const apiRoutes = {
 	backupSchedule: {
 		base: '/api/backupschedule',
 		runNow: '/api/backupschedule/run-now',
+		adminUsers: '/api/backupschedule/admin/users',
+		adminUser: (userId: number) => `/api/backupschedule/admin/${userId}`,
+		adminRunNow: (userId: number) => `/api/backupschedule/admin/${userId}/run-now`,
 	},
 } as const
 

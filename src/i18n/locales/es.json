@@ -49,7 +49,8 @@
 		"wrapped": "Resumen",
 		"calendar": "Calendario",
 		"data": "Datos",
-		"backupSchedule": "Programación de copias"
+		"backupSchedule": "Programación de copias",
+		"backupScheduleAdmin": "Copias por usuario"
 	},
 	"dashboard": {
 		"title": "Panel",
@@ -425,5 +426,11 @@
 		"infoNote1": "Se exporta un archivo CSV <strong>por perfil</strong> a la ruta de destino.",
 		"infoNote2": "Los archivos más antiguos del límite de retención (por perfil) se <strong>eliminan automáticamente</strong>.",
 		"infoNote3": "El servicio comprueba el horario <strong>cada minuto</strong> en el servidor."
+	},
+	"backupScheduleAdmin": {
+		"title": "Copias de seguridad por usuario",
+		"subtitle": "Gestiona las programaciones de copia para todos los usuarios. Expande un usuario para ver y editar su configuración.",
+		"enabled": "Activado",
+		"disabled": "Desactivado"
 	}
 }
