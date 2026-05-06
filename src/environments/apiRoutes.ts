@@ -105,6 +105,10 @@ export const apiRoutes = {
 		tmdb: '/api/media/search/tmdb',
 		add: '/api/media/search/add',
 	},
+	backupSchedule: {
+		base: '/api/backupschedule',
+		runNow: '/api/backupschedule/run-now',
+	},
 } as const
 
 export type ApiRoutes = typeof apiRoutes
