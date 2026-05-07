@@ -86,6 +86,7 @@ export const apiRoutes = {
 		profileBlocks: '/api/admin/profile-blocks',
 		purgeProfileMedia: (profileId: number) => `/api/admin/profiles/${profileId}/media`,
 		deleteProfile: (id: number) => `/api/admin/profiles/${id}`,
+		createUserForProfile: (profileId: number) => `/api/admin/profiles/${profileId}/create-user`,
 	},
 	asset: {
 		image: (mediaItemId: number, imageType: string) => `/api/asset/${mediaItemId}/${imageType}`,

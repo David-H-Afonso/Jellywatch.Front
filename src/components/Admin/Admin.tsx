@@ -52,6 +52,7 @@ import {
 	addProfileFromJellyfin,
 	purgeProfileMedia,
 	deleteProfile,
+	createUserForProfile,
 } from '@/services/AdminService/AdminService'
 import { SyncJobType, SyncJobStatus } from '@/models/api/Enums'
 
@@ -130,6 +131,7 @@ const Admin: React.FC = () => {
 	const [purgingProfileId, setPurgingProfileId] = useState<number | null>(null)
 	const [deletingUserId, setDeletingUserId] = useState<number | null>(null)
 	const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null)
+	const [creatingUserForProfileId, setCreatingUserForProfileId] = useState<number | null>(null)
 
 	useEffect(() => {
 		dispatch(fetchUsers())
@@ -295,6 +297,18 @@ const Admin: React.FC = () => {
 			dispatch(fetchUsers())
 		} finally {
 			setDeletingProfileId(null)
+		}
+	}
+
+	const handleCreateUserForProfile = async (profile: ProfileDto) => {
+		if (!confirm(t('admin.confirmCreateUser', { name: profile.displayName }))) return
+		setCreatingUserForProfileId(profile.id)
+		try {
+			await createUserForProfile(profile.id)
+			setAllProfiles((prev) => prev.map((p) => (p.id === profile.id ? { ...p, userId: -1 } : p)))
+			dispatch(fetchUsers())
+		} finally {
+			setCreatingUserForProfileId(null)
 		}
 	}
 
@@ -522,20 +536,32 @@ const Admin: React.FC = () => {
 									<td>{p.id}</td>
 									<td>{p.displayName}</td>
 									<td>
-										<button
-											className='btn-danger btn-sm'
-											onClick={() => handlePurgeProfile(p)}
-											disabled={purgingProfileId === p.id}>
-											{purgingProfileId === p.id ? t('admin.purging') : t('admin.purgeMedia')}
-										</button>
-										<button
-											className='btn-danger btn-sm'
-											onClick={() => handleDeleteProfile(p)}
-											disabled={deletingProfileId === p.id}>
-											{deletingProfileId === p.id
-												? t('admin.deletingProfile')
-												: t('admin.deleteProfile')}
-										</button>
+										<div className='admin-table__actions'>
+											{!p.userId && (
+												<button
+													className='btn-primary btn-sm'
+													onClick={() => handleCreateUserForProfile(p)}
+													disabled={creatingUserForProfileId === p.id}>
+													{creatingUserForProfileId === p.id
+														? t('admin.creatingUser')
+														: t('admin.createUser')}
+												</button>
+											)}
+											<button
+												className='btn-danger btn-sm'
+												onClick={() => handlePurgeProfile(p)}
+												disabled={purgingProfileId === p.id}>
+												{purgingProfileId === p.id ? t('admin.purging') : t('admin.purgeMedia')}
+											</button>
+											<button
+												className='btn-danger btn-sm'
+												onClick={() => handleDeleteProfile(p)}
+												disabled={deletingProfileId === p.id}>
+												{deletingProfileId === p.id
+													? t('admin.deletingProfile')
+													: t('admin.deleteProfile')}
+											</button>
+										</div>
 									</td>
 								</tr>
 							))}

@@ -265,7 +265,10 @@
 		"confirmDeleteUser": "Delete user \"{{name}}\"? Their profile(s) will remain but the user account will be removed.",
 		"deleteProfile": "Delete profile",
 		"deletingProfile": "Deleting...",
-		"confirmDeleteProfile": "Delete profile \"{{name}}\"? All watch history and the linked user account will be permanently removed."
+		"confirmDeleteProfile": "Delete profile \"{{name}}\"? All watch history and the linked user account will be permanently removed.",
+		"createUser": "Create user",
+		"creatingUser": "Creating...",
+		"confirmCreateUser": "Create a user account for profile \"{{name}}\"? This will allow them to use backup features."
 	},
 	"filters": {
 		"all": "All States",

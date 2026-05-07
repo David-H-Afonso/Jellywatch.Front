@@ -265,7 +265,10 @@
 		"confirmDeleteUser": "¿Eliminar al usuario \"{{name}}\"? Sus perfiles permanecerán pero la cuenta de usuario será eliminada.",
 		"deleteProfile": "Eliminar perfil",
 		"deletingProfile": "Eliminando...",
-		"confirmDeleteProfile": "¿Eliminar el perfil \"{{name}}\"? Todo el historial de visionado y la cuenta de usuario vinculada se eliminarán de forma permanente."
+		"confirmDeleteProfile": "¿Eliminar el perfil \"{{name}}\"? Todo el historial de visionado y la cuenta de usuario vinculada se eliminarán de forma permanente.",
+		"createUser": "Crear usuario",
+		"creatingUser": "Creando...",
+		"confirmCreateUser": "¿Crear una cuenta de usuario para el perfil \"{{name}}\"? Esto le permitirá usar las funciones de copia de seguridad."
 	},
 	"filters": {
 		"all": "Todos los estados",

@@ -34,6 +34,12 @@ export const deleteProfile = async (id: number): Promise<void> => {
 	await customFetch<void>(apiRoutes.admin.deleteProfile(id), { method: 'DELETE' })
 }
 
+export const createUserForProfile = async (profileId: number): Promise<UserDto> => {
+	return await customFetch<UserDto>(apiRoutes.admin.createUserForProfile(profileId), {
+		method: 'POST',
+	})
+}
+
 export const getImportQueue = async (
 	page = 1,
 	pageSize = 10
