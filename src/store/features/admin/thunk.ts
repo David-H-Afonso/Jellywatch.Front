@@ -8,6 +8,7 @@ import {
 	triggerProfileSync,
 	getMediaLibrary,
 	deleteMediaItem,
+	deleteUser,
 	getBlacklist,
 	addToBlacklist,
 	removeFromBlacklist,
@@ -106,6 +107,19 @@ export const doDeleteMediaItem = createAsyncThunk(
 			return id
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : 'Failed to delete media item'
+			return rejectWithValue(message)
+		}
+	}
+)
+
+export const doDeleteUser = createAsyncThunk(
+	'admin/deleteUser',
+	async (id: number, { rejectWithValue }) => {
+		try {
+			await deleteUser(id)
+			return id
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : 'Failed to delete user'
 			return rejectWithValue(message)
 		}
 	}

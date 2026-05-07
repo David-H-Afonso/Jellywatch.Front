@@ -24,6 +24,7 @@ import {
 	fetchBlacklist,
 	doTriggerProfileSync,
 	doDeleteMediaItem,
+	doDeleteUser,
 	doRefreshMediaItem,
 	doRefreshAllMetadata,
 	doRefreshAllImages,
@@ -50,6 +51,7 @@ import {
 	getJellyfinUsers,
 	addProfileFromJellyfin,
 	purgeProfileMedia,
+	deleteProfile,
 } from '@/services/AdminService/AdminService'
 import { SyncJobType, SyncJobStatus } from '@/models/api/Enums'
 
@@ -126,6 +128,8 @@ const Admin: React.FC = () => {
 	const [jellyfinUsers, setJellyfinUsers] = useState<JellyfinUserDto[]>([])
 	const [addingProfileId, setAddingProfileId] = useState<string | null>(null)
 	const [purgingProfileId, setPurgingProfileId] = useState<number | null>(null)
+	const [deletingUserId, setDeletingUserId] = useState<number | null>(null)
+	const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null)
 
 	useEffect(() => {
 		dispatch(fetchUsers())
@@ -269,6 +273,28 @@ const Admin: React.FC = () => {
 			await purgeProfileMedia(profile.id)
 		} finally {
 			setPurgingProfileId(null)
+		}
+	}
+
+	const handleDeleteUser = async (user: { id: number; username: string }) => {
+		if (!confirm(t('admin.confirmDeleteUser', { name: user.username }))) return
+		setDeletingUserId(user.id)
+		try {
+			await dispatch(doDeleteUser(user.id))
+		} finally {
+			setDeletingUserId(null)
+		}
+	}
+
+	const handleDeleteProfile = async (profile: ProfileDto) => {
+		if (!confirm(t('admin.confirmDeleteProfile', { name: profile.displayName }))) return
+		setDeletingProfileId(profile.id)
+		try {
+			await deleteProfile(profile.id)
+			setAllProfiles((prev) => prev.filter((p) => p.id !== profile.id))
+			dispatch(fetchUsers())
+		} finally {
+			setDeletingProfileId(null)
 		}
 	}
 
@@ -452,6 +478,7 @@ const Admin: React.FC = () => {
 								<th>{t('auth.username')}</th>
 								<th>Admin</th>
 								<th>Created</th>
+								<th>{t('admin.actions')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -461,6 +488,14 @@ const Admin: React.FC = () => {
 									<td>{u.username}</td>
 									<td>{u.isAdmin ? '✓' : '—'}</td>
 									<td>{new Date(u.createdAt).toLocaleDateString()}</td>
+									<td>
+										<button
+											className='btn-danger btn-sm'
+											onClick={() => handleDeleteUser(u)}
+											disabled={deletingUserId === u.id}>
+											{deletingUserId === u.id ? t('admin.deletingUser') : t('admin.deleteUser')}
+										</button>
+									</td>
 								</tr>
 							))}
 						</tbody>
@@ -492,6 +527,14 @@ const Admin: React.FC = () => {
 											onClick={() => handlePurgeProfile(p)}
 											disabled={purgingProfileId === p.id}>
 											{purgingProfileId === p.id ? t('admin.purging') : t('admin.purgeMedia')}
+										</button>
+										<button
+											className='btn-danger btn-sm'
+											onClick={() => handleDeleteProfile(p)}
+											disabled={deletingProfileId === p.id}>
+											{deletingProfileId === p.id
+												? t('admin.deletingProfile')
+												: t('admin.deleteProfile')}
 										</button>
 									</td>
 								</tr>

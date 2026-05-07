@@ -22,6 +22,10 @@ export const getUsers = async (): Promise<UserDto[]> => {
 	return await customFetch<UserDto[]>(apiRoutes.admin.users)
 }
 
+export const deleteUser = async (id: number): Promise<void> => {
+	await customFetch<void>(apiRoutes.admin.userById(id), { method: 'DELETE' })
+}
+
 export const getAllProfiles = async (): Promise<ProfileDto[]> => {
 	return await customFetch<ProfileDto[]>(apiRoutes.admin.allProfiles)
 }

@@ -259,7 +259,13 @@
 		"purgeMedia": "Purge all media",
 		"purging": "Purging...",
 		"confirmPurge": "Purge ALL watch data for \"{{name}}\"? This will delete all watch states, watch events, and blocks. This cannot be undone.",
-		"confirmDeleteMedia": "Delete {{title}} from the library? This cannot be undone."
+		"confirmDeleteMedia": "Delete {{title}} from the library? This cannot be undone.",
+		"deleteUser": "Delete user",
+		"deletingUser": "Deleting...",
+		"confirmDeleteUser": "Delete user \"{{name}}\"? Their profile(s) will remain but the user account will be removed.",
+		"deleteProfile": "Delete profile",
+		"deletingProfile": "Deleting...",
+		"confirmDeleteProfile": "Delete profile \"{{name}}\"? All watch history and the linked user account will be permanently removed."
 	},
 	"filters": {
 		"all": "All States",

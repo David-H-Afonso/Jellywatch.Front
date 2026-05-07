@@ -67,6 +67,7 @@ export const apiRoutes = {
 	},
 	admin: {
 		users: '/api/admin/users',
+		userById: (id: number) => `/api/admin/users/${id}`,
 		allProfiles: '/api/admin/profiles',
 		jellyfinUsers: '/api/admin/jellyfin-users',
 		addProfile: '/api/admin/add-profile',

@@ -9,6 +9,7 @@ export {
 	doTriggerProfileSync,
 	fetchMediaLibrary,
 	doDeleteMediaItem,
+	doDeleteUser,
 	doRefreshMediaItem,
 	doRefreshAllMetadata,
 	doRefreshAllImages,

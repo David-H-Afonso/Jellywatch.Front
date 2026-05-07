@@ -259,7 +259,13 @@
 		"purgeMedia": "Purgar todos los datos",
 		"purging": "Purgando...",
 		"confirmPurge": "¿Purgar TODOS los datos de visionado de \"{{name}}\"? Se eliminarán todos los estados, eventos y bloqueos. Esta acción no se puede deshacer.",
-		"confirmDeleteMedia": "¿Eliminar {{title}} de la biblioteca? Esta acción no se puede deshacer."
+		"confirmDeleteMedia": "¿Eliminar {{title}} de la biblioteca? Esta acción no se puede deshacer.",
+		"deleteUser": "Eliminar usuario",
+		"deletingUser": "Eliminando...",
+		"confirmDeleteUser": "¿Eliminar al usuario \"{{name}}\"? Sus perfiles permanecerán pero la cuenta de usuario será eliminada.",
+		"deleteProfile": "Eliminar perfil",
+		"deletingProfile": "Eliminando...",
+		"confirmDeleteProfile": "¿Eliminar el perfil \"{{name}}\"? Todo el historial de visionado y la cuenta de usuario vinculada se eliminarán de forma permanente."
 	},
 	"filters": {
 		"all": "Todos los estados",

@@ -13,6 +13,7 @@ import {
 	fetchWebhookLogs,
 	fetchMediaLibrary,
 	doDeleteMediaItem,
+	doDeleteUser,
 	doRefreshMediaItem,
 	doRefreshAllMetadata,
 	doRefreshAllImages,
@@ -145,6 +146,14 @@ const adminSlice = createSlice({
 			})
 			.addCase(doDeleteMediaItem.rejected, (state, action) => {
 				state.error = (action.payload as string) || 'Failed to delete media item'
+			})
+
+		builder
+			.addCase(doDeleteUser.fulfilled, (state, action) => {
+				state.users = state.users.filter((u) => u.id !== action.payload)
+			})
+			.addCase(doDeleteUser.rejected, (state, action) => {
+				state.error = (action.payload as string) || 'Failed to delete user'
 			})
 
 		builder.addCase(doRefreshMediaItem.rejected, (state, action) => {
