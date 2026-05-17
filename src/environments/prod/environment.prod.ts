@@ -10,7 +10,8 @@ function getApiBaseUrl(): string {
 	if (import.meta.env.VITE_API_URL) {
 		return import.meta.env.VITE_API_URL as string
 	}
-	return 'http://192.168.0.32:1985'
+	// Fallback: empty string = same-origin, nginx proxy handles /api/ routes
+	return ''
 }
 
 export const environment = {
