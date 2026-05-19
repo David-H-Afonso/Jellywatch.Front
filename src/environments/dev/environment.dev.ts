@@ -1,16 +1,18 @@
 import { apiRoutes } from '../apiRoutes'
 
+const getStringValue = (value: unknown): string | null =>
+	typeof value === 'string' ? value : null
+
 function getApiBaseUrl(): string {
-	if (typeof globalThis !== 'undefined' && (globalThis as any).API_BASE_URL) {
-		return (globalThis as any).API_BASE_URL
+	if (typeof globalThis !== 'undefined') {
+		const runtimeApiBaseUrl = getStringValue((globalThis as any).API_BASE_URL)
+		if (runtimeApiBaseUrl !== null) return runtimeApiBaseUrl
+
+		const runtimeEnvApiUrl = getStringValue((globalThis as any).ENV?.VITE_API_URL)
+		if (runtimeEnvApiUrl !== null) return runtimeEnvApiUrl
 	}
-	if (typeof globalThis !== 'undefined' && (globalThis as any).ENV?.VITE_API_URL) {
-		return (globalThis as any).ENV.VITE_API_URL
-	}
-	if (import.meta.env.DEV) {
-		return 'http://localhost:5011'
-	}
-	return 'http://localhost:5011'
+
+	return (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 }
 
 export const environment = {

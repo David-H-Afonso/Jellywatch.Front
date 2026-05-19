@@ -12,7 +12,13 @@ describe('environment – dev', () => {
 		expect(mod.environment).toHaveProperty('baseUrl')
 		expect(mod.environment).toHaveProperty('apiRoutes')
 		expect(typeof mod.environment.baseUrl).toBe('string')
-		expect(mod.environment.baseUrl.length).toBeGreaterThan(0)
+		expect(mod.environment.baseUrl).toBe('')
+	})
+
+	it('uses an explicitly empty runtime API base URL as same-origin', async () => {
+		;(globalThis as any).API_BASE_URL = ''
+		const mod = await import('@/environments/dev/environment.dev')
+		expect(mod.environment.baseUrl).toBe('')
 	})
 
 	it('apiRoutes is the same object from apiRoutes module', async () => {
@@ -34,6 +40,12 @@ describe('environment – prod', () => {
 		expect(mod.environment).toHaveProperty('baseUrl')
 		expect(mod.environment).toHaveProperty('apiRoutes')
 		expect(typeof mod.environment.baseUrl).toBe('string')
+	})
+
+	it('uses an explicitly empty runtime API base URL as same-origin', async () => {
+		;(globalThis as any).API_BASE_URL = ''
+		const mod = await import('@/environments/prod/environment.prod')
+		expect(mod.environment.baseUrl).toBe('')
 	})
 
 	it('apiRoutes is the same object from apiRoutes module', async () => {

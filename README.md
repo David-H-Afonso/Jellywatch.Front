@@ -45,7 +45,9 @@ npm run dev
 # Available at http://localhost:5173
 ```
 
-The dev server proxies API requests. Configure the API URL in `src/environments/`.
+The dev and preview servers proxy `/api/*` requests to the Jellywatch API.
+By default the proxy target is `http://localhost:5011`; override it with
+`VITE_PROXY_API_URL` when your API is running elsewhere.
 
 ## Production Build
 
@@ -54,7 +56,8 @@ npm run build
 # Output in dist/
 ```
 
-The built files are served by the API's static file middleware in production.
+The production Docker image serves the SPA with nginx and proxies `/api/*`
+requests to the `jellywatch-api:8080` container.
 
 ## Project Structure
 
@@ -103,16 +106,15 @@ docker build -t jellywatch-web .
 docker run -p 80:80 jellywatch-web
 ```
 
-The production image serves the SPA with nginx and proxies `/api/` to the
-`jellywatch-api:8080` container. Keep the frontend and API containers on the
-same Docker network, or set `API_BASE_URL` to a full reachable API origin
-without a trailing `/api`.
+Keep the frontend and API containers on the same Docker network, or set
+`API_BASE_URL` to a full reachable API origin without a trailing `/api`.
 
 ## Environment Variables
 
-| Variable       | Description     | Default                 |
-| -------------- | --------------- | ----------------------- |
-| `API_BASE_URL` | Optional backend API origin. Leave empty to use nginx `/api/` proxy. | empty |
+| Variable             | Description                                                        | Default                 |
+| -------------------- | ------------------------------------------------------------------ | ----------------------- |
+| `API_BASE_URL`       | Runtime backend API origin. Leave empty to use nginx `/api/` proxy. | empty                   |
+| `VITE_PROXY_API_URL` | Local Vite dev/preview proxy target.                               | `http://localhost:5011` |
 
 ## License
 

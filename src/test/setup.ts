@@ -3,6 +3,8 @@ import { cleanup } from '@testing-library/react'
 import { afterEach, afterAll, beforeAll } from 'vitest'
 import { server } from './mocks/server'
 
+;(globalThis as any).API_BASE_URL = 'http://localhost:5011'
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
 afterEach(() => {
 	cleanup()
