@@ -113,6 +113,32 @@ describe('Auth Flow Integration', () => {
 		)
 	})
 
+	it('shows a proxy configuration error when login receives the frontend HTML', async () => {
+		const user = userEvent.setup()
+		server.use(
+			http.post(
+				`${API}/api/auth/login`,
+				() =>
+					new HttpResponse('<!doctype html><html></html>', {
+						headers: { 'Content-Type': 'text/html' },
+					})
+			)
+		)
+
+		const { store } = renderLogin()
+
+		await user.type(screen.getByLabelText(/server/i), 'http://localhost:5011')
+		await user.type(screen.getByLabelText(/username/i), 'wrong')
+		await user.type(screen.getByLabelText(/password/i), 'wrong')
+
+		const submitBtn = screen.getByRole('button', { name: /login|sign in|connect/i })
+		await user.click(submitBtn)
+
+		await waitFor(() => {
+			expect(store.getState().auth.error).toContain('API returned HTML')
+		})
+	})
+
 	it('login form requires all fields', () => {
 		renderLogin()
 		const submitBtn = screen.getByRole('button', { name: /login|sign in|connect/i })

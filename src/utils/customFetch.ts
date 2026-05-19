@@ -143,6 +143,18 @@ const parseResponseData = async (httpResponse: Response): Promise<any> => {
 	return await httpResponse.text()
 }
 
+const apiReturnedHtmlMessage =
+	'API returned HTML instead of data. Check that /api routes are being proxied to the Jellywatch API.'
+
+const isApiRequest = (endpoint: string): boolean => {
+	try {
+		const url = new URL(endpoint, globalThis.location?.origin ?? 'http://localhost')
+		return url.pathname.startsWith('/api/')
+	} catch {
+		return endpoint.startsWith('/api/')
+	}
+}
+
 const createTimeoutPromise = (timeoutMs: number): Promise<never> => {
 	return new Promise((_, reject) => {
 		setTimeout(() => {
@@ -210,13 +222,20 @@ export const customFetch = async <T = any>(
 		const httpResponse = timeoutMs
 			? await Promise.race([fetchPromise, createTimeoutPromise(timeoutMs)])
 			: await fetchPromise
+
+		if (httpResponse.status === 401) {
+			handleUnauthorizedAccess()
+			throw new Error('Session expired. Please login again.')
+		}
+
+		const responseContentType = httpResponse.headers.get('content-type') || ''
+		if (isApiRequest(endpoint) && responseContentType.includes('text/html')) {
+			throw new Error(apiReturnedHtmlMessage)
+		}
+
 		const responseData = await parseResponseData(httpResponse)
 
 		if (!httpResponse.ok) {
-			if (httpResponse.status === 401) {
-				handleUnauthorizedAccess()
-				throw new Error('Session expired. Please login again.')
-			}
 			const errorMessage =
 				typeof responseData === 'string' ? responseData : JSON.stringify(responseData)
 			throw new Error(`HTTP ${httpResponse.status} ${httpResponse.statusText}: ${errorMessage}`)

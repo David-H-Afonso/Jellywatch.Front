@@ -103,13 +103,16 @@ docker build -t jellywatch-web .
 docker run -p 80:80 jellywatch-web
 ```
 
-Set the `API_BASE_URL` environment variable to point to the Jellywatch API.
+The production image serves the SPA with nginx and proxies `/api/` to the
+`jellywatch-api:8080` container. Keep the frontend and API containers on the
+same Docker network, or set `API_BASE_URL` to a full reachable API origin
+without a trailing `/api`.
 
 ## Environment Variables
 
 | Variable       | Description     | Default                 |
 | -------------- | --------------- | ----------------------- |
-| `API_BASE_URL` | Backend API URL | `http://localhost:5011` |
+| `API_BASE_URL` | Optional backend API origin. Leave empty to use nginx `/api/` proxy. | empty |
 
 ## License
 

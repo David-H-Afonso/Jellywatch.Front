@@ -395,6 +395,19 @@ describe('response parsing', () => {
 		expect(result).toContain('<h1>Hi</h1>')
 	})
 
+	it('rejects HTML returned from API routes', async () => {
+		server.use(
+			http.get(
+				`${BASE}/api/probe`,
+				() =>
+					new HttpResponse('<!doctype html><html></html>', {
+						headers: { 'Content-Type': 'text/html' },
+					})
+			)
+		)
+		await expect(customFetch('/api/probe')).rejects.toThrow('API returned HTML')
+	})
+
 	it('parses application/octet-stream response as a Blob', async () => {
 		server.use(
 			http.get(
