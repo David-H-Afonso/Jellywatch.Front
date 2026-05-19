@@ -1,9 +1,21 @@
 import type { RootState } from '@/store'
+import type { AuthState, ProfileInfo } from '@/models/store/AuthState'
 
 export const selectAuth = (state: RootState) => state.auth
 
+const hasValidUserShape = (user: AuthState['user'] | unknown): user is NonNullable<AuthState['user']> =>
+	Boolean(user && typeof user === 'object' && Array.isArray((user as { profiles?: unknown }).profiles))
+
+const selectSafeProfiles = (state: RootState): ProfileInfo[] => {
+	const profiles = state.auth.user?.profiles
+	return Array.isArray(profiles) ? profiles : []
+}
+
 export const selectIsAuthenticated = (state: RootState) =>
-	state.auth.isAuthenticated && state.auth.user !== null && state.auth.token !== null
+	state.auth.isAuthenticated &&
+	typeof state.auth.token === 'string' &&
+	state.auth.token.length > 0 &&
+	hasValidUserShape(state.auth.user)
 
 export const selectCurrentUser = (state: RootState) => state.auth.user
 
@@ -15,6 +27,10 @@ export const selectAuthError = (state: RootState) => state.auth.error
 
 export const selectAuthToken = (state: RootState) => state.auth.token
 
-export const selectActiveProfileId = (state: RootState) => state.auth.user?.activeProfileId ?? null
+export const selectActiveProfileId = (state: RootState) => {
+	const user = state.auth.user
+	if (!hasValidUserShape(user)) return null
+	return user.activeProfileId ?? selectSafeProfiles(state)[0]?.id ?? null
+}
 
-export const selectProfiles = (state: RootState) => state.auth.user?.profiles ?? []
+export const selectProfiles = selectSafeProfiles

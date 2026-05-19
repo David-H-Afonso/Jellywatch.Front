@@ -153,7 +153,7 @@ describe('authSlice – fetchCurrentUser thunk', () => {
 		expect(state.user?.activeProfileId).toBe(10) // first profile
 	})
 
-	it('preserves existing activeProfileId when user already has one', () => {
+	it('falls back to the first profile when the existing activeProfileId no longer exists', () => {
 		const prev = createAuthState({
 			user: {
 				id: 1,
@@ -181,7 +181,55 @@ describe('authSlice – fetchCurrentUser thunk', () => {
 			type: fetchCurrentUser.fulfilled.type,
 			payload: me,
 		})
-		expect(state.user?.activeProfileId).toBe(99)
+		expect(state.user?.activeProfileId).toBe(10)
+	})
+
+	it('preserves existing activeProfileId when it still exists', () => {
+		const prev = createAuthState({
+			user: {
+				id: 1,
+				username: 'u',
+				isAdmin: false,
+				avatarUrl: null,
+				preferredLanguage: 'en',
+				jellyfinUserId: 'j1',
+				profiles: [{ id: 10, displayName: 'A', jellyfinUserId: 'j1', isJoint: false }],
+				activeProfileId: 10,
+			},
+		})
+
+		const me = {
+			id: 1,
+			username: 'u',
+			isAdmin: false,
+			avatarUrl: null,
+			preferredLanguage: 'en',
+			jellyfinUserId: 'j1',
+			profiles: [{ id: 10, displayName: 'A', jellyfinUserId: 'j1', isJoint: false }],
+		}
+
+		const state = authReducer(prev, {
+			type: fetchCurrentUser.fulfilled.type,
+			payload: me,
+		})
+		expect(state.user?.activeProfileId).toBe(10)
+	})
+
+	it('handles missing profiles in /me responses', () => {
+		const state = authReducer(createAuthState({ token: 'tok' }), {
+			type: fetchCurrentUser.fulfilled.type,
+			payload: {
+				id: 1,
+				username: 'u',
+				isAdmin: false,
+				avatarUrl: null,
+				preferredLanguage: 'en',
+				jellyfinUserId: 'j1',
+			},
+		})
+
+		expect(state.user?.profiles).toEqual([])
+		expect(state.user?.activeProfileId).toBeNull()
 	})
 })
 
@@ -224,6 +272,29 @@ describe('auth selectors', () => {
 	it('selectProfiles returns [] when no user', () => {
 		const s = { auth: { ...root.auth, user: null } } as any
 		expect(selectProfiles(s)).toEqual([])
+	})
+
+	it('selectIsAuthenticated is false for a legacy user without profiles', () => {
+		const s = {
+			auth: {
+				...root.auth,
+				user: { id: 1, username: 'legacy', isAdmin: false },
+			},
+		} as any
+		expect(selectIsAuthenticated(s)).toBe(false)
+		expect(selectProfiles(s)).toEqual([])
+		expect(selectActiveProfileId(s)).toBeNull()
+	})
+
+	it('fetchCurrentUser.rejected clears auth when the session expired', () => {
+		const state = authReducer(createAuthState({ isAuthenticated: true, token: 'tok' }), {
+			type: fetchCurrentUser.rejected.type,
+			payload: 'Session expired. Please login again.',
+		})
+
+		expect(state.isAuthenticated).toBe(false)
+		expect(state.token).toBeNull()
+		expect(state.user).toBeNull()
 	})
 })
 

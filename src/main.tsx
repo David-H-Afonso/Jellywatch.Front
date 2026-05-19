@@ -7,6 +7,7 @@ import { store, persistor } from './store'
 import { router } from '@/navigation/router'
 import { initCustomFetch } from '@/utils/customFetch'
 import { forceLogout } from '@/store/features/auth/authSlice'
+import { SessionBootstrap } from '@/components/Auth'
 import '@/i18n'
 import './App.scss'
 
@@ -16,7 +17,9 @@ createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<Provider store={store}>
 			<PersistGate loading={<div>Loading...</div>} persistor={persistor}>
-				<RouterProvider router={router} />
+				<SessionBootstrap>
+					<RouterProvider router={router} />
+				</SessionBootstrap>
 			</PersistGate>
 		</Provider>
 	</StrictMode>

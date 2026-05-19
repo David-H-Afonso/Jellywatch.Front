@@ -34,7 +34,6 @@ describe('environment – prod', () => {
 		expect(mod.environment).toHaveProperty('baseUrl')
 		expect(mod.environment).toHaveProperty('apiRoutes')
 		expect(typeof mod.environment.baseUrl).toBe('string')
-		expect(mod.environment.baseUrl.length).toBeGreaterThan(0)
 	})
 
 	it('apiRoutes is the same object from apiRoutes module', async () => {

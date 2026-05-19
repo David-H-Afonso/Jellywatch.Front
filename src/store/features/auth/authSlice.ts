@@ -5,6 +5,26 @@ import type { AuthState, ProfileInfo } from '@/models/store/AuthState'
 
 const setLoginToken = createAction<string>('auth/setLoginToken')
 
+const normalizeProfiles = (profiles: unknown): ProfileInfo[] => {
+	if (!Array.isArray(profiles)) return []
+
+	return profiles
+		.filter((profile) => profile && typeof profile === 'object')
+		.map((profile) => {
+			const p = profile as Partial<ProfileInfo>
+			return {
+				id: Number(p.id),
+				displayName: p.displayName ?? '',
+				jellyfinUserId: p.jellyfinUserId ?? '',
+				isJoint: p.isJoint === true,
+			}
+		})
+		.filter((profile) => Number.isFinite(profile.id))
+}
+
+const isUnauthorizedMessage = (message: string): boolean =>
+	/session expired|unauthorized|401/i.test(message)
+
 const initialState: AuthState = {
 	isAuthenticated: false,
 	user: null,
@@ -19,7 +39,7 @@ export const loginUser = createAsyncThunk(
 		try {
 			const response = await authService.login(credentials)
 			dispatch(setLoginToken(response.token))
-			await dispatch(fetchCurrentUser())
+			await dispatch(fetchCurrentUser()).unwrap()
 			return response
 		} catch (error) {
 			if (error instanceof Error) {
@@ -101,12 +121,17 @@ const authSlice = createSlice({
 
 		builder.addCase(fetchCurrentUser.fulfilled, (state, action) => {
 			const me = action.payload
-			const profiles: ProfileInfo[] = me.profiles.map((p) => ({
-				id: p.id,
-				displayName: p.displayName,
-				jellyfinUserId: p.jellyfinUserId,
-				isJoint: p.isJoint,
-			}))
+			const profiles = normalizeProfiles(me.profiles)
+			const previousActiveProfileId = state.user?.activeProfileId ?? null
+			const activeProfileId =
+				previousActiveProfileId != null &&
+				profiles.some((profile) => profile.id === previousActiveProfileId)
+					? previousActiveProfileId
+					: (profiles[0]?.id ?? null)
+
+			state.loading = false
+			state.error = null
+			state.isAuthenticated = Boolean(state.token)
 			state.user = {
 				id: me.id,
 				username: me.username,
@@ -115,7 +140,22 @@ const authSlice = createSlice({
 				preferredLanguage: me.preferredLanguage,
 				jellyfinUserId: me.jellyfinUserId,
 				profiles,
-				activeProfileId: state.user?.activeProfileId ?? profiles[0]?.id ?? null,
+				activeProfileId,
+			}
+		})
+		builder.addCase(fetchCurrentUser.pending, (state) => {
+			state.loading = true
+			state.error = null
+		})
+		builder.addCase(fetchCurrentUser.rejected, (state, action) => {
+			const message = (action.payload as string) || 'Failed to fetch user info'
+			state.loading = false
+			state.error = message
+
+			if (isUnauthorizedMessage(message)) {
+				state.isAuthenticated = false
+				state.user = null
+				state.token = null
 			}
 		})
 	},
