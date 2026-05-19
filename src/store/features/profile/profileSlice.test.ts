@@ -78,6 +78,19 @@ describe('profileSlice – thunk extra reducers', () => {
 		expect(state.activityPagination.totalCount).toBe(5)
 	})
 
+	it('fetchProfileActivity.fulfilled falls back to empty activity for malformed payloads', () => {
+		const state = profileReducer(
+			{ ...initial, activity: [{ id: 1 }] as any },
+			{
+				type: fetchProfileActivity.fulfilled.type,
+				payload: {},
+			}
+		)
+
+		expect(state.activity).toEqual([])
+		expect(state.activityPagination).toEqual(initial.activityPagination)
+	})
+
 	it('fetchProfileActivity.rejected sets error', () => {
 		const state = profileReducer(initial, {
 			type: fetchProfileActivity.rejected.type,
@@ -162,9 +175,19 @@ describe('profileSlice – edge cases', () => {
 		expect(selectProfileActivity(s)).toEqual([])
 	})
 
+	it('selectProfileActivity returns empty array for legacy undefined activity', () => {
+		const s = { profile: { ...initial, activity: undefined } } as any
+		expect(selectProfileActivity(s)).toEqual([])
+	})
+
 	it('selectProfileActivityPagination returns defaults initially', () => {
 		const s = { profile: initial } as any
 		expect(selectProfileActivityPagination(s).page).toBe(1)
 		expect(selectProfileActivityPagination(s).totalCount).toBe(0)
+	})
+
+	it('selectProfileActivityPagination returns defaults for legacy undefined pagination', () => {
+		const s = { profile: { ...initial, activityPagination: undefined } } as any
+		expect(selectProfileActivityPagination(s)).toEqual(initial.activityPagination)
 	})
 })

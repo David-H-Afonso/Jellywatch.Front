@@ -151,6 +151,33 @@ describe('Dashboard Flow', () => {
 		})
 	})
 
+	it('does not crash when activity payload is missing data', async () => {
+		server.use(
+			http.get(`${API}/api/profile/:id/activity`, () => {
+				return HttpResponse.json({})
+			})
+		)
+		const { store } = renderDashboard()
+
+		await waitFor(() => {
+			expect(store.getState().profile.activity).toEqual([])
+			expect(screen.getByText(/TestUser/)).toBeInTheDocument()
+		})
+	})
+
+	it('does not crash when upcoming payload is missing data', async () => {
+		server.use(
+			http.get(`${API}/api/stats/:id/upcoming`, () => {
+				return HttpResponse.json({})
+			})
+		)
+		renderDashboard()
+
+		await waitFor(() => {
+			expect(screen.getByText(/TestUser/)).toBeInTheDocument()
+		})
+	})
+
 	it('includes profile selector', () => {
 		renderDashboard()
 		// ProfileSelector renders a SyncButton

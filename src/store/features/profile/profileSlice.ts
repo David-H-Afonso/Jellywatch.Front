@@ -43,12 +43,12 @@ const profileSlice = createSlice({
 			})
 			.addCase(fetchProfileActivity.fulfilled, (state, action) => {
 				state.loading = false
-				state.activity = action.payload.data
+				state.activity = Array.isArray(action.payload?.data) ? action.payload.data : []
 				state.activityPagination = {
-					page: action.payload.page,
-					pageSize: action.payload.pageSize,
-					totalCount: action.payload.totalCount,
-					totalPages: action.payload.totalPages,
+					page: action.payload?.page ?? initialState.activityPagination.page,
+					pageSize: action.payload?.pageSize ?? initialState.activityPagination.pageSize,
+					totalCount: action.payload?.totalCount ?? initialState.activityPagination.totalCount,
+					totalPages: action.payload?.totalPages ?? initialState.activityPagination.totalPages,
 				}
 			})
 			.addCase(fetchProfileActivity.rejected, (state, action) => {

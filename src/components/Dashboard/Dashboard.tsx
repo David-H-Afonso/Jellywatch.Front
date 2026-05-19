@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
 			dispatch(fetchProfileDetail(activeProfileId))
 			dispatch(fetchProfileActivity({ profileId: activeProfileId, params: { pageSize: 10 } }))
 			getUpcoming(activeProfileId, 30)
-				.then(setUpcoming)
+				.then((result) => setUpcoming(Array.isArray(result) ? result : []))
 				.catch(() => setUpcoming([]))
 		}
 	}, [dispatch, activeProfileId])
