@@ -17,6 +17,7 @@ import {
 	StarRating,
 	PosterPickerModal,
 	CastSection,
+	AddToWatchlistModal,
 } from '@/components/elements'
 import { WatchState } from '@/models/api/Enums'
 import {
@@ -62,6 +63,7 @@ const MovieDetail: React.FC = () => {
 	const [customDate, setCustomDate] = useState('')
 	const [showConfirmRemove, setShowConfirmRemove] = useState(false)
 	const [showConfirmBlock, setShowConfirmBlock] = useState(false)
+	const [showWatchlistModal, setShowWatchlistModal] = useState(false)
 	const dateMenuRef = useRef<HTMLDivElement>(null)
 	const menuRef = useRef<HTMLDivElement>(null)
 	const [showMenu, setShowMenu] = useState(false)
@@ -260,6 +262,11 @@ const MovieDetail: React.FC = () => {
 					<div className='movie-detail__title-row'>
 						<h1>{title}</h1>
 						<WatchStateBadge state={movie.state} />
+						{activeProfileId && (
+							<button className='movie-detail__toggle' onClick={() => setShowWatchlistModal(true)}>
+								+ {t('watchlists.addToWatchlist')}
+							</button>
+						)}
 						{activeProfileId && (
 							<div className='movie-detail__admin-menu-wrap' ref={menuRef}>
 								<input
@@ -527,6 +534,13 @@ const MovieDetail: React.FC = () => {
 					mediaItemId={movie.mediaItemId}
 					onClose={() => setShowPosterPicker(false)}
 					onSelected={handlePosterSelected}
+				/>
+			)}
+			{showWatchlistModal && movie && (
+				<AddToWatchlistModal
+					mediaItemId={movie.mediaItemId}
+					mediaTitle={title}
+					onClose={() => setShowWatchlistModal(false)}
 				/>
 			)}
 		</div>

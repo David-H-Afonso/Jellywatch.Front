@@ -16,6 +16,7 @@
 		"cypress:run": "cypress run"
 	},
 	"dependencies": {
+		"@dnd-kit/react": "^0.4.0",
 		"@reduxjs/toolkit": "^2.9.0",
 		"i18next": "^26.0.3",
 		"i18next-browser-languagedetector": "^8.2.1",

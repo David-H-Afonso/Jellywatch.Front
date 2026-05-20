@@ -25,6 +25,7 @@ import {
 	PosterPickerModal,
 	StarRating,
 	CastSection,
+	AddToWatchlistModal,
 } from '@/components/elements'
 import { WatchState } from '@/models/api/Enums'
 import {
@@ -38,12 +39,17 @@ import {
 	getSeriesCredits,
 	addManually,
 } from '@/services/MediaService/MediaService'
-import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
-import { refreshSeriesWatchDates } from '@/services/AdminService/AdminService'
+import {
+	deleteMediaItem,
+	forcePropagateSeriesFromParents,
+	refreshMediaItem,
+	refreshSeriesWatchDates,
+} from '@/services/AdminService/AdminService'
 import {
 	removeMediaFromProfile,
 	blockMediaForProfile,
 	unblockMediaForProfile,
+	updateSeriesDashboardPreference,
 } from '@/services/ProfileService/ProfileService'
 import type { SeasonDto } from '@/models/api'
 import './SeriesDetail.scss'
@@ -69,6 +75,7 @@ const SeriesDetail: React.FC = () => {
 	const [refreshing, setRefreshing] = useState(false)
 	const [refreshingImages, setRefreshingImages] = useState(false)
 	const [refreshingDates, setRefreshingDates] = useState(false)
+	const [forcingParentSync, setForcingParentSync] = useState(false)
 	const [showPosterPicker, setShowPosterPicker] = useState(false)
 	const [showLogoPicker, setShowLogoPicker] = useState(false)
 	const [savingRating, setSavingRating] = useState(false)
@@ -79,6 +86,7 @@ const SeriesDetail: React.FC = () => {
 	const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 	const [showConfirmRemove, setShowConfirmRemove] = useState(false)
 	const [showConfirmBlock, setShowConfirmBlock] = useState(false)
+	const [showWatchlistModal, setShowWatchlistModal] = useState(false)
 	const [posterVersion, setPosterVersion] = useState(0)
 	const [datePickerTarget, setDatePickerTarget] = useState<
 		{ type: 'season'; seasonId: number } | { type: 'series' } | null
@@ -239,6 +247,12 @@ const SeriesDetail: React.FC = () => {
 		if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
 	}
 
+	const handleDashboardPreference = async () => {
+		if (!activeProfileId || !series) return
+		await updateSeriesDashboardPreference(activeProfileId, series.id, !series.isInDashboard)
+		if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
+	}
+
 	const handleAddToLibrary = async () => {
 		if (!activeProfileId || !series || !series.tmdbId) return
 		setIsAddingToLibrary(true)
@@ -288,6 +302,17 @@ const SeriesDetail: React.FC = () => {
 			// Forbidden for non-admins — button is hidden anyway
 		} finally {
 			setRefreshingDates(false)
+		}
+	}
+
+	const handleForceParentSync = async () => {
+		if (!series || !activeProfileId) return
+		setForcingParentSync(true)
+		try {
+			await forcePropagateSeriesFromParents(series.id, activeProfileId)
+			if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
+		} finally {
+			setForcingParentSync(false)
 		}
 	}
 
@@ -366,6 +391,11 @@ const SeriesDetail: React.FC = () => {
 								</button>
 							)}
 							{activeProfileId && (
+								<button className='series-detail__add-btn' onClick={() => setShowWatchlistModal(true)}>
+									+ {t('watchlists.addToWatchlist')}
+								</button>
+							)}
+							{activeProfileId && (
 								<div className='series-detail__admin-menu-wrap' ref={menuRef}>
 									<input
 										ref={posterInputRef}
@@ -402,6 +432,29 @@ const SeriesDetail: React.FC = () => {
 														setShowMenu(false)
 													}}>
 													{t('admin.removeFromList')}
+												</button>
+											)}
+											{series.isInLibrary && (
+												<button
+													onClick={async () => {
+														setShowMenu(false)
+														await handleDashboardPreference()
+													}}>
+													{series.isInDashboard
+														? t('watchlists.removeFromDashboard')
+														: t('watchlists.addToDashboard')}
+												</button>
+											)}
+											{series.isInLibrary && activeProfileId && (
+												<button
+													onClick={async () => {
+														setShowMenu(false)
+														await handleForceParentSync()
+													}}
+													disabled={forcingParentSync}>
+													{forcingParentSync
+														? t('watchlists.syncingFromParent')
+														: t('watchlists.forceParentSync')}
 												</button>
 											)}
 											{isAdmin && (
@@ -949,6 +1002,13 @@ const SeriesDetail: React.FC = () => {
 					type='logo'
 					onClose={() => setShowLogoPicker(false)}
 					onSelected={() => setShowLogoPicker(false)}
+				/>
+			)}
+			{showWatchlistModal && series && (
+				<AddToWatchlistModal
+					mediaItemId={series.mediaItemId}
+					mediaTitle={title}
+					onClose={() => setShowWatchlistModal(false)}
 				/>
 			)}
 			{showConfirmDelete && (

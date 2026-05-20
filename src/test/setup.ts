@@ -5,6 +5,14 @@ import { server } from './mocks/server'
 
 ;(globalThis as any).API_BASE_URL = 'http://localhost:5011'
 
+class ResizeObserverMock {
+	observe() {}
+	unobserve() {}
+	disconnect() {}
+}
+
+;(globalThis as any).ResizeObserver ??= ResizeObserverMock
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
 afterEach(() => {
 	cleanup()

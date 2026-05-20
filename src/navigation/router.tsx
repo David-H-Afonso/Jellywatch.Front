@@ -10,6 +10,7 @@ import Activity from '@/components/Activity/Activity'
 import Wrapped from '@/components/Wrapped/Wrapped'
 import Calendar from '@/components/Calendar/Calendar'
 import DataManager from '@/components/DataManager/DataManager'
+import Watchlists from '@/components/Watchlists/Watchlists'
 import { Login, ProtectedRoute, PublicRoute } from '@/components/Auth'
 import { RouteError, NotFound } from '@/components/errors'
 
@@ -62,6 +63,11 @@ export const router = createHashRouter([
 	{
 		path: '/activity',
 		element: protectedRoute(<Activity />),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/watchlists',
+		element: protectedRoute(<Watchlists />),
 		errorElement: <RouteError />,
 	},
 	{

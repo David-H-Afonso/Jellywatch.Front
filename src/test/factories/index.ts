@@ -6,6 +6,10 @@ import {
 	SyncJobType,
 	SyncJobStatus,
 	ExternalProvider,
+	WatchlistItemType,
+	WatchlistRole,
+	WatchlistState,
+	WatchlistStatus,
 } from '@/models/api/Enums'
 import type {
 	LoginResponse,
@@ -39,6 +43,16 @@ import type {
 	BlacklistedItemDto,
 } from '@/models/api/Sync'
 import type { WrappedDto, CalendarDayDto, UpcomingEpisodeDto } from '@/models/api/Stats'
+import type {
+	WatchlistDetailDto,
+	WatchlistIndexDto,
+	WatchlistInvitationDto,
+	WatchlistItemDto,
+	WatchlistMediaItemDto,
+	WatchlistMemberDto,
+	WatchlistPermissionsDto,
+	WatchlistSummaryDto,
+} from '@/models/api/Watchlist'
 import type { AuthState, ProfileInfo } from '@/models/store/AuthState'
 import type { SeriesState } from '@/models/store/SeriesState'
 import type { MoviesState } from '@/models/store/MoviesState'
@@ -193,6 +207,9 @@ export const createSeriesDetailDto = (overrides?: Partial<SeriesDetailDto>): Ser
 	spanishTranslation: null,
 	isBlocked: false,
 	isInLibrary: true,
+	includeInDashboard: false,
+	excludeFromDashboard: false,
+	isInDashboard: false,
 	...overrides,
 })
 
@@ -382,6 +399,137 @@ export const createBlacklistedItemDto = (
 	displayName: 'Blacklisted Item',
 	reason: 'Not relevant',
 	createdAt: '2025-01-15T00:00:00Z',
+	...overrides,
+})
+
+// ── Watchlists ─────────────────────────────────────────────────────
+export const createWatchlistPermissions = (
+	overrides?: Partial<WatchlistPermissionsDto>
+): WatchlistPermissionsDto => ({
+	canAddItems: true,
+	canRemoveItems: true,
+	canReorderItems: true,
+	canUpdateItemStatus: true,
+	canInviteMembers: true,
+	canManageMembers: true,
+	canUpdateWatchlist: true,
+	canDeleteWatchlist: true,
+	...overrides,
+})
+
+export const createWatchlistMediaItemDto = (
+	overrides?: Partial<WatchlistMediaItemDto>
+): WatchlistMediaItemDto => ({
+	mediaItemId: 100,
+	mediaType: MediaType.Series,
+	seriesId: 1,
+	movieId: null,
+	title: 'House of the Dragon',
+	originalTitle: null,
+	posterPath: '/house.jpg',
+	releaseDate: '2024-01-01',
+	isInProfile: true,
+	isBlacklisted: false,
+	canAddToProfile: false,
+	...overrides,
+})
+
+export const createWatchlistItemDto = (
+	overrides?: Partial<WatchlistItemDto>
+): WatchlistItemDto => ({
+	id: nextId(),
+	itemType: WatchlistItemType.MediaItem,
+	mediaItemId: 100,
+	childWatchlistId: null,
+	status: WatchlistStatus.WantToWatch,
+	position: 0,
+	addedByUserId: 1,
+	addedByUsername: 'testuser',
+	createdAt: '2025-01-01T00:00:00Z',
+	updatedAt: '2025-01-01T00:00:00Z',
+	media: createWatchlistMediaItemDto(),
+	childWatchlist: null,
+	...overrides,
+})
+
+export const createWatchlistSummaryDto = (
+	overrides?: Partial<WatchlistSummaryDto>
+): WatchlistSummaryDto => ({
+	id: 1,
+	name: 'Weekly queue',
+	description: 'Shows for this week',
+	state: WatchlistState.Pending,
+	ownerUserId: 1,
+	ownerUsername: 'testuser',
+	role: WatchlistRole.Owner,
+	permissions: createWatchlistPermissions(),
+	itemCount: 1,
+	createdAt: '2025-01-01T00:00:00Z',
+	updatedAt: '2025-01-01T00:00:00Z',
+	...overrides,
+})
+
+export const createWatchlistMemberDto = (
+	overrides?: Partial<WatchlistMemberDto>
+): WatchlistMemberDto => ({
+	id: nextId(),
+	userId: nextId(),
+	username: 'partner',
+	role: WatchlistRole.Member,
+	permissions: createWatchlistPermissions({ canRemoveItems: false, canInviteMembers: false }),
+	createdAt: '2025-01-01T00:00:00Z',
+	...overrides,
+})
+
+export const createWatchlistDetailDto = (
+	overrides?: Partial<WatchlistDetailDto>
+): WatchlistDetailDto => ({
+	...createWatchlistSummaryDto(),
+	members: [
+		createWatchlistMemberDto({
+			id: 1,
+			userId: 1,
+			username: 'testuser',
+			role: WatchlistRole.Owner,
+			permissions: createWatchlistPermissions(),
+			createdAt: '2025-01-01T00:00:00Z',
+		}),
+	],
+	items: [createWatchlistItemDto()],
+	...overrides,
+})
+
+export const createWatchlistInvitationDto = (
+	overrides?: Partial<WatchlistInvitationDto>
+): WatchlistInvitationDto => ({
+	id: 2,
+	watchlistId: 2,
+	watchlistName: 'Partner list',
+	watchlistDescription: 'Shared',
+	invitedByUserId: 2,
+	invitedByUsername: 'partner',
+	role: WatchlistRole.Member,
+	status: 0,
+	createdAt: '2025-01-01T00:00:00Z',
+	preview: {
+		id: 2,
+		name: 'Partner list',
+		description: 'Shared',
+		state: WatchlistState.Pending,
+		hasFullAccess: false,
+		canRequestAccess: false,
+		items: [createWatchlistItemDto({ id: 20 })],
+	},
+	...overrides,
+})
+
+export const createWatchlistIndexDto = (
+	overrides?: Partial<WatchlistIndexDto>
+): WatchlistIndexDto => ({
+	watchlists: [createWatchlistSummaryDto()],
+	pendingInvitations: [],
+	incomingAccessRequests: [],
+	defaultWatchlistId: 1,
 	...overrides,
 })
 

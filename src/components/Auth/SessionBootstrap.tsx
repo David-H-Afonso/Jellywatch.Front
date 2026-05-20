@@ -22,20 +22,14 @@ export const SessionBootstrap: React.FC<SessionBootstrapProps> = ({ children }) 
 			return
 		}
 
-		let cancelled = false
-
 		dispatch(fetchCurrentUser())
 			.unwrap()
 			.catch(() => {
 				/* customFetch/authSlice handle expired or invalid sessions */
 			})
 			.finally(() => {
-				if (!cancelled) setCheckingSession(false)
+				setCheckingSession(false)
 			})
-
-		return () => {
-			cancelled = true
-		}
 	}, [dispatch, token])
 
 	if (checkingSession) return <div>Loading...</div>

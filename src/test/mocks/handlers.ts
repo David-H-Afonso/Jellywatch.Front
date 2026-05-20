@@ -24,6 +24,8 @@ import {
 	createCastMemberDto,
 	createPersonCreditsDto,
 	createNoteDto,
+	createWatchlistDetailDto,
+	createWatchlistIndexDto,
 } from '../factories'
 
 const API = 'http://localhost:5011'
@@ -59,6 +61,14 @@ export const handlers = [
 	),
 	http.delete(
 		`${API}/api/profile/:profileId/media/:mediaItemId`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.post(
+		`${API}/api/profile/:profileId/media/:mediaItemId`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.patch(
+		`${API}/api/profile/:profileId/series/:seriesId/dashboard`,
 		() => new HttpResponse(null, { status: 204 })
 	),
 	http.put(
@@ -200,6 +210,46 @@ export const handlers = [
 	http.get(`${API}/api/stats/:profileId/upcoming`, () =>
 		HttpResponse.json([createUpcomingEpisodeDto()])
 	),
+
+	// ── Watchlists ────────────────────────────────────────────────
+	http.get(`${API}/api/watchlists`, () => HttpResponse.json(createWatchlistIndexDto())),
+	http.post(`${API}/api/watchlists`, () => HttpResponse.json(createWatchlistDetailDto())),
+	http.get(`${API}/api/watchlists/:id`, () => HttpResponse.json(createWatchlistDetailDto())),
+	http.put(`${API}/api/watchlists/:id`, () => new HttpResponse(null, { status: 204 })),
+	http.delete(`${API}/api/watchlists/:id`, () => new HttpResponse(null, { status: 204 })),
+	http.post(`${API}/api/watchlists/:id/complete`, () => new HttpResponse(null, { status: 204 })),
+	http.post(`${API}/api/watchlists/:id/items`, () => new HttpResponse(null, { status: 204 })),
+	http.put(`${API}/api/watchlists/:id/items/:itemId`, () => new HttpResponse(null, { status: 204 })),
+	http.delete(
+		`${API}/api/watchlists/:id/items/:itemId`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.put(`${API}/api/watchlists/:id/items/reorder`, () => new HttpResponse(null, { status: 204 })),
+	http.post(
+		`${API}/api/watchlists/:id/members/invite`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.post(
+		`${API}/api/watchlists/invitations/:id/accept`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.post(
+		`${API}/api/watchlists/invitations/:id/reject`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.post(
+		`${API}/api/watchlists/:id/access-requests`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.post(
+		`${API}/api/watchlists/access-requests/:id/approve`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.post(
+		`${API}/api/watchlists/access-requests/:id/reject`,
+		() => new HttpResponse(null, { status: 204 })
+	),
+	http.put(`${API}/api/watchlists/me/default`, () => new HttpResponse(null, { status: 204 })),
 
 	// ── Data Import/Export ────────────────────────────────────────
 	http.get(

@@ -37,6 +37,9 @@ export interface SeriesDetailDto {
 	spanishTranslation: TranslationDto | null
 	isBlocked: boolean
 	isInLibrary: boolean
+	includeInDashboard: boolean
+	excludeFromDashboard: boolean
+	isInDashboard: boolean
 }
 
 export interface MovieListDto {

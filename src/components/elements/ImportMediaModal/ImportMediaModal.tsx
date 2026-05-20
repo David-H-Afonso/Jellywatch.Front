@@ -5,10 +5,12 @@ import type { TmdbTvSearchResultDto, TmdbMovieSearchResultDto } from '@/models/a
 import './ImportMediaModal.scss'
 
 type MediaTypeOption = 'series' | 'movie'
-type SearchResult = TmdbTvSearchResultDto | TmdbMovieSearchResultDto
+type SearchResult =
+	| (TmdbTvSearchResultDto & { resultType: 'series' })
+	| (TmdbMovieSearchResultDto & { resultType: 'movie' })
 
-function isTvResult(r: SearchResult): r is TmdbTvSearchResultDto {
-	return 'name' in r
+function isTvResult(r: SearchResult): r is TmdbTvSearchResultDto & { resultType: 'series' } {
+	return r.resultType === 'series'
 }
 
 interface Props {
@@ -34,7 +36,7 @@ export const ImportMediaModal: React.FC<Props> = ({
 	const [results, setResults] = useState<SearchResult[]>([])
 	const [searching, setSearching] = useState(false)
 	const [addingId, setAddingId] = useState<number | null>(null)
-	const [addedIds, setAddedIds] = useState<Set<number>>(new Set())
+	const [addedIds, setAddedIds] = useState<Set<string>>(new Set())
 	const [error, setError] = useState<string | null>(null)
 	const [idSuccess, setIdSuccess] = useState(false)
 
@@ -52,8 +54,21 @@ export const ImportMediaModal: React.FC<Props> = ({
 		setError(null)
 		setResults([])
 		try {
-			const data = await searchTmdb(query.trim(), mediaType, year ? Number(year) : undefined)
-			setResults(data)
+			const [seriesResults, movieResults] = await Promise.all([
+				searchTmdb(query.trim(), 'series', year ? Number(year) : undefined),
+				searchTmdb(query.trim(), 'movie', year ? Number(year) : undefined),
+			])
+			const taggedSeries = (seriesResults as TmdbTvSearchResultDto[]).map((result) => ({
+				...result,
+				resultType: 'series' as const,
+			}))
+			const taggedMovies = (movieResults as TmdbMovieSearchResultDto[]).map((result) => ({
+				...result,
+				resultType: 'movie' as const,
+			}))
+			const preferred = mediaType === 'series' ? taggedSeries : taggedMovies
+			const secondary = mediaType === 'series' ? taggedMovies : taggedSeries
+			setResults([...preferred, ...secondary].slice(0, 20))
 		} catch {
 			setError(t('common.error'))
 		} finally {
@@ -61,12 +76,12 @@ export const ImportMediaModal: React.FC<Props> = ({
 		}
 	}
 
-	const handleAdd = async (tmdbId: number): Promise<boolean> => {
+	const handleAdd = async (tmdbId: number, type: MediaTypeOption): Promise<boolean> => {
 		setAddingId(tmdbId)
 		setError(null)
 		try {
-			await addManually({ tmdbId, type: mediaType, profileId })
-			setAddedIds((prev) => new Set(prev).add(tmdbId))
+			await addManually({ tmdbId, type, profileId })
+			setAddedIds((prev) => new Set(prev).add(`${type}-${tmdbId}`))
 			onAdded()
 			return true
 		} catch {
@@ -81,7 +96,7 @@ export const ImportMediaModal: React.FC<Props> = ({
 		e.preventDefault()
 		const id = Number(tmdbIdInput.trim())
 		if (!id || isNaN(id)) return
-		const success = await handleAdd(id)
+		const success = await handleAdd(id, mediaType)
 		if (success) {
 			setTmdbIdInput('')
 			setIdSuccess(true)
@@ -172,11 +187,11 @@ export const ImportMediaModal: React.FC<Props> = ({
 										: result.release_date?.slice(0, 4)
 									const posterPath = result.poster_path
 									const isAdding = addingId === result.id
-									const isAdded = addedIds.has(result.id)
+									const isAdded = addedIds.has(`${result.resultType}-${result.id}`)
 
 									return (
 										<div
-											key={result.id}
+											key={`${result.resultType}-${result.id}`}
 											className={`import-result ${isAdded ? 'import-result--added' : ''}`}>
 											<div className='import-result__poster'>
 												{posterPath ? (
@@ -192,6 +207,7 @@ export const ImportMediaModal: React.FC<Props> = ({
 											<div className='import-result__info'>
 												<h4 className='import-result__title'>{title}</h4>
 												<div className='import-result__meta'>
+													<span>{isTv ? t('import.series') : t('import.movie')}</span>
 													{releaseYear && <span>{releaseYear}</span>}
 													{result.vote_average > 0 && (
 														<span>★ {result.vote_average.toFixed(1)}</span>
@@ -203,7 +219,7 @@ export const ImportMediaModal: React.FC<Props> = ({
 											</div>
 											<button
 												className={`import-result__btn ${isAdded ? 'import-result__btn--added' : 'btn-primary'}`}
-												onClick={() => !isAdded && handleAdd(result.id)}
+												onClick={() => !isAdded && handleAdd(result.id, result.resultType)}
 												disabled={isAdding || isAdded}>
 												{isAdded
 													? t('import.added')

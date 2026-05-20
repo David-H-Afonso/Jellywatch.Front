@@ -38,6 +38,23 @@ export const removeMediaFromProfile = async (
 	})
 }
 
+export const addMediaToProfile = async (profileId: number, mediaItemId: number): Promise<void> => {
+	await customFetch<void>(apiRoutes.profile.addMedia(profileId, mediaItemId), {
+		method: 'POST',
+	})
+}
+
+export const updateSeriesDashboardPreference = async (
+	profileId: number,
+	seriesId: number,
+	includeInDashboard: boolean
+): Promise<void> => {
+	await customFetch<void>(apiRoutes.profile.seriesDashboard(profileId, seriesId), {
+		method: 'PATCH',
+		body: { includeInDashboard },
+	})
+}
+
 export const blockMediaForProfile = async (
 	profileId: number,
 	mediaItemId: number

@@ -83,6 +83,7 @@ describe('ImportMediaModal', () => {
 	it('performs search and shows results', async () => {
 		const user = userEvent.setup()
 		mockSearchTmdb.mockResolvedValueOnce(mockSearchResults as any)
+		mockSearchTmdb.mockResolvedValueOnce([])
 		renderModal()
 
 		const input = screen.getByPlaceholderText(/title/i)
@@ -96,11 +97,13 @@ describe('ImportMediaModal', () => {
 		})
 		expect(screen.getByText('Better Call Saul')).toBeInTheDocument()
 		expect(mockSearchTmdb).toHaveBeenCalledWith('Breaking', 'series', undefined)
+		expect(mockSearchTmdb).toHaveBeenCalledWith('Breaking', 'movie', undefined)
 	})
 
 	it('adds media item from search results', async () => {
 		const user = userEvent.setup()
 		mockSearchTmdb.mockResolvedValueOnce(mockSearchResults as any)
+		mockSearchTmdb.mockResolvedValueOnce([])
 		mockAddManually.mockResolvedValueOnce(undefined as any)
 		const { onAdded } = renderModal()
 
@@ -171,6 +174,7 @@ describe('ImportMediaModal', () => {
 
 	it('shows no results message', async () => {
 		const user = userEvent.setup()
+		mockSearchTmdb.mockResolvedValueOnce([])
 		mockSearchTmdb.mockResolvedValueOnce([])
 		renderModal()
 

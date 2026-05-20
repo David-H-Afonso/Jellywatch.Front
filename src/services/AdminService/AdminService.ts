@@ -90,6 +90,16 @@ export const refreshSeriesWatchDates = async (
 	)
 }
 
+export const forcePropagateSeriesFromParents = async (
+	seriesId: number,
+	targetProfileId: number
+): Promise<{ updated: number; message: string; sourceProfileCount: number }> => {
+	return await customFetch<{ updated: number; message: string; sourceProfileCount: number }>(
+		apiRoutes.sync.forcePropagateSeries(seriesId, targetProfileId),
+		{ method: 'POST' }
+	)
+}
+
 export const getMediaLibrary = async (
 	page = 1,
 	pageSize = 10

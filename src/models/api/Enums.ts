@@ -59,3 +59,50 @@ export const ImportStatus = {
 	Failed: 3,
 } as const
 export type ImportStatus = (typeof ImportStatus)[keyof typeof ImportStatus]
+
+export const WatchlistStatus = {
+	WantToWatch: 0,
+	Watching: 1,
+	Paused: 2,
+	Watched: 3,
+	Dropped: 4,
+} as const
+export type WatchlistStatus = (typeof WatchlistStatus)[keyof typeof WatchlistStatus]
+
+export const WatchlistState = {
+	Pending: 0,
+	Watching: 1,
+	Completed: 2,
+	Paused: 3,
+	Archived: 4,
+} as const
+export type WatchlistState = (typeof WatchlistState)[keyof typeof WatchlistState]
+
+export const WatchlistRole = {
+	Owner: 0,
+	Admin: 1,
+	Member: 2,
+} as const
+export type WatchlistRole = (typeof WatchlistRole)[keyof typeof WatchlistRole]
+
+export const WatchlistItemType = {
+	MediaItem: 0,
+	Watchlist: 1,
+} as const
+export type WatchlistItemType = (typeof WatchlistItemType)[keyof typeof WatchlistItemType]
+
+export const WatchlistInvitationStatus = {
+	Pending: 0,
+	Accepted: 1,
+	Rejected: 2,
+} as const
+export type WatchlistInvitationStatus =
+	(typeof WatchlistInvitationStatus)[keyof typeof WatchlistInvitationStatus]
+
+export const WatchlistAccessRequestStatus = {
+	Pending: 0,
+	Approved: 1,
+	Rejected: 2,
+} as const
+export type WatchlistAccessRequestStatus =
+	(typeof WatchlistAccessRequestStatus)[keyof typeof WatchlistAccessRequestStatus]

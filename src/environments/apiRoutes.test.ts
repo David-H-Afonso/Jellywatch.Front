@@ -34,6 +34,7 @@ describe('apiRoutes – static paths', () => {
 		expect(apiRoutes.sync.jobs).toBe('/api/sync/jobs')
 		expect(apiRoutes.sync.webhookLogs).toBe('/api/sync/webhook-logs')
 		expect(apiRoutes.sync.rePropagate).toBe('/api/sync/re-propagate')
+		expect(apiRoutes.sync.forcePropagateSeries(11, 22)).toBe('/api/sync/force-propagate-series/11?targetProfileId=22')
 	})
 
 	it('admin routes', () => {

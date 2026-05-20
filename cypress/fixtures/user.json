@@ -5,6 +5,5 @@
 	"avatarUrl": null,
 	"preferredLanguage": "en",
 	"jellyfinUserId": "jf-user-1",
-	"profiles": [{ "id": 10, "name": "Main" }],
-	"activeProfileId": 10
+	"profiles": [{ "id": 10, "displayName": "Main", "jellyfinUserId": "jf-user-1", "isJoint": false }]
 }

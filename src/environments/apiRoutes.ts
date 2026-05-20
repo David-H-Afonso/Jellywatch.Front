@@ -18,10 +18,14 @@ export const apiRoutes = {
 			`/api/profile/${profileId}/series/${seriesId}/state`,
 		removeMedia: (profileId: number, mediaItemId: number) =>
 			`/api/profile/${profileId}/media/${mediaItemId}`,
+		addMedia: (profileId: number, mediaItemId: number) =>
+			`/api/profile/${profileId}/media/${mediaItemId}`,
 		blockMedia: (profileId: number, mediaItemId: number) =>
 			`/api/profile/${profileId}/media/${mediaItemId}/block`,
 		unblockMedia: (profileId: number, mediaItemId: number) =>
 			`/api/profile/${profileId}/media/${mediaItemId}/block`,
+		seriesDashboard: (profileId: number, seriesId: number) =>
+			`/api/profile/${profileId}/series/${seriesId}/dashboard`,
 		blocks: (profileId: number) => `/api/profile/${profileId}/blocks`,
 	},
 	series: {
@@ -62,6 +66,8 @@ export const apiRoutes = {
 		rePropagate: '/api/sync/re-propagate',
 		refreshWatchDates: (seriesId: number, profileId: number) =>
 			`/api/sync/refresh-watch-dates/${seriesId}?profileId=${profileId}`,
+		forcePropagateSeries: (seriesId: number, targetProfileId: number) =>
+			`/api/sync/force-propagate-series/${seriesId}?targetProfileId=${targetProfileId}`,
 		jobs: '/api/sync/jobs',
 		webhookLogs: '/api/sync/webhook-logs',
 	},
@@ -113,6 +119,27 @@ export const apiRoutes = {
 		adminUsers: '/api/backupschedule/admin/users',
 		adminUser: (userId: number) => `/api/backupschedule/admin/${userId}`,
 		adminRunNow: (userId: number) => `/api/backupschedule/admin/${userId}/run-now`,
+	},
+	watchlists: {
+		base: '/api/watchlists',
+		byId: (id: number) => `/api/watchlists/${id}`,
+		complete: (id: number) => `/api/watchlists/${id}/complete`,
+		items: (id: number) => `/api/watchlists/${id}/items`,
+		item: (id: number, itemId: number) => `/api/watchlists/${id}/items/${itemId}`,
+		reorder: (id: number) => `/api/watchlists/${id}/items/reorder`,
+		invite: (id: number) => `/api/watchlists/${id}/members/invite`,
+		users: '/api/watchlists/users',
+		member: (id: number, memberId: number) => `/api/watchlists/${id}/members/${memberId}`,
+		leave: (id: number) => `/api/watchlists/${id}/me`,
+		acceptInvitation: (invitationId: number) =>
+			`/api/watchlists/invitations/${invitationId}/accept`,
+		rejectInvitation: (invitationId: number) =>
+			`/api/watchlists/invitations/${invitationId}/reject`,
+		requestAccess: (id: number) => `/api/watchlists/${id}/access-requests`,
+		approveAccess: (requestId: number) =>
+			`/api/watchlists/access-requests/${requestId}/approve`,
+		rejectAccess: (requestId: number) => `/api/watchlists/access-requests/${requestId}/reject`,
+		default: '/api/watchlists/me/default',
 	},
 } as const
 

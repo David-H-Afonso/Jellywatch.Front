@@ -54,6 +54,11 @@ export const Header: React.FC = () => {
 					<Link to='/activity' className={`nav-link ${isActive('/activity') ? 'active' : ''}`}>
 						{t('nav.activity')}
 					</Link>
+					<Link
+						to='/watchlists'
+						className={`nav-link ${isActive('/watchlists') ? 'active' : ''}`}>
+						{t('nav.watchlists')}
+					</Link>
 					<Link to='/wrapped' className={`nav-link ${isActive('/wrapped') ? 'active' : ''}`}>
 						{t('nav.wrapped')}
 					</Link>
