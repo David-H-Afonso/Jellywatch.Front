@@ -400,6 +400,7 @@ const MovieDetail: React.FC = () => {
 						value={movie.userRating ?? null}
 						onChange={handleRate}
 						saving={savingRating}
+						showValue
 					/>
 
 					<div className='movie-detail__toggle-wrap'>

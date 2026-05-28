@@ -196,6 +196,7 @@ describe('Series Detail Flow', () => {
 		await waitFor(() => {
 			expect(screen.getByText('Breaking Bad')).toBeInTheDocument()
 		})
+		expect(screen.getByText('8/10')).toBeInTheDocument()
 		// Star rating buttons should be present
 		const starButtons = screen.getAllByRole('button').filter((b) => b.className.includes('star'))
 		expect(starButtons.length).toBeGreaterThanOrEqual(1)

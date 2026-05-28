@@ -6,6 +6,7 @@ import { selectActiveProfileId } from '@/store/features/auth/selector'
 import { getWrapped } from '@/services/StatsService/StatsService'
 import { MediaPoster } from '@/components/elements'
 import type { WrappedDto, GenreBreakdownDto } from '@/models/api'
+import { formatUserRating } from '@/utils'
 import './Wrapped.scss'
 const MONTH_KEYS = [
 	'january',
@@ -290,7 +291,7 @@ const Wrapped: React.FC = () => {
 															)}
 															{mv.userRating != null && (
 																<span className='wrapped__month-rating wrapped__month-rating--user'>
-																	★ {(mv.userRating / 2).toFixed(1)}
+																	★ {formatUserRating(mv.userRating)}
 																</span>
 															)}
 															{mv.userRating == null && mv.tmdbRating != null && (
@@ -337,7 +338,7 @@ const Wrapped: React.FC = () => {
 										</span>
 										{data!.firstWatch.userRating != null && (
 											<span className='wrapped__list-rating wrapped__list-rating--user'>
-												★ {(data!.firstWatch.userRating / 2).toFixed(1)}
+												★ {formatUserRating(data!.firstWatch.userRating)}
 											</span>
 										)}
 										{data!.firstWatch.userRating == null && data!.firstWatch.tmdbRating != null && (
@@ -374,7 +375,7 @@ const Wrapped: React.FC = () => {
 												{s.userRating != null && (
 													<span className='wrapped__list-rating wrapped__list-rating--user'>
 														{' '}
-														· ★ {(s.userRating / 2).toFixed(1)}
+														· ★ {formatUserRating(s.userRating)}
 													</span>
 												)}
 												{s.userRating == null && s.tmdbRating != null && (
@@ -418,7 +419,7 @@ const Wrapped: React.FC = () => {
 												{m.userRating != null && (
 													<span className='wrapped__list-rating wrapped__list-rating--user'>
 														{' '}
-														· ★ {(m.userRating / 2).toFixed(1)}
+														· ★ {formatUserRating(m.userRating)}
 													</span>
 												)}
 												{m.userRating == null && m.tmdbRating != null && (

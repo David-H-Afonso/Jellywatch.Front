@@ -12,6 +12,7 @@ import {
 import { fetchProfileActivity } from '@/store/features/profile'
 import { ProfileSelector, WatchStateBadge, Pagination, MediaPoster } from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
+import { formatUserRating } from '@/utils'
 import './Activity.scss'
 
 const DATE_PRESETS = ['all', '7d', '30d', '90d', 'custom'] as const
@@ -246,7 +247,7 @@ const Activity: React.FC = () => {
 										)}
 									{item.userRating != null && (
 										<span className='activity-page__rating' title={t('activity.userRating')}>
-											★ {(item.userRating / 2).toFixed(1)}
+											★ {formatUserRating(item.userRating)}
 										</span>
 									)}
 									{item.tmdbRating != null && (

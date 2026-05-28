@@ -52,6 +52,7 @@ import {
 	updateSeriesDashboardPreference,
 } from '@/services/ProfileService/ProfileService'
 import type { SeasonDto } from '@/models/api'
+import { formatUserRating } from '@/utils'
 import './SeriesDetail.scss'
 
 const CalendarIcon = () => (
@@ -561,6 +562,7 @@ const SeriesDetail: React.FC = () => {
 							value={series.userRating ?? null}
 							onChange={handleRate}
 							saving={savingRating}
+							showValue
 						/>
 					</div>
 					{overview && <p className='series-detail__overview'>{overview}</p>}
@@ -733,7 +735,7 @@ const SeriesDetail: React.FC = () => {
 								</span>
 							</div>
 							{season.userRating != null && (
-								<span className='season-header__user-rating'>★ {season.userRating / 2}</span>
+								<span className='season-header__user-rating'>★ {formatUserRating(season.userRating)}</span>
 							)}
 							{activeProfileId &&
 								(() => {
@@ -920,6 +922,7 @@ const SeriesDetail: React.FC = () => {
 										value={season.userRating ?? null}
 										onChange={(r) => handleRateSeason(season.id, r)}
 										label={`${t('series.season', { number: season.seasonNumber })}:`}
+										showValue
 									/>
 								</div>
 								{season.episodes.map((ep) => (
@@ -975,6 +978,8 @@ const SeriesDetail: React.FC = () => {
 											<StarRating
 												value={ep.userRating ?? null}
 												onChange={(r) => handleRateEpisode(ep.id, r)}
+												starCount={5}
+												showValue
 											/>
 										</span>
 										<WatchStateBadge state={ep.state} size='sm' />

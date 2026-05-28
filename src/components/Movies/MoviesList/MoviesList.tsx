@@ -21,6 +21,7 @@ import {
 } from '@/components/elements'
 import type { MediaQueryParameters } from '@/models/api'
 import { WatchState } from '@/models/api/Enums'
+import { formatUserRating } from '@/utils'
 import './MoviesList.scss'
 
 const MoviesList: React.FC = () => {
@@ -185,7 +186,7 @@ const MoviesList: React.FC = () => {
 							<div className='movie-card__footer'>
 								<WatchStateBadge state={m.state} size='sm' />
 								{m.userRating != null && (
-									<span className='movie-card__rating'>★ {(m.userRating / 2).toFixed(1)}</span>
+									<span className='movie-card__rating'>★ {formatUserRating(m.userRating)}</span>
 								)}
 							</div>
 						</div>

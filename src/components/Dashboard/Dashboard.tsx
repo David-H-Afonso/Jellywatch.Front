@@ -13,6 +13,7 @@ import { getUpcoming } from '@/services/StatsService/StatsService'
 import { ProfileSelector, WatchStateBadge, MediaPoster } from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
 import type { UpcomingEpisodeDto } from '@/models/api'
+import { formatUserRating } from '@/utils'
 import './Dashboard.scss'
 
 const formatRelativeDate = (
@@ -269,7 +270,7 @@ const Dashboard: React.FC = () => {
 											)}
 										{item.userRating != null && (
 											<span className='activity-item__rating'>
-												★ {(item.userRating / 2).toFixed(1)}
+												★ {formatUserRating(item.userRating)}
 											</span>
 										)}
 										{item.tmdbRating != null && (

@@ -21,6 +21,7 @@ import {
 } from '@/components/elements'
 import type { MediaQueryParameters } from '@/models/api'
 import { WatchState } from '@/models/api/Enums'
+import { formatUserRating } from '@/utils'
 import './SeriesList.scss'
 
 const SeriesList: React.FC = () => {
@@ -187,7 +188,7 @@ const SeriesList: React.FC = () => {
 								)}
 								<div className='series-card__badges'>
 									{s.userRating != null && (
-										<span className='series-card__rating'>★ {(s.userRating / 2).toFixed(1)}</span>
+										<span className='series-card__rating'>★ {formatUserRating(s.userRating)}</span>
 									)}
 								</div>
 							</div>

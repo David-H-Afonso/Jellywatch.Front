@@ -1,15 +1,18 @@
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
+import { formatUserRating } from '@/utils'
 import './StarRating.scss'
 
 interface Props {
-	/** Backend value 1–10 (or null for no rating) */
+	/** Backend value 0–10 in 0.5 steps (or null for no rating) */
 	value: number | null
 	onChange: (rating: number | null) => void
 	disabled?: boolean
 	saving?: boolean
+	/** Number of stars used by the control while still representing a 0-10 score. */
+	starCount?: number
 	/** Optional label shown before stars (e.g. "Season:"). Omit for no label. */
 	label?: string
-	/** Whether to show the numeric value (e.g. "4.5/5") next to stars. Defaults to false. */
+	/** Whether to show the numeric value (e.g. "8.5/10") next to stars. Defaults to false. */
 	showValue?: boolean
 }
 
@@ -17,15 +20,14 @@ type FillState = 'empty' | 'half' | 'full'
 
 interface StarProps {
 	fill: FillState
-	index: number
 }
 
-const StarSvg: React.FC<StarProps> = ({ fill, index }) => {
-	const clipId = `sr-clip-${index}`
+const StarSvg: React.FC<StarProps> = ({ fill }) => {
+	const clipId = useId()
 	const path =
 		'M12 2l2.73 5.53 6.11.89-4.42 4.31 1.04 6.07L12 15.9l-5.46 2.9 1.04-6.07L3.16 8.42l6.11-.89L12 2z'
 	return (
-		<svg viewBox='0 0 24 24' width='22' height='22' className='star-svg'>
+		<svg viewBox='0 0 24 24' className='star-svg'>
 			{fill === 'half' && (
 				<defs>
 					<clipPath id={clipId}>
@@ -50,14 +52,14 @@ export const StarRating: React.FC<Props> = ({
 	onChange,
 	disabled = false,
 	saving = false,
+	starCount = 10,
 	label,
 	showValue = false,
 }) => {
 	const [hovered, setHovered] = useState<number | null>(null)
+	const scorePerStar = 10 / starCount
 
-	// Convert backend 1-10 to display 0.5-5
-	const displayValue = value !== null ? value / 2 : null
-	const display = hovered ?? displayValue
+	const display = hovered ?? (value !== null ? value / scorePerStar : null)
 
 	const getFill = (star: number): FillState => {
 		if (display === null) return 'empty'
@@ -78,15 +80,15 @@ export const StarRating: React.FC<Props> = ({
 		const rect = e.currentTarget.getBoundingClientRect()
 		const x = e.clientX - rect.left
 		const selected = x < rect.width / 2 ? star - 0.5 : star
-		const backendValue = selected * 2
-		onChange(value === backendValue ? null : backendValue)
+		const nextValue = selected * scorePerStar
+		onChange(value === nextValue ? null : nextValue)
 	}
 
 	return (
 		<div className='star-rating'>
 			{label && <span className='star-rating__label'>{label}</span>}
 			<div className='star-rating__stars' onMouseLeave={() => setHovered(null)}>
-				{[1, 2, 3, 4, 5].map((star) => (
+				{Array.from({ length: starCount }, (_, index) => index + 1).map((star) => (
 					<button
 						key={star}
 						type='button'
@@ -94,16 +96,12 @@ export const StarRating: React.FC<Props> = ({
 						onMouseMove={(e) => handleMouseMove(e, star)}
 						onClick={(e) => handleClick(e, star)}
 						disabled={disabled || saving}
-						aria-label={`${star}`}>
-						<StarSvg fill={getFill(star)} index={star} />
+						aria-label={formatUserRating(star * scorePerStar)}>
+						<StarSvg fill={getFill(star)} />
 					</button>
 				))}
 			</div>
-			{showValue && displayValue !== null && (
-				<span className='star-rating__value'>
-					{displayValue % 1 === 0 ? displayValue.toFixed(0) : displayValue.toFixed(1)}/5
-				</span>
-			)}
+			{showValue && value !== null && <span className='star-rating__value'>{formatUserRating(value)}</span>}
 			{saving && <span className='star-rating__saving'>✓</span>}
 		</div>
 	)
