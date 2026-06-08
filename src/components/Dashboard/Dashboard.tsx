@@ -14,6 +14,7 @@ import { ProfileSelector, WatchStateBadge, MediaPoster } from '@/components/elem
 import { WatchState, MediaType } from '@/models/api/Enums'
 import type { UpcomingEpisodeDto } from '@/models/api'
 import { formatUserRating } from '@/utils'
+import { getExternalSearchLabel, getExternalSearchLink } from '@/utils/externalLinks'
 import './Dashboard.scss'
 
 const formatRelativeDate = (
@@ -219,7 +220,12 @@ const Dashboard: React.FC = () => {
 			)}
 
 			<div className='dashboard__activity'>
-				<h2>{t('dashboard.recentActivity')}</h2>
+				<div className='dashboard__section-heading'>
+					<h2>{t('dashboard.recentActivity')}</h2>
+					<Link to='/activity?datePreset=7d&share=1' className='dashboard__share-link'>
+						{t('activity.share.open')}
+					</Link>
+				</div>
 				{activity.length === 0 && !loading && (
 					<p className='empty-state'>{t('dashboard.noActivity')}</p>
 				)}
@@ -228,9 +234,10 @@ const Dashboard: React.FC = () => {
 						const link =
 							item.mediaType === MediaType.Movie && item.movieId
 								? `/movies/${item.movieId}`
-								: item.seriesId
-									? `/series/${item.seriesId}`
-									: null
+									: item.seriesId
+										? `/series/${item.seriesId}`
+										: null
+						const externalLink = getExternalSearchLink(item.mediaType, item.mediaTitle)
 						return (
 							<div key={item.id} className='activity-item'>
 								{link ? (
@@ -290,6 +297,16 @@ const Dashboard: React.FC = () => {
 									}
 									size='sm'
 								/>
+								{externalLink && (
+									<a
+										className='activity-item__external-link'
+										href={externalLink}
+										target='_blank'
+										rel='noreferrer'
+										title={getExternalSearchLabel(item.mediaType)}>
+										{getExternalSearchLabel(item.mediaType)}
+									</a>
+								)}
 							</div>
 						)
 					})}

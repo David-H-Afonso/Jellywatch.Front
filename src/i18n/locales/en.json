@@ -82,6 +82,22 @@
 		"oldestFirst": "Oldest first",
 		"userRating": "Your rating",
 		"markedAt": "Marked",
+		"share": {
+			"open": "Share watched",
+			"exit": "Exit sharing",
+			"title": "Share image",
+			"count": "{{count}} of {{limit}} selected",
+			"latest": "Latest 10 watched",
+			"clear": "Clear",
+			"hint": "Press the + button on movies or series you want to include.",
+			"searchPlaceholder": "Search any movie or series in your library...",
+			"generating": "Preparing image...",
+			"previewAlt": "Grid of watched movies and series",
+			"copy": "Copy image",
+			"copied": "Copied. You can paste it into another chat.",
+			"copyFallback": "Use right click on the image and copy it.",
+			"imageFooter": "Made with Jellywatch"
+		},
 		"date": {
 			"all": "All time",
 			"7d": "7 days",

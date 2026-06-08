@@ -82,6 +82,22 @@
 		"oldestFirst": "Más antiguos",
 		"userRating": "Tu puntuación",
 		"markedAt": "Marcado",
+		"share": {
+			"open": "Compartir vistas",
+			"exit": "Salir de compartir",
+			"title": "Imagen para compartir",
+			"count": "{{count}} de {{limit}} seleccionadas",
+			"latest": "Últimas 10 vistas",
+			"clear": "Limpiar",
+			"hint": "Pulsa el botón + en las pelis o series que quieres incluir.",
+			"searchPlaceholder": "Buscar cualquier peli o serie de tu biblioteca...",
+			"generating": "Preparando imagen...",
+			"previewAlt": "Grid de películas y series vistas",
+			"copy": "Copiar imagen",
+			"copied": "Copiada. Ya puedes pegarla en otro chat.",
+			"copyFallback": "Usa click derecho sobre la imagen y copia.",
+			"imageFooter": "Hecho con Jellywatch"
+		},
 		"date": {
 			"all": "Todo",
 			"7d": "7 días",
