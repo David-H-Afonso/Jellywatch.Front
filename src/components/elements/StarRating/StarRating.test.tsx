@@ -97,6 +97,30 @@ describe('StarRating', () => {
 		expect(screen.getByText('8.5/10')).toBeInTheDocument()
 	})
 
+	it('previews numeric value while hovering a star', () => {
+		wrap(<StarRating value={null} onChange={() => {}} />)
+
+		const buttons = screen.getAllByRole('button')
+		const eighthButton = buttons[7] as HTMLButtonElement
+		vi.spyOn(eighthButton, 'getBoundingClientRect').mockReturnValue({
+			x: 0,
+			y: 0,
+			top: 0,
+			left: 0,
+			right: 20,
+			bottom: 20,
+			width: 20,
+			height: 20,
+			toJSON: () => ({}),
+		})
+
+		fireEvent.mouseMove(eighthButton, { clientX: 5 })
+		expect(screen.getByText('7.5/10')).toBeInTheDocument()
+
+		fireEvent.mouseLeave(eighthButton.parentElement!)
+		expect(screen.queryByText('7.5/10')).not.toBeInTheDocument()
+	})
+
 	it('shows saving indicator', () => {
 		const { container } = wrap(<StarRating value={6} onChange={() => {}} saving />)
 		expect(container.querySelector('.star-rating__saving')).toBeInTheDocument()

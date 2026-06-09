@@ -60,6 +60,8 @@ export const StarRating: React.FC<Props> = ({
 	const scorePerStar = 10 / starCount
 
 	const display = hovered ?? (value !== null ? value / scorePerStar : null)
+	const previewValue = hovered !== null ? hovered * scorePerStar : value
+	const shouldShowValue = hovered !== null || (showValue && value !== null)
 
 	const getFill = (star: number): FillState => {
 		if (display === null) return 'empty'
@@ -101,7 +103,9 @@ export const StarRating: React.FC<Props> = ({
 					</button>
 				))}
 			</div>
-			{showValue && value !== null && <span className='star-rating__value'>{formatUserRating(value)}</span>}
+			{shouldShowValue && previewValue !== null && (
+				<span className='star-rating__value'>{formatUserRating(previewValue)}</span>
+			)}
 			{saving && <span className='star-rating__saving'>✓</span>}
 		</div>
 	)
