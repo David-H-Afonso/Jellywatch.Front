@@ -441,9 +441,13 @@
 }
 
 .episode-row {
-	display: flex;
+	display: grid;
+	grid-template-columns: 5rem 0.5rem 80px 0.5rem 5.4rem 0.5rem minmax(
+			10rem,
+			1fr
+		) 0.5rem 8.8rem 2px 6.7rem 2px 5.3rem;
 	align-items: center;
-	gap: 0.75rem;
+	column-gap: 0;
 	padding: 0.5rem 0.75rem;
 	border-radius: 4px;
 
@@ -451,7 +455,12 @@
 		background: var(--color-surface-hover);
 	}
 
+	.episode-toggle-wrap {
+		grid-column: 1;
+	}
+
 	&__still-slot {
+		grid-column: 3;
 		width: 80px;
 		height: 45px;
 		flex-shrink: 0;
@@ -472,22 +481,26 @@
 	}
 
 	&__number {
-		min-width: 40px;
+		grid-column: 5;
 		font-size: 0.85rem;
 		color: var(--color-text-secondary);
-		flex-shrink: 0;
+		white-space: nowrap;
 	}
 
 	&__name {
-		flex: 1;
+		grid-column: 7;
 		font-size: 0.9rem;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 		min-width: 0;
 		display: flex;
 		align-items: baseline;
 		gap: 0.5rem;
+	}
+
+	&__name-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		min-width: 0;
 	}
 
 	&__watched-at {
@@ -498,23 +511,34 @@
 		flex-shrink: 0;
 	}
 
+	&__metrics {
+		grid-column: 9;
+		display: inline-flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 2px;
+		min-width: 0;
+		white-space: nowrap;
+	}
+
 	&__air-date {
-		flex-shrink: 0;
 		font-size: 0.75rem;
 		color: var(--color-text-secondary);
 		white-space: nowrap;
 	}
 
 	&__tmdb-rating {
-		flex-shrink: 0;
 		font-size: 0.75rem;
 		color: #01b4e4;
 		white-space: nowrap;
 		font-weight: 600;
+		margin: 0px 2px;
 	}
 
 	&__rating {
-		flex-shrink: 0;
+		grid-column: 11;
+		justify-self: start;
+		white-space: nowrap;
 
 		.star-rating {
 			gap: 0.15rem;
@@ -531,6 +555,15 @@
 		.star-rating__saving {
 			font-size: 0.65rem;
 		}
+
+		.star-rating__value {
+			min-width: 5ch;
+		}
+	}
+
+	.watch-state-badge {
+		grid-column: 13;
+		justify-self: end;
 	}
 }
 
@@ -671,6 +704,7 @@
 	}
 
 	.episode-row {
+		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
 		padding: 0.5rem;
@@ -734,13 +768,15 @@
 		&__name {
 			flex-basis: 100%;
 			order: 1;
-			white-space: normal;
 			font-size: 0.8rem;
+		}
+
+		&__name-text {
+			white-space: normal;
 		}
 
 		&__tmdb-rating {
 			font-size: 0.7rem;
-			margin-left: auto;
 		}
 	}
 }

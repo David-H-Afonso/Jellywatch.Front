@@ -12,7 +12,6 @@
 
 	&__stars {
 		display: flex;
-		gap: 1px;
 		flex-wrap: wrap;
 		max-width: 100%;
 	}
@@ -40,8 +39,13 @@
 		font-size: 0.85rem;
 		color: #fbbf24;
 		font-weight: 600;
-		min-width: 3.4rem;
+		min-width: 6ch;
 		white-space: nowrap;
+		pointer-events: none;
+
+		&--empty {
+			visibility: hidden;
+		}
 	}
 
 	&__saving {

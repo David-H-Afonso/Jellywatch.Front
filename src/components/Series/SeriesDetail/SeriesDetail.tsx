@@ -950,8 +950,8 @@ const SeriesDetail: React.FC = () => {
 										<span className='episode-row__number'>
 											{t('series.episode', { number: ep.episodeNumber })}
 										</span>
-										<span className='episode-row__name'>
-											{ep.name ?? ''}
+										<span className='episode-row__name' title={ep.name ?? ''}>
+											<span className='episode-row__name-text'>{ep.name ?? ''}</span>
 											{ep.watchedAt && (
 												<span className='episode-row__watched-at'>
 													{(() => {
@@ -961,19 +961,21 @@ const SeriesDetail: React.FC = () => {
 												</span>
 											)}
 										</span>
-										{ep.airDate && (
-											<span className='episode-row__air-date'>
-												{(() => {
-													const d = new Date(ep.airDate + 'T12:00:00')
-													return `${d.getDate()} ${d.toLocaleDateString(i18n.language, { month: 'short' })}, ${d.getFullYear()}`
-												})()}
-											</span>
-										)}
-										{ep.tmdbRating != null && (
-											<span className='episode-row__tmdb-rating' title='TMDB'>
-												★ {ep.tmdbRating.toFixed(1)}
-											</span>
-										)}
+										<span className='episode-row__metrics'>
+											{ep.airDate && (
+												<span className='episode-row__air-date'>
+													{(() => {
+														const d = new Date(ep.airDate + 'T12:00:00')
+														return `${d.getDate()} ${d.toLocaleDateString(i18n.language, { month: 'short' })}, ${d.getFullYear()}`
+													})()}
+												</span>
+											)}
+											{ep.tmdbRating != null && (
+												<span className='episode-row__tmdb-rating' title='TMDB'>
+													★ {ep.tmdbRating.toFixed(1)}
+												</span>
+											)}
+										</span>
 										<span className='episode-row__rating' onClick={(e) => e.stopPropagation()}>
 											<StarRating
 												value={ep.userRating ?? null}

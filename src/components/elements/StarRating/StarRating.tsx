@@ -61,7 +61,8 @@ export const StarRating: React.FC<Props> = ({
 
 	const display = hovered ?? (value !== null ? value / scorePerStar : null)
 	const previewValue = hovered !== null ? hovered * scorePerStar : value
-	const shouldShowValue = hovered !== null || (showValue && value !== null)
+	const shouldReserveValue = showValue || hovered !== null
+	const shouldShowValue = previewValue !== null
 
 	const getFill = (star: number): FillState => {
 		if (display === null) return 'empty'
@@ -103,8 +104,12 @@ export const StarRating: React.FC<Props> = ({
 					</button>
 				))}
 			</div>
-			{shouldShowValue && previewValue !== null && (
-				<span className='star-rating__value'>{formatUserRating(previewValue)}</span>
+			{shouldReserveValue && (
+				<span
+					className={`star-rating__value ${shouldShowValue ? '' : 'star-rating__value--empty'}`}
+					aria-hidden={!shouldShowValue}>
+					{shouldShowValue ? formatUserRating(previewValue) : '10/10'}
+				</span>
 			)}
 			{saving && <span className='star-rating__saving'>✓</span>}
 		</div>

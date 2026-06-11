@@ -97,6 +97,13 @@ describe('StarRating', () => {
 		expect(screen.getByText('8.5/10')).toBeInTheDocument()
 	})
 
+	it('reserves numeric value space when showValue is true without a rating', () => {
+		const { container } = wrap(<StarRating value={null} onChange={() => {}} showValue />)
+		const valueSlot = container.querySelector('.star-rating__value')
+		expect(valueSlot).toBeInTheDocument()
+		expect(valueSlot).toHaveClass('star-rating__value--empty')
+	})
+
 	it('previews numeric value while hovering a star', () => {
 		wrap(<StarRating value={null} onChange={() => {}} />)
 
