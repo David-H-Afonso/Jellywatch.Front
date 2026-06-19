@@ -236,3 +236,18 @@ export interface PersonCreditItemDto {
 	releaseDate: string | null
 	voteAverage: number | null
 }
+
+export interface MediaAvailabilityDto {
+	source: string
+	isAvailable: boolean
+	isMonitored: boolean
+	status: string | null
+	sizeMb: number | null
+	episodeFileCount: number | null
+	totalEpisodeCount: number | null
+}
+
+export interface MediaAvailabilityResponse {
+	configured: boolean
+	availability: MediaAvailabilityDto | null
+}

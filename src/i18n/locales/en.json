@@ -559,5 +559,10 @@
 		"subtitle": "Manage backup schedules for all users. Expand a user to view and edit their settings.",
 		"enabled": "Enabled",
 		"disabled": "Disabled"
+	},
+	"availability": {
+		"downloaded": "Downloaded",
+		"monitored": "Monitored",
+		"notDownloaded": "Not downloaded"
 	}
 }

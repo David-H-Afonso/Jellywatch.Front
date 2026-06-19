@@ -1,6 +1,7 @@
 export { Button } from './Button/Button'
 export { CastSection } from './CastSection/CastSection'
 export { WatchStateBadge } from './WatchStateBadge/WatchStateBadge'
+export { AvailabilityBadge } from './AvailabilityBadge/AvailabilityBadge'
 export { RatingDisplay } from './RatingDisplay/RatingDisplay'
 export { ProfileSelector } from './ProfileSelector/ProfileSelector'
 export { EpisodeToggle } from './EpisodeToggle/EpisodeToggle'

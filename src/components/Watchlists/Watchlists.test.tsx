@@ -41,6 +41,12 @@ const services = vi.hoisted(() => ({
 	removeWatchlistMember: vi.fn(),
 	leaveWatchlist: vi.fn(),
 	addMediaToProfile: vi.fn(),
+	uploadWatchlistCover: vi.fn(),
+	deleteWatchlistCover: vi.fn(),
+	setWatchlistCoverUrl: vi.fn(),
+	exportWatchlist: vi.fn(),
+	importWatchlist: vi.fn(),
+	searchTmdb: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('@/services', () => services)

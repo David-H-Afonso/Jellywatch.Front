@@ -22,6 +22,7 @@ import {
 	MediaPoster,
 	EpisodeToggle,
 	WatchStateBadge,
+	AvailabilityBadge,
 	PosterPickerModal,
 	StarRating,
 	CastSection,
@@ -545,6 +546,7 @@ const SeriesDetail: React.FC = () => {
 								{series.totalSeasons} {t('series.seasons')}
 							</span>
 						)}
+						<AvailabilityBadge mediaItemId={series.mediaItemId} />
 					</div>
 					{series.genres && (
 						<div className='series-detail__genres'>

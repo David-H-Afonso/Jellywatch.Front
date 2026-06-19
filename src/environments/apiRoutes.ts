@@ -46,6 +46,10 @@ export const apiRoutes = {
 		rating: (id: number) => `/api/media/movies/${id}/rating`,
 		credits: (id: number) => `/api/media/movies/${id}/credits`,
 	},
+	media: {
+		availability: (mediaItemId: number) => `/api/media/${mediaItemId}/availability`,
+		availabilityStatus: '/api/media/availability/status',
+	},
 	person: {
 		credits: (tmdbPersonId: number) => `/api/media/person/${tmdbPersonId}/credits`,
 	},

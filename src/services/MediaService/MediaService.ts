@@ -16,6 +16,7 @@ import type {
 	ManualAddResultDto,
 	CastMemberDto,
 	PersonCreditsDto,
+	MediaAvailabilityResponse,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -206,4 +207,8 @@ export const getPersonCredits = async (
 	return await customFetch<PersonCreditsDto>(apiRoutes.person.credits(tmdbPersonId), {
 		params: profileId ? { profileId } : undefined,
 	})
+}
+
+export const getMediaAvailability = async (mediaItemId: number): Promise<MediaAvailabilityResponse> => {
+	return await customFetch<MediaAvailabilityResponse>(apiRoutes.media.availability(mediaItemId))
 }

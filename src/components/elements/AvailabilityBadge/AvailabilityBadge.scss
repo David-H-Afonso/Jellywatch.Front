@@ -1,0 +1,42 @@
+.availability-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.2rem 0.55rem;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	white-space: nowrap;
+
+	svg {
+		width: 14px;
+		height: 14px;
+		fill: currentColor;
+		flex-shrink: 0;
+	}
+}
+
+.availability-badge--available {
+	background: rgba(76, 175, 80, 0.15);
+	color: #66bb6a;
+}
+
+.availability-badge--monitored {
+	background: rgba(255, 193, 7, 0.15);
+	color: #ffc107;
+}
+
+.availability-badge--missing {
+	background: rgba(158, 158, 158, 0.12);
+	color: #999;
+}
+
+.availability-badge__detail {
+	opacity: 0.75;
+	font-size: 0.7rem;
+
+	&::before {
+		content: '\00b7';
+		margin-right: 0.2rem;
+	}
+}

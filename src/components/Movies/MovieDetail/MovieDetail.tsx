@@ -14,6 +14,7 @@ import {
 	RatingDisplay,
 	MediaPoster,
 	WatchStateBadge,
+	AvailabilityBadge,
 	StarRating,
 	PosterPickerModal,
 	CastSection,
@@ -385,6 +386,7 @@ const MovieDetail: React.FC = () => {
 								})()}
 							</span>
 						)}
+						<AvailabilityBadge mediaItemId={movie.mediaItemId} />
 					</div>
 					{movie.genres && (
 						<div className='movie-detail__genres'>
