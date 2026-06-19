@@ -112,6 +112,7 @@ export const apiRoutes = {
 	mediaSearch: {
 		tmdb: '/api/media/search/tmdb',
 		add: '/api/media/search/add',
+		resolve: '/api/media/search/resolve',
 	},
 	backupSchedule: {
 		base: '/api/backupschedule',

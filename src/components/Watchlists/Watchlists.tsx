@@ -9,7 +9,6 @@ import { environment } from '@/environments'
 import { MediaPoster, ProfileSelector } from '@/components/elements'
 import {
 	acceptWatchlistInvitation,
-	addManually,
 	addMediaToProfile,
 	addWatchlistItem,
 	approveWatchlistAccess,
@@ -32,6 +31,7 @@ import {
 	removeWatchlistMember,
 	reorderWatchlistItems,
 	requestWatchlistAccess,
+	resolveMedia,
 	searchTmdb,
 	setDefaultWatchlist,
 	setWatchlistCoverUrl,
@@ -393,15 +393,17 @@ const Watchlists: React.FC = () => {
 		setMediaSearchLoading(true)
 		const timeout = window.setTimeout(async () => {
 			try {
-				const params = { search: query, pageSize: 6, profileId: activeProfileId ?? undefined }
+				// Search local media first — show results immediately
+				const params = { search: query, pageSize: 8, profileId: activeProfileId ?? undefined }
 				const [series, movies] = await Promise.all([getSeries(params), getMovies(params)])
 				if (cancelled) return
 				const localResults: MediaSearchOption[] = [
 					...series.data.map(toSeriesOption),
 					...movies.data.map(toMovieOption),
 				]
+				setMediaSearchResults(localResults.slice(0, 8))
 
-				// Also search TMDB for external results
+				// Then search TMDB in background
 				const [tmdbSeries, tmdbMovies] = await Promise.all([
 					searchTmdb(query, 'series').catch(() => []),
 					searchTmdb(query, 'movie').catch(() => []),
@@ -446,7 +448,7 @@ const Watchlists: React.FC = () => {
 					})),
 				].filter((r) => !localTitles.has(r.title.toLowerCase()))
 
-				setMediaSearchResults([...localResults.slice(0, 6), ...externalResults.slice(0, 6)])
+				setMediaSearchResults([...localResults.slice(0, 8), ...externalResults.slice(0, 6)])
 			} catch {
 				if (!cancelled) setMediaSearchResults([])
 			} finally {
@@ -511,20 +513,18 @@ const Watchlists: React.FC = () => {
 			selectedMedia?.mediaItemId ?? (isNumericQuery(addMediaQuery) ? Number(addMediaQuery) : null)
 		const childId = Number(addChildId)
 
-		// If selected media is external (from TMDB), import it first
+		// If selected media is external (from TMDB), resolve it into global media first
 		if (
 			addType === WatchlistItemType.MediaItem &&
 			!mediaId &&
 			selectedMedia?.isExternal &&
 			selectedMedia.tmdbId
 		) {
-			if (!activeProfileId) return
 			setSaving(true)
 			try {
-				const result = await addManually({
+				const result = await resolveMedia({
 					tmdbId: selectedMedia.tmdbId,
 					type: selectedMedia.mediaType === MediaType.Series ? 'series' : 'movie',
-					profileId: activeProfileId,
 				})
 				mediaId = result.mediaItemId
 			} catch {
@@ -1805,7 +1805,15 @@ const WatchlistItemRow: React.FC<ItemRowProps> = ({
 						className='watchlist-child-cover'
 						onClick={() => setExpanded((v) => !v)}
 						aria-label={expanded ? t('watchlists.hidePreview') : t('watchlists.showPreview')}>
-						<ListIcon />
+						{child.coverUrl ? (
+							<img
+								src={`${environment.baseUrl}${child.coverUrl}`}
+								alt={child.name}
+								className='watchlist-child-cover__img'
+							/>
+						) : (
+							<ListIcon />
+						)}
 					</button>
 					<div className='watchlist-item__content watchlist-item__content--child'>
 						<div className='watchlist-child-heading'>

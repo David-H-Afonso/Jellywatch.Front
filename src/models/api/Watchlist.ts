@@ -95,6 +95,7 @@ export interface WatchlistChildDto {
 	id: number
 	name: string
 	description: string | null
+	coverUrl: string | null
 	state: WatchlistState
 	hasFullAccess: boolean
 	canRequestAccess: boolean

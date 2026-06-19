@@ -181,6 +181,16 @@ export const addManually = async (dto: ManualAddRequestDto): Promise<ManualAddRe
 	})
 }
 
+export const resolveMedia = async (dto: {
+	tmdbId: number
+	type: 'series' | 'movie'
+}): Promise<{ mediaItemId: number; title: string }> => {
+	return await customFetch<{ mediaItemId: number; title: string }>(apiRoutes.mediaSearch.resolve, {
+		method: 'POST',
+		body: dto,
+	})
+}
+
 export const getSeriesCredits = async (id: number): Promise<CastMemberDto[]> => {
 	return await customFetch<CastMemberDto[]>(apiRoutes.series.credits(id))
 }
