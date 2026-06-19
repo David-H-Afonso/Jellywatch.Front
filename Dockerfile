@@ -1,5 +1,5 @@
-# Build
-FROM node:20-alpine AS build
+# Build (always on native arch — output is static files)
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
