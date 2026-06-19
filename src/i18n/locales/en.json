@@ -512,7 +512,12 @@
 		"export": "Export watchlist",
 		"import": "Import watchlist",
 		"importInvalidFormat": "Invalid JSON format. The file must contain a name and items array.",
-		"importPartial": "Imported {{imported}} of {{total}} items. Some items could not be resolved."
+		"importPartial": "Imported {{imported}} of {{total}} items. Some items could not be resolved.",
+		"cover": "Cover image",
+		"uploadCover": "Upload cover",
+		"coverFromUrl": "From URL",
+		"coverUrlPlaceholder": "https://example.com/image.jpg",
+		"removeCover": "Remove cover"
 	},
 	"backupSchedule": {
 		"title": "Backup Schedule",

@@ -141,6 +141,7 @@ export const apiRoutes = {
 		default: '/api/watchlists/me/default',
 		export: (id: number) => `/api/watchlists/${id}/export`,
 		import: '/api/watchlists/import',
+		cover: (id: number) => `/api/watchlists/${id}/cover`,
 	},
 } as const
 

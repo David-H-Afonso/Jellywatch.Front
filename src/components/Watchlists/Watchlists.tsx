@@ -5,15 +5,18 @@ import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react'
 import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable'
 import { useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId } from '@/store/features/auth/selector'
+import { environment } from '@/environments'
 import { MediaPoster, ProfileSelector } from '@/components/elements'
 import {
 	acceptWatchlistInvitation,
+	addManually,
 	addMediaToProfile,
 	addWatchlistItem,
 	approveWatchlistAccess,
 	completeWatchlist,
 	createWatchlist,
 	deleteWatchlist,
+	deleteWatchlistCover,
 	deleteWatchlistItem,
 	exportWatchlist,
 	getMovies,
@@ -29,10 +32,13 @@ import {
 	removeWatchlistMember,
 	reorderWatchlistItems,
 	requestWatchlistAccess,
+	searchTmdb,
 	setDefaultWatchlist,
+	setWatchlistCoverUrl,
 	updateWatchlist,
 	updateWatchlistItem,
 	updateWatchlistMember,
+	uploadWatchlistCover,
 } from '@/services'
 import {
 	MediaType,
@@ -59,11 +65,13 @@ import './Watchlists.scss'
 
 interface MediaSearchOption {
 	id: number
-	mediaItemId: number
+	mediaItemId: number | null
+	tmdbId: number | null
 	title: string
 	releaseDate: string | null
 	posterPath: string | null
 	mediaType: MediaType
+	isExternal: boolean
 }
 
 const statusOptions = [
@@ -89,19 +97,23 @@ const isNumericQuery = (value: string) => /^\d+$/.test(value.trim())
 const toSeriesOption = (series: SeriesListDto): MediaSearchOption => ({
 	id: series.id,
 	mediaItemId: series.mediaItemId,
+	tmdbId: null,
 	title: series.title,
 	releaseDate: series.releaseDate,
-	posterPath: series.posterPath,
+	posterPath: `${environment.baseUrl}/api/asset/${series.mediaItemId}/Poster`,
 	mediaType: MediaType.Series,
+	isExternal: false,
 })
 
 const toMovieOption = (movie: MovieListDto): MediaSearchOption => ({
 	id: movie.id,
 	mediaItemId: movie.mediaItemId,
+	tmdbId: null,
 	title: movie.title,
 	releaseDate: movie.releaseDate,
-	posterPath: movie.posterPath,
+	posterPath: `${environment.baseUrl}/api/asset/${movie.mediaItemId}/Poster`,
 	mediaType: MediaType.Movie,
+	isExternal: false,
 })
 
 const TrashIcon = () => (
@@ -179,6 +191,12 @@ const ExportIcon = () => (
 const ImportIcon = () => (
 	<svg viewBox='0 0 24 24' aria-hidden='true'>
 		<path d='M11 16V10H7l5-5 5 5h-4v6h-2Zm-7 3v-2h16v2H4Z' />
+	</svg>
+)
+
+const LinkIcon = () => (
+	<svg viewBox='0 0 24 24' aria-hidden='true'>
+		<path d='M3.9 12a4.1 4.1 0 0 1 4.1-4.1h3V6H8a6 6 0 0 0 0 12h3v-1.9H8A4.1 4.1 0 0 1 3.9 12ZM8 13h8v-2H8v2Zm5-7v1.9h3a4.1 4.1 0 0 1 0 8.2h-3V18h3a6 6 0 0 0 0-12h-3Z' />
 	</svg>
 )
 
@@ -282,6 +300,8 @@ const Watchlists: React.FC = () => {
 	const [addChildId, setAddChildId] = useState('')
 	const [addType, setAddType] = useState<WatchlistItemType>(WatchlistItemType.MediaItem)
 	const [addStatus, setAddStatus] = useState<WatchlistStatus>(WatchlistStatus.WantToWatch)
+	const [coverUrlInput, setCoverUrlInput] = useState('')
+	const [showCoverUrlInput, setShowCoverUrlInput] = useState(false)
 
 	const loadIndex = useCallback(async () => {
 		setLoading(true)
@@ -376,15 +396,63 @@ const Watchlists: React.FC = () => {
 				const params = { search: query, pageSize: 6, profileId: activeProfileId ?? undefined }
 				const [series, movies] = await Promise.all([getSeries(params), getMovies(params)])
 				if (cancelled) return
-				setMediaSearchResults(
-					[...series.data.map(toSeriesOption), ...movies.data.map(toMovieOption)].slice(0, 8)
-				)
+				const localResults: MediaSearchOption[] = [
+					...series.data.map(toSeriesOption),
+					...movies.data.map(toMovieOption),
+				]
+
+				// Also search TMDB for external results
+				const [tmdbSeries, tmdbMovies] = await Promise.all([
+					searchTmdb(query, 'series').catch(() => []),
+					searchTmdb(query, 'movie').catch(() => []),
+				])
+				if (cancelled) return
+
+				const localTitles = new Set(localResults.map((r) => r.title.toLowerCase()))
+				const externalResults: MediaSearchOption[] = [
+					...(
+						tmdbSeries as {
+							id: number
+							name: string | null
+							poster_path: string | null
+							first_air_date: string | null
+						}[]
+					).map((r) => ({
+						id: r.id,
+						mediaItemId: null,
+						tmdbId: r.id,
+						title: r.name ?? '',
+						releaseDate: r.first_air_date,
+						posterPath: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
+						mediaType: MediaType.Series,
+						isExternal: true,
+					})),
+					...(
+						tmdbMovies as {
+							id: number
+							title: string | null
+							poster_path: string | null
+							release_date: string | null
+						}[]
+					).map((r) => ({
+						id: r.id + 1_000_000,
+						mediaItemId: null,
+						tmdbId: r.id,
+						title: r.title ?? '',
+						releaseDate: r.release_date,
+						posterPath: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
+						mediaType: MediaType.Movie,
+						isExternal: true,
+					})),
+				].filter((r) => !localTitles.has(r.title.toLowerCase()))
+
+				setMediaSearchResults([...localResults.slice(0, 6), ...externalResults.slice(0, 6)])
 			} catch {
 				if (!cancelled) setMediaSearchResults([])
 			} finally {
 				if (!cancelled) setMediaSearchLoading(false)
 			}
-		}, 250)
+		}, 350)
 
 		return () => {
 			cancelled = true
@@ -438,9 +506,33 @@ const Watchlists: React.FC = () => {
 	const handleAddItem = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!detail) return
-		const mediaId =
+
+		let mediaId =
 			selectedMedia?.mediaItemId ?? (isNumericQuery(addMediaQuery) ? Number(addMediaQuery) : null)
 		const childId = Number(addChildId)
+
+		// If selected media is external (from TMDB), import it first
+		if (
+			addType === WatchlistItemType.MediaItem &&
+			!mediaId &&
+			selectedMedia?.isExternal &&
+			selectedMedia.tmdbId
+		) {
+			if (!activeProfileId) return
+			setSaving(true)
+			try {
+				const result = await addManually({
+					tmdbId: selectedMedia.tmdbId,
+					type: selectedMedia.mediaType === MediaType.Series ? 'series' : 'movie',
+					profileId: activeProfileId,
+				})
+				mediaId = result.mediaItemId
+			} catch {
+				setSaving(false)
+				return
+			}
+		}
+
 		if (addType === WatchlistItemType.MediaItem && !mediaId) return
 		setSaving(true)
 		try {
@@ -547,6 +639,49 @@ const Watchlists: React.FC = () => {
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : t('watchlists.importInvalidFormat'))
+		} finally {
+			setSaving(false)
+		}
+	}
+
+	const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file || !detail) return
+		e.target.value = ''
+		try {
+			setSaving(true)
+			await uploadWatchlistCover(detail.id, file)
+			await refreshAll()
+		} catch (err) {
+			setError(err instanceof Error ? err.message : t('common.error'))
+		} finally {
+			setSaving(false)
+		}
+	}
+
+	const handleCoverDelete = async () => {
+		if (!detail) return
+		try {
+			setSaving(true)
+			await deleteWatchlistCover(detail.id)
+			await refreshAll()
+		} catch (err) {
+			setError(err instanceof Error ? err.message : t('common.error'))
+		} finally {
+			setSaving(false)
+		}
+	}
+
+	const handleCoverFromUrl = async () => {
+		if (!detail || !coverUrlInput.trim()) return
+		try {
+			setSaving(true)
+			await setWatchlistCoverUrl(detail.id, coverUrlInput.trim())
+			setCoverUrlInput('')
+			setShowCoverUrlInput(false)
+			await refreshAll()
+		} catch (err) {
+			setError(err instanceof Error ? err.message : t('common.error'))
 		} finally {
 			setSaving(false)
 		}
@@ -777,10 +912,69 @@ const Watchlists: React.FC = () => {
 													placeholder={t('watchlists.description')}
 												/>
 											</label>
+											{detail.permissions.canUpdateWatchlist && (
+												<div className='watchlist-editor__cover'>
+													<span>{t('watchlists.cover')}</span>
+													<div className='watchlist-editor__cover-controls'>
+														{detail.coverUrl && (
+															<WatchlistCover
+																watchlistId={detail.id}
+																coverUrl={detail.coverUrl}
+																small
+															/>
+														)}
+														<label className='btn-secondary btn-sm'>
+															<ImportIcon /> {t('watchlists.uploadCover')}
+															<input
+																type='file'
+																accept='image/jpeg,image/png,image/webp'
+																hidden
+																onChange={handleCoverUpload}
+															/>
+														</label>
+														<button
+															className='btn-secondary btn-sm'
+															onClick={() => setShowCoverUrlInput((v) => !v)}
+															disabled={saving}>
+															<LinkIcon /> {t('watchlists.coverFromUrl')}
+														</button>
+														{detail.coverUrl && (
+															<button
+																className='btn-danger btn-sm'
+																onClick={handleCoverDelete}
+																disabled={saving}>
+																{t('watchlists.removeCover')}
+															</button>
+														)}
+													</div>
+													{showCoverUrlInput && (
+														<div className='watchlist-editor__cover-url'>
+															<input
+																type='url'
+																value={coverUrlInput}
+																onChange={(e) => setCoverUrlInput(e.target.value)}
+																placeholder={t('watchlists.coverUrlPlaceholder')}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter') handleCoverFromUrl()
+																}}
+															/>
+															<button
+																className='btn-primary btn-sm'
+																onClick={handleCoverFromUrl}
+																disabled={saving || !coverUrlInput.trim()}>
+																{t('common.save')}
+															</button>
+														</div>
+													)}
+												</div>
+											)}
 										</div>
 									</section>
 								) : (
 									<section className='watchlist-overview'>
+										{detail.coverUrl && (
+											<WatchlistCover watchlistId={detail.id} coverUrl={detail.coverUrl} />
+										)}
 										<div className='watchlist-overview__copy'>
 											<div className='watchlist-overview__eyebrow'>
 												<span>{t(roleKey(detail.role))}</span>
@@ -861,7 +1055,17 @@ const Watchlists: React.FC = () => {
 												/>
 												{selectedMedia && (
 													<span className='watchlist-media-search__selected'>
-														{selectedMedia.title} · #{selectedMedia.mediaItemId}
+														{selectedMedia.posterPath && (
+															<img
+																src={selectedMedia.posterPath}
+																alt=''
+																className='watchlist-media-search__poster'
+															/>
+														)}
+														{selectedMedia.title}
+														{selectedMedia.isExternal
+															? ` · TMDB#${selectedMedia.tmdbId}`
+															: ` · #${selectedMedia.mediaItemId}`}
 													</span>
 												)}
 												{mediaSearchLoading && (
@@ -873,21 +1077,33 @@ const Watchlists: React.FC = () => {
 													<div className='watchlist-media-search__menu'>
 														{mediaSearchResults.map((result) => (
 															<button
-																key={`${result.mediaType}-${result.id}`}
+																key={`${result.mediaType}-${result.id}-${result.isExternal ? 'ext' : 'local'}`}
 																type='button'
+																className={
+																	result.isExternal ? 'watchlist-media-search__item--external' : ''
+																}
 																onClick={() => {
 																	setSelectedMedia(result)
 																	setAddMediaQuery(result.title)
 																	setMediaSearchResults([])
 																}}>
-																<span>{result.title}</span>
-																<small>
-																	{result.mediaType === MediaType.Series
-																		? t('import.series')
-																		: t('import.movie')}
-																	{result.releaseDate && ` · ${result.releaseDate.slice(0, 4)}`}
-																	{' · '}#{result.mediaItemId}
-																</small>
+																{result.posterPath && (
+																	<img
+																		src={result.posterPath}
+																		alt=''
+																		className='watchlist-media-search__poster'
+																	/>
+																)}
+																<span className='watchlist-media-search__info'>
+																	<span>{result.title}</span>
+																	<small>
+																		{result.mediaType === MediaType.Series
+																			? t('import.series')
+																			: t('import.movie')}
+																		{result.releaseDate && ` · ${result.releaseDate.slice(0, 4)}`}
+																		{result.isExternal ? ` · TMDB` : ` · #${result.mediaItemId}`}
+																	</small>
+																</span>
 															</button>
 														))}
 													</div>
@@ -1075,6 +1291,29 @@ interface PermissionChecklistProps {
 	t: (key: string, opts?: Record<string, unknown>) => string
 	onChange: (permissions: WatchlistPermissionsDto) => void
 	disabled?: boolean
+}
+
+interface WatchlistCoverProps {
+	watchlistId: number
+	coverUrl: string
+	small?: boolean
+}
+
+const WatchlistCover: React.FC<WatchlistCoverProps> = ({ coverUrl, small }) => {
+	const [hasError, setHasError] = useState(false)
+	const src = `${environment.baseUrl}${coverUrl}`
+
+	if (hasError) return null
+
+	return (
+		<img
+			className={`watchlist-cover${small ? ' watchlist-cover--small' : ''}`}
+			src={src}
+			alt=''
+			loading='lazy'
+			onError={() => setHasError(true)}
+		/>
+	)
 }
 
 interface IconButtonProps {

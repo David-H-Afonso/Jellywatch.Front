@@ -512,7 +512,12 @@
 		"export": "Exportar watchlist",
 		"import": "Importar watchlist",
 		"importInvalidFormat": "Formato JSON inválido. El archivo debe contener un nombre y un array de items.",
-		"importPartial": "Se importaron {{imported}} de {{total}} items. Algunos no se pudieron resolver."
+		"importPartial": "Se importaron {{imported}} de {{total}} items. Algunos no se pudieron resolver.",
+		"cover": "Imagen de portada",
+		"uploadCover": "Subir portada",
+		"coverFromUrl": "Desde URL",
+		"coverUrlPlaceholder": "https://ejemplo.com/imagen.jpg",
+		"removeCover": "Quitar portada"
 	},
 	"backupSchedule": {
 		"title": "Programación de copias",

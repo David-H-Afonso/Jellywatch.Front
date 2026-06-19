@@ -19,6 +19,7 @@ export interface WatchlistSummaryDto {
 	id: number
 	name: string
 	description: string | null
+	coverUrl: string | null
 	state: WatchlistState
 	ownerUserId: number
 	ownerUsername: string

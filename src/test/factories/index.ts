@@ -458,6 +458,7 @@ export const createWatchlistSummaryDto = (
 	id: 1,
 	name: 'Weekly queue',
 	description: 'Shows for this week',
+	coverUrl: null,
 	state: WatchlistState.Pending,
 	ownerUserId: 1,
 	ownerUsername: 'testuser',

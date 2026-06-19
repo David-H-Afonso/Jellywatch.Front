@@ -160,3 +160,23 @@ export const importWatchlist = async (
 		body: data,
 	})
 }
+
+export const uploadWatchlistCover = async (id: number, file: File): Promise<void> => {
+	const formData = new FormData()
+	formData.append('file', file)
+	await customFetch<void>(apiRoutes.watchlists.cover(id), {
+		method: 'POST',
+		body: formData,
+	})
+}
+
+export const setWatchlistCoverUrl = async (id: number, url: string): Promise<void> => {
+	await customFetch<void>(apiRoutes.watchlists.cover(id), {
+		method: 'PUT',
+		body: { url },
+	})
+}
+
+export const deleteWatchlistCover = async (id: number): Promise<void> => {
+	await customFetch<void>(apiRoutes.watchlists.cover(id), { method: 'DELETE' })
+}
