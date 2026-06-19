@@ -45,7 +45,6 @@ import type {
 	WatchlistChildDto,
 	WatchlistDetailDto,
 	WatchlistImportDto,
-	WatchlistImportResultDto,
 	WatchlistIndexDto,
 	WatchlistInvitationDto,
 	WatchlistItemDto,
