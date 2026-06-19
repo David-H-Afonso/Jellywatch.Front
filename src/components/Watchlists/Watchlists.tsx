@@ -1779,9 +1779,17 @@ const WatchlistItemRow: React.FC<ItemRowProps> = ({
 										: `/movies/${media.movieId}`
 								}>
 								{media.title}
+								{media.userRating != null && (
+									<span className='watchlist-item__rating'>★ {media.userRating}</span>
+								)}
 							</Link>
 						) : (
-							<span className='watchlist-item__title'>{media.title}</span>
+							<span className='watchlist-item__title'>
+								{media.title}
+								{media.userRating != null && (
+									<span className='watchlist-item__rating'>★ {media.userRating}</span>
+								)}
+							</span>
 						)}
 						<span className='watchlist-item__meta'>
 							{media.mediaType === MediaType.Series ? t('import.series') : t('import.movie')}

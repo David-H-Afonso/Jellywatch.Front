@@ -769,6 +769,13 @@
 	}
 }
 
+.watchlist-item__rating {
+	margin-left: 0.5rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--watchlist-primary);
+}
+
 .watchlist-item__meta,
 .child-preview small {
 	color: var(--watchlist-muted);

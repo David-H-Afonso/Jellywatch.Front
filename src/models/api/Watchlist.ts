@@ -86,6 +86,7 @@ export interface WatchlistMediaItemDto {
 	originalTitle: string | null
 	posterPath: string | null
 	releaseDate: string | null
+	userRating: number | null
 	isInProfile: boolean
 	isBlacklisted: boolean
 	canAddToProfile: boolean
