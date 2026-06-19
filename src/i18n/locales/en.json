@@ -508,7 +508,11 @@
 			"manageMembers": "Manage members",
 			"updateWatchlist": "Edit list",
 			"deleteWatchlist": "Delete list"
-		}
+		},
+		"export": "Export watchlist",
+		"import": "Import watchlist",
+		"importInvalidFormat": "Invalid JSON format. The file must contain a name and items array.",
+		"importPartial": "Imported {{imported}} of {{total}} items. Some items could not be resolved."
 	},
 	"backupSchedule": {
 		"title": "Backup Schedule",

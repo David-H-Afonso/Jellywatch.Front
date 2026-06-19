@@ -191,7 +191,11 @@
 	align-items: center;
 	padding: 1.1rem 1.2rem;
 	background:
-		linear-gradient(135deg, color-mix(in srgb, var(--watchlist-primary) 13%, transparent), transparent 45%),
+		linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--watchlist-primary) 13%, transparent),
+			transparent 45%
+		),
 		var(--watchlist-panel);
 }
 
@@ -632,8 +636,7 @@
 	justify-content: center;
 	border: 1px solid color-mix(in srgb, var(--watchlist-primary) 35%, var(--watchlist-border));
 	background:
-		linear-gradient(160deg, var(--watchlist-primary-soft), transparent),
-		var(--watchlist-bg);
+		linear-gradient(160deg, var(--watchlist-primary-soft), transparent), var(--watchlist-bg);
 	color: var(--watchlist-primary);
 	cursor: pointer;
 
@@ -775,6 +778,13 @@
 	width: 1rem;
 	height: 1rem;
 	fill: currentColor;
+}
+
+label.btn-secondary {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	cursor: pointer;
 }
 
 .watchlist-invitation,

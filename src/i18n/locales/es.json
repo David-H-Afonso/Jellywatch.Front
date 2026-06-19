@@ -508,7 +508,11 @@
 			"manageMembers": "Gestionar miembros",
 			"updateWatchlist": "Editar lista",
 			"deleteWatchlist": "Borrar lista"
-		}
+		},
+		"export": "Exportar watchlist",
+		"import": "Importar watchlist",
+		"importInvalidFormat": "Formato JSON inválido. El archivo debe contener un nombre y un array de items.",
+		"importPartial": "Se importaron {{imported}} de {{total}} items. Algunos no se pudieron resolver."
 	},
 	"backupSchedule": {
 		"title": "Programación de copias",

@@ -15,11 +15,13 @@ import {
 	createWatchlist,
 	deleteWatchlist,
 	deleteWatchlistItem,
+	exportWatchlist,
 	getMovies,
 	getSeries,
 	getWatchlist,
 	getWatchlists,
 	getWatchlistUserOptions,
+	importWatchlist,
 	inviteWatchlistMember,
 	leaveWatchlist,
 	rejectWatchlistAccess,
@@ -42,6 +44,8 @@ import {
 import type {
 	WatchlistChildDto,
 	WatchlistDetailDto,
+	WatchlistImportDto,
+	WatchlistImportResultDto,
 	WatchlistIndexDto,
 	WatchlistInvitationDto,
 	WatchlistItemDto,
@@ -164,6 +168,18 @@ const GripIcon = () => (
 const ListIcon = () => (
 	<svg viewBox='0 0 24 24' aria-hidden='true'>
 		<path d='M5 6.5A1.5 1.5 0 1 1 2 6.5a1.5 1.5 0 0 1 3 0ZM7 5h14v3H7V5Zm-2 7A1.5 1.5 0 1 1 2 12a1.5 1.5 0 0 1 3 0Zm2-1.5h14v3H7v-3ZM5 17.5A1.5 1.5 0 1 1 2 17.5a1.5 1.5 0 0 1 3 0ZM7 16h14v3H7v-3Z' />
+	</svg>
+)
+
+const ExportIcon = () => (
+	<svg viewBox='0 0 24 24' aria-hidden='true'>
+		<path d='M13 5v6h4l-5 5-5-5h4V5h2Zm-9 14v-2h16v2H4Z' />
+	</svg>
+)
+
+const ImportIcon = () => (
+	<svg viewBox='0 0 24 24' aria-hidden='true'>
+		<path d='M11 16V10H7l5-5 5 5h-4v6h-2Zm-7 3v-2h16v2H4Z' />
 	</svg>
 )
 
@@ -361,10 +377,9 @@ const Watchlists: React.FC = () => {
 				const params = { search: query, pageSize: 6, profileId: activeProfileId ?? undefined }
 				const [series, movies] = await Promise.all([getSeries(params), getMovies(params)])
 				if (cancelled) return
-				setMediaSearchResults([
-					...series.data.map(toSeriesOption),
-					...movies.data.map(toMovieOption),
-				].slice(0, 8))
+				setMediaSearchResults(
+					[...series.data.map(toSeriesOption), ...movies.data.map(toMovieOption)].slice(0, 8)
+				)
 			} catch {
 				if (!cancelled) setMediaSearchResults([])
 			} finally {
@@ -424,7 +439,8 @@ const Watchlists: React.FC = () => {
 	const handleAddItem = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!detail) return
-		const mediaId = selectedMedia?.mediaItemId ?? (isNumericQuery(addMediaQuery) ? Number(addMediaQuery) : null)
+		const mediaId =
+			selectedMedia?.mediaItemId ?? (isNumericQuery(addMediaQuery) ? Number(addMediaQuery) : null)
 		const childId = Number(addChildId)
 		if (addType === WatchlistItemType.MediaItem && !mediaId) return
 		setSaving(true)
@@ -494,6 +510,49 @@ const Watchlists: React.FC = () => {
 		setInvitePermissions(permissionsForRole(role))
 	}
 
+	const handleExport = async () => {
+		if (!detail) return
+		try {
+			const data = await exportWatchlist(detail.id)
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+			a.download = `watchlist-${data.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.json`
+			a.click()
+			URL.revokeObjectURL(url)
+		} catch (err) {
+			setError(err instanceof Error ? err.message : t('common.error'))
+		}
+	}
+
+	const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+		e.target.value = ''
+		try {
+			const text = await file.text()
+			const json = JSON.parse(text) as WatchlistImportDto
+			if (!json.name || !Array.isArray(json.items)) {
+				setError(t('watchlists.importInvalidFormat'))
+				return
+			}
+			setSaving(true)
+			const result = await importWatchlist(json)
+			await loadIndex()
+			setSelectedId(result.watchlistId)
+			if (result.errors.length > 0) {
+				setError(
+					`${t('watchlists.importPartial', { imported: result.importedItems, total: result.totalItems })}`
+				)
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err.message : t('watchlists.importInvalidFormat'))
+		} finally {
+			setSaving(false)
+		}
+	}
+
 	return (
 		<div className='watchlists-page'>
 			<div className='watchlists-page__header'>
@@ -503,6 +562,16 @@ const Watchlists: React.FC = () => {
 				</div>
 				<div className='watchlists-page__header-actions'>
 					<ProfileSelector />
+					<label className='btn-secondary btn-sm btn-icon' title={t('watchlists.import')}>
+						<ImportIcon />
+						<input
+							type='file'
+							accept='.json'
+							hidden
+							onChange={handleImportFile}
+							disabled={saving}
+						/>
+					</label>
 					<button className='btn-primary btn-sm' onClick={() => setCreateOpen((v) => !v)}>
 						+ {t('watchlists.create')}
 					</button>
@@ -621,7 +690,9 @@ const Watchlists: React.FC = () => {
 												<h2>{detail.name}</h2>
 											</div>
 											<div className='watchlist-editor__actions'>
-												<IconButton label={t('watchlists.viewMode')} onClick={() => setEditMode(false)}>
+												<IconButton
+													label={t('watchlists.viewMode')}
+													onClick={() => setEditMode(false)}>
 													<CloseIcon />
 												</IconButton>
 												<IconButton
@@ -727,8 +798,13 @@ const Watchlists: React.FC = () => {
 											<span>{t('common.items')}</span>
 										</div>
 										<div className='watchlist-overview__actions'>
-											<IconButton label={t('watchlists.editMode')} onClick={() => setEditMode(true)}>
+											<IconButton
+												label={t('watchlists.editMode')}
+												onClick={() => setEditMode(true)}>
 												<EditIcon />
+											</IconButton>
+											<IconButton label={t('watchlists.export')} onClick={handleExport}>
+												<ExportIcon />
 											</IconButton>
 											<IconButton
 												label={
@@ -889,98 +965,98 @@ const Watchlists: React.FC = () => {
 								</DragDropProvider>
 
 								{editMode && (
-								<section className='watchlist-members'>
-									<div className='watchlist-section-heading'>
-										<h2>{t('watchlists.members')}</h2>
-										<p>{t('watchlists.membersSubtitle')}</p>
-									</div>
-									<div className='watchlist-members__grid'>
-										{detail.members.map((member) => (
-											<MemberEditor
-												key={member.id}
-												member={member}
-												detail={detail}
-												t={t}
-												onSave={async (role, permissions) => {
-													await updateWatchlistMember(detail.id, member.id, role, permissions)
-													await refreshAll()
-												}}
-												onRemove={async () => {
-													await removeWatchlistMember(detail.id, member.id)
-													await refreshAll()
-												}}
-											/>
-										))}
-									</div>
-									{detail.permissions.canInviteMembers && (
-										<form
-											className='watchlist-invite-form'
-											onSubmit={async (e) => {
-												e.preventDefault()
-												if (!selectedInviteUser) return
-												await inviteWatchlistMember(detail.id, {
-													userId: selectedInviteUser.id,
-													role: inviteRole,
-													permissions: invitePermissions,
-												})
-												setInviteSearch('')
-												setSelectedInviteUser(null)
-												handleInviteRoleChange(WatchlistRole.Member)
-												await refreshAll()
-											}}>
-											<div className='watchlist-user-search'>
-												<input
-													value={inviteSearch}
-													onChange={(e) => {
-														setInviteSearch(e.target.value)
-														setSelectedInviteUser(null)
-													}}
-													placeholder={t('watchlists.userSearchPlaceholder')}
-													autoComplete='off'
-												/>
-												{selectedInviteUser && (
-													<span className='watchlist-user-search__selected'>
-														{selectedInviteUser.username}
-													</span>
-												)}
-												{inviteOptions.length > 0 && !selectedInviteUser && (
-													<div className='watchlist-user-search__menu'>
-														{inviteOptions.map((user) => (
-															<button
-																key={user.id}
-																type='button'
-																disabled={user.isMember || user.hasPendingInvitation}
-																onClick={() => {
-																	setSelectedInviteUser(user)
-																	setInviteSearch(user.username)
-																}}>
-																<span>{user.username}</span>
-																<small>
-																	{user.isMember
-																		? t('watchlists.alreadyMember')
-																		: user.hasPendingInvitation
-																			? t('watchlists.pendingInvitation')
-																			: `#${user.id}`}
-																</small>
-															</button>
-														))}
-													</div>
-												)}
-											</div>
-											<RoleSelect value={inviteRole} t={t} onChange={handleInviteRoleChange} />
-											<button className='btn-primary btn-sm' disabled={!selectedInviteUser}>
-												<PlusIcon /> {t('watchlists.invite')}
-											</button>
-											{inviteRole === WatchlistRole.Member && (
-												<PermissionChecklist
-													permissions={invitePermissions}
+									<section className='watchlist-members'>
+										<div className='watchlist-section-heading'>
+											<h2>{t('watchlists.members')}</h2>
+											<p>{t('watchlists.membersSubtitle')}</p>
+										</div>
+										<div className='watchlist-members__grid'>
+											{detail.members.map((member) => (
+												<MemberEditor
+													key={member.id}
+													member={member}
+													detail={detail}
 													t={t}
-													onChange={setInvitePermissions}
+													onSave={async (role, permissions) => {
+														await updateWatchlistMember(detail.id, member.id, role, permissions)
+														await refreshAll()
+													}}
+													onRemove={async () => {
+														await removeWatchlistMember(detail.id, member.id)
+														await refreshAll()
+													}}
 												/>
-											)}
-										</form>
-									)}
-								</section>
+											))}
+										</div>
+										{detail.permissions.canInviteMembers && (
+											<form
+												className='watchlist-invite-form'
+												onSubmit={async (e) => {
+													e.preventDefault()
+													if (!selectedInviteUser) return
+													await inviteWatchlistMember(detail.id, {
+														userId: selectedInviteUser.id,
+														role: inviteRole,
+														permissions: invitePermissions,
+													})
+													setInviteSearch('')
+													setSelectedInviteUser(null)
+													handleInviteRoleChange(WatchlistRole.Member)
+													await refreshAll()
+												}}>
+												<div className='watchlist-user-search'>
+													<input
+														value={inviteSearch}
+														onChange={(e) => {
+															setInviteSearch(e.target.value)
+															setSelectedInviteUser(null)
+														}}
+														placeholder={t('watchlists.userSearchPlaceholder')}
+														autoComplete='off'
+													/>
+													{selectedInviteUser && (
+														<span className='watchlist-user-search__selected'>
+															{selectedInviteUser.username}
+														</span>
+													)}
+													{inviteOptions.length > 0 && !selectedInviteUser && (
+														<div className='watchlist-user-search__menu'>
+															{inviteOptions.map((user) => (
+																<button
+																	key={user.id}
+																	type='button'
+																	disabled={user.isMember || user.hasPendingInvitation}
+																	onClick={() => {
+																		setSelectedInviteUser(user)
+																		setInviteSearch(user.username)
+																	}}>
+																	<span>{user.username}</span>
+																	<small>
+																		{user.isMember
+																			? t('watchlists.alreadyMember')
+																			: user.hasPendingInvitation
+																				? t('watchlists.pendingInvitation')
+																				: `#${user.id}`}
+																	</small>
+																</button>
+															))}
+														</div>
+													)}
+												</div>
+												<RoleSelect value={inviteRole} t={t} onChange={handleInviteRoleChange} />
+												<button className='btn-primary btn-sm' disabled={!selectedInviteUser}>
+													<PlusIcon /> {t('watchlists.invite')}
+												</button>
+												{inviteRole === WatchlistRole.Member && (
+													<PermissionChecklist
+														permissions={invitePermissions}
+														t={t}
+														onChange={setInvitePermissions}
+													/>
+												)}
+											</form>
+										)}
+									</section>
 								)}
 							</>
 						) : (
@@ -1216,7 +1292,7 @@ interface CustomSelectProps<T extends number> {
 	className?: string
 }
 
-const CustomSelect = <T extends number,>({
+const CustomSelect = <T extends number>({
 	value,
 	options,
 	onChange,
@@ -1267,7 +1343,10 @@ const StatusSelect: React.FC<StatusSelectProps> = ({
 		value={value}
 		disabled={disabled}
 		className={className}
-		options={statusOptions.map((status) => ({ value: status, label: t(watchlistStatusKey(status)) }))}
+		options={statusOptions.map((status) => ({
+			value: status,
+			label: t(watchlistStatusKey(status)),
+		}))}
 		onChange={onChange}
 	/>
 )
@@ -1500,12 +1579,16 @@ const WatchlistItemRow: React.FC<ItemRowProps> = ({
 						{child.description && <p>{child.description}</p>}
 						<div className='watchlist-child-actions'>
 							{child.hasFullAccess ? (
-								<button className='btn-secondary btn-sm' onClick={() => onSelectWatchlist(child.id)}>
+								<button
+									className='btn-secondary btn-sm'
+									onClick={() => onSelectWatchlist(child.id)}>
 									{t('watchlists.openWatchlist')}
 								</button>
 							) : (
 								child.canRequestAccess && (
-									<button className='btn-secondary btn-sm' onClick={() => onRequestAccess(child.id)}>
+									<button
+										className='btn-secondary btn-sm'
+										onClick={() => onRequestAccess(child.id)}>
 										{t('watchlists.requestAccess')}
 									</button>
 								)
@@ -1554,7 +1637,9 @@ const ChildPreview: React.FC<ChildPreviewProps> = ({ child, t, depth }) => (
 					<strong>{child.name}</strong>
 					{child.description && <p>{child.description}</p>}
 				</div>
-				<span>{child.items.length} {t('common.items')}</span>
+				<span>
+					{child.items.length} {t('common.items')}
+				</span>
 			</div>
 		)}
 		{child.items.length === 0 ? (

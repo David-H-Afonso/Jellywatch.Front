@@ -136,10 +136,11 @@ export const apiRoutes = {
 		rejectInvitation: (invitationId: number) =>
 			`/api/watchlists/invitations/${invitationId}/reject`,
 		requestAccess: (id: number) => `/api/watchlists/${id}/access-requests`,
-		approveAccess: (requestId: number) =>
-			`/api/watchlists/access-requests/${requestId}/approve`,
+		approveAccess: (requestId: number) => `/api/watchlists/access-requests/${requestId}/approve`,
 		rejectAccess: (requestId: number) => `/api/watchlists/access-requests/${requestId}/reject`,
 		default: '/api/watchlists/me/default',
+		export: (id: number) => `/api/watchlists/${id}/export`,
+		import: '/api/watchlists/import',
 	},
 } as const
 

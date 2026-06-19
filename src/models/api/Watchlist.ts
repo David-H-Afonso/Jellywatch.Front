@@ -156,3 +156,47 @@ export interface InviteWatchlistMemberDto {
 	permissions?: WatchlistPermissionsDto | null
 	message?: string | null
 }
+
+// ━━━━ IMPORT / EXPORT ━━━━
+
+export interface WatchlistExportDto {
+	name: string
+	description: string | null
+	state: string
+	exportedAt: string
+	items: WatchlistExportItemDto[]
+}
+
+export interface WatchlistExportItemDto {
+	mediaType: string
+	title: string
+	tmdbId: number | null
+	imdbId: string | null
+	status: string
+	position: number
+}
+
+export interface WatchlistImportDto {
+	name: string
+	description?: string | null
+	state?: string | null
+	items: WatchlistImportItemDto[]
+}
+
+export interface WatchlistImportItemDto {
+	mediaType: string
+	title: string
+	tmdbId?: number | null
+	imdbId?: string | null
+	status?: string | null
+	position?: number | null
+}
+
+export interface WatchlistImportResultDto {
+	watchlistId: number
+	watchlistName: string
+	totalItems: number
+	importedItems: number
+	skippedItems: number
+	errors: string[]
+}

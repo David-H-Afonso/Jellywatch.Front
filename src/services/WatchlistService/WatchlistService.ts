@@ -7,6 +7,9 @@ import type {
 	UpdateWatchlistDto,
 	UpdateWatchlistItemDto,
 	WatchlistDetailDto,
+	WatchlistExportDto,
+	WatchlistImportDto,
+	WatchlistImportResultDto,
 	WatchlistIndexDto,
 	WatchlistPermissionsDto,
 	WatchlistRole,
@@ -65,10 +68,7 @@ export const completeWatchlist = async (id: number): Promise<void> => {
 	await customFetch<void>(apiRoutes.watchlists.complete(id), { method: 'POST' })
 }
 
-export const addWatchlistItem = async (
-	id: number,
-	data: AddWatchlistItemDto
-): Promise<void> => {
+export const addWatchlistItem = async (id: number, data: AddWatchlistItemDto): Promise<void> => {
 	await customFetch<void>(apiRoutes.watchlists.items(id), { method: 'POST', body: data })
 }
 
@@ -146,4 +146,17 @@ export const rejectWatchlistAccess = async (requestId: number): Promise<void> =>
 
 export const setDefaultWatchlist = async (watchlistId: number | null): Promise<void> => {
 	await customFetch<void>(apiRoutes.watchlists.default, { method: 'PUT', body: { watchlistId } })
+}
+
+export const exportWatchlist = async (id: number): Promise<WatchlistExportDto> => {
+	return await customFetch<WatchlistExportDto>(apiRoutes.watchlists.export(id))
+}
+
+export const importWatchlist = async (
+	data: WatchlistImportDto
+): Promise<WatchlistImportResultDto> => {
+	return await customFetch<WatchlistImportResultDto>(apiRoutes.watchlists.import, {
+		method: 'POST',
+		body: data,
+	})
 }
