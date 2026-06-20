@@ -10,7 +10,13 @@ import {
 	selectProfileError,
 } from '@/store/features/profile'
 import { fetchProfileActivity } from '@/store/features/profile'
-import { ProfileSelector, WatchStateBadge, Pagination, MediaPoster } from '@/components/elements'
+import {
+	ProfileSelector,
+	WatchStateBadge,
+	Pagination,
+	MediaPoster,
+	AvailabilityBadge,
+} from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
 import { formatUserRating } from '@/utils'
 import { environment } from '@/environments'
@@ -40,7 +46,9 @@ interface ShareSearchItem extends ShareImageItem {
 }
 
 const getPosterSource = (mediaItemId: number | null) =>
-	mediaItemId ? `${environment.baseUrl}${environment.apiRoutes.asset.image(mediaItemId, 'Poster')}` : null
+	mediaItemId
+		? `${environment.baseUrl}${environment.apiRoutes.asset.image(mediaItemId, 'Poster')}`
+		: null
 
 const loadPoster = (src: string | null): Promise<HTMLImageElement | null> =>
 	new Promise((resolve) => {
@@ -145,7 +153,10 @@ const drawWrappedText = (
 		const isLast = index === maxLines - 1 && lines.length > maxLines
 		let renderedLine = currentLine
 		if (isLast) {
-			while (context.measureText(`${renderedLine}...`).width > maxWidth && renderedLine.length > 1) {
+			while (
+				context.measureText(`${renderedLine}...`).width > maxWidth &&
+				renderedLine.length > 1
+			) {
 				renderedLine = renderedLine.slice(0, -1)
 			}
 			renderedLine = `${renderedLine}...`
@@ -215,7 +226,9 @@ const buildShareImage = async (
 	context.font = '700 48px system-ui, -apple-system, Segoe UI, sans-serif'
 	context.fillText('Jellywatch', padding, 68)
 
-	const posters = await Promise.all(items.map((item) => loadPoster(getPosterSource(item.mediaItemId))))
+	const posters = await Promise.all(
+		items.map((item) => loadPoster(getPosterSource(item.mediaItemId)))
+	)
 
 	items.forEach((item, index) => {
 		const col = index % cols
@@ -282,15 +295,7 @@ const buildShareImage = async (
 		if (item.subtitle) {
 			context.fillStyle = '#bfdbfe'
 			context.font = '600 12px system-ui, -apple-system, Segoe UI, sans-serif'
-			drawWrappedText(
-				context,
-				item.subtitle,
-				x + 14,
-				y + posterHeight + 76,
-				cardWidth - 28,
-				16,
-				1
-			)
+			drawWrappedText(context, item.subtitle, x + 14, y + posterHeight + 76, cardWidth - 28, 16, 1)
 		}
 
 		if (item.dateLabel) {
@@ -384,14 +389,17 @@ const Activity: React.FC = () => {
 		})
 	}, [])
 
-	const toggleShareItem = useCallback((id: number) => {
-		setCopyState('idle')
-		setSelectedIds((current) => {
-			if (current.includes(id)) return current.filter((itemId) => itemId !== id)
-			if (current.length + extraShareItems.length >= SHARE_LIMIT) return current
-			return [...current, id]
-		})
-	}, [extraShareItems.length])
+	const toggleShareItem = useCallback(
+		(id: number) => {
+			setCopyState('idle')
+			setSelectedIds((current) => {
+				if (current.includes(id)) return current.filter((itemId) => itemId !== id)
+				if (current.length + extraShareItems.length >= SHARE_LIMIT) return current
+				return [...current, id]
+			})
+		},
+		[extraShareItems.length]
+	)
 
 	const selectLatestWatched = useCallback(() => {
 		setCopyState('idle')
@@ -404,14 +412,17 @@ const Activity: React.FC = () => {
 		)
 	}, [activity])
 
-	const addShareSearchItem = useCallback((item: ShareSearchItem) => {
-		setCopyState('idle')
-		setExtraShareItems((current) => {
-			if (current.some((existing) => existing.key === item.key)) return current
-			if (current.length + selectedIds.length >= SHARE_LIMIT) return current
-			return [...current, item]
-		})
-	}, [selectedIds.length])
+	const addShareSearchItem = useCallback(
+		(item: ShareSearchItem) => {
+			setCopyState('idle')
+			setExtraShareItems((current) => {
+				if (current.some((existing) => existing.key === item.key)) return current
+				if (current.length + selectedIds.length >= SHARE_LIMIT) return current
+				return [...current, item]
+			})
+		},
+		[selectedIds.length]
+	)
 
 	const removeShareItem = useCallback((key: string) => {
 		setCopyState('idle')
@@ -640,7 +651,9 @@ const Activity: React.FC = () => {
 					<div className='activity-page__share-tools'>
 						<div>
 							<strong>{t('activity.share.title')}</strong>
-							<span>{t('activity.share.count', { count: selectedItems.length, limit: SHARE_LIMIT })}</span>
+							<span>
+								{t('activity.share.count', { count: selectedItems.length, limit: SHARE_LIMIT })}
+							</span>
 						</div>
 						<div className='activity-page__share-actions'>
 							<button onClick={selectLatestWatched}>{t('activity.share.latest')}</button>
@@ -666,7 +679,9 @@ const Activity: React.FC = () => {
 								if (event.key === 'Enter') runShareSearch()
 							}}
 						/>
-						<button onClick={runShareSearch} disabled={shareSearchLoading || shareSearch.trim().length < 2}>
+						<button
+							onClick={runShareSearch}
+							disabled={shareSearchLoading || shareSearch.trim().length < 2}>
 							{shareSearchLoading ? t('common.loading') : t('common.search')}
 						</button>
 					</div>
@@ -694,9 +709,7 @@ const Activity: React.FC = () => {
 										</div>
 										<button
 											onClick={() =>
-												alreadySelected
-													? removeShareItem(result.key)
-													: addShareSearchItem(result)
+												alreadySelected ? removeShareItem(result.key) : addShareSearchItem(result)
 											}
 											disabled={disabled}>
 											{alreadySelected ? t('common.remove') : t('common.add')}
@@ -718,7 +731,9 @@ const Activity: React.FC = () => {
 					{selectedItems.length === 0 && (
 						<p className='activity-page__share-hint'>{t('activity.share.hint')}</p>
 					)}
-					{shareBusy && <p className='activity-page__share-hint'>{t('activity.share.generating')}</p>}
+					{shareBusy && (
+						<p className='activity-page__share-hint'>{t('activity.share.generating')}</p>
+					)}
 					{shareImage && (
 						<div className='activity-page__share-preview'>
 							<img src={shareImage} alt={t('activity.share.previewAlt')} />
@@ -807,6 +822,7 @@ const Activity: React.FC = () => {
 									)}
 								</div>
 							</div>
+							<AvailabilityBadge mediaItemId={item.mediaItemId} />
 							<WatchStateBadge
 								state={
 									item.eventType === 4

@@ -6,7 +6,7 @@ import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable'
 import { useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId } from '@/store/features/auth/selector'
 import { environment } from '@/environments'
-import { MediaPoster, ProfileSelector } from '@/components/elements'
+import { MediaPoster, ProfileSelector, AvailabilityBadge } from '@/components/elements'
 import {
 	acceptWatchlistInvitation,
 	addMediaToProfile,
@@ -1795,6 +1795,7 @@ const WatchlistItemRow: React.FC<ItemRowProps> = ({
 							{media.mediaType === MediaType.Series ? t('import.series') : t('import.movie')}
 							{media.releaseDate && ` · ${media.releaseDate.slice(0, 4)}`}
 						</span>
+						<AvailabilityBadge mediaItemId={media.mediaItemId} />
 						{media.canAddToProfile && activeProfileId && (
 							<button
 								className='btn-secondary btn-sm watchlist-add-profile-button'

@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getMediaAvailability } from '@/services'
-import type { MediaAvailabilityDto } from '@/models/api'
+import type { MediaAvailabilityDto, MediaAvailabilityResponse } from '@/models/api'
 import './AvailabilityBadge.scss'
+
+// Deduplicate concurrent requests for the same mediaItemId across all badge instances
+const _cache = new Map<number, Promise<MediaAvailabilityResponse>>()
+function getCachedAvailability(mediaItemId: number): Promise<MediaAvailabilityResponse> {
+	if (!_cache.has(mediaItemId)) {
+		_cache.set(mediaItemId, getMediaAvailability(mediaItemId))
+	}
+	return _cache.get(mediaItemId)!
+}
 
 interface Props {
 	mediaItemId: number
@@ -18,7 +27,7 @@ export const AvailabilityBadge: React.FC<Props> = ({ mediaItemId }) => {
 		let cancelled = false
 		const fetchAvailability = async () => {
 			try {
-				const data = await getMediaAvailability(mediaItemId)
+				const data = await getCachedAvailability(mediaItemId)
 				if (!cancelled) {
 					setConfigured(data.configured)
 					setAvailability(data.availability)
