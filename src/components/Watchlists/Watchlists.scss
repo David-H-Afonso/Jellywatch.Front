@@ -782,6 +782,13 @@
 	font-size: 0.85rem;
 }
 
+// Keep the availability badge compact inside the watchlist column layout
+.watchlist-item__content .availability-badge {
+	align-self: flex-start;
+	font-size: 0.7rem;
+	padding: 0.15rem 0.4rem;
+}
+
 .watchlist-item__content--child p {
 	max-width: 72ch;
 	margin: 0;
