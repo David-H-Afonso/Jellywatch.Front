@@ -306,6 +306,7 @@ const Watchlists: React.FC = () => {
 	)
 	const [addMediaQuery, setAddMediaQuery] = useState('')
 	const [addMediaTypeFilter, setAddMediaTypeFilter] = useState<'all' | 'movie' | 'series'>('all')
+	const [addMediaLibraryOnly, setAddMediaLibraryOnly] = useState(false)
 	const [selectedMedia, setSelectedMedia] = useState<MediaSearchOption | null>(null)
 	const [mediaSearchResults, setMediaSearchResults] = useState<MediaSearchOption[]>([])
 	const [mediaSearchLoading, setMediaSearchLoading] = useState(false)
@@ -417,58 +418,62 @@ const Watchlists: React.FC = () => {
 					...(addMediaTypeFilter !== 'movie' ? series.data.map(toSeriesOption) : []),
 					...(addMediaTypeFilter !== 'series' ? movies.data.map(toMovieOption) : []),
 				]
-				setMediaSearchResults(localResults.slice(0, 8))
+				if (addMediaLibraryOnly) {
+					setMediaSearchResults(localResults.slice(0, 14))
+				} else {
+					setMediaSearchResults(localResults.slice(0, 8))
 
-				// Then search TMDB in background
-				const [tmdbSeries, tmdbMovies] = await Promise.all([
-					addMediaTypeFilter !== 'movie'
-						? searchTmdb(query, 'series').catch(() => [])
-						: Promise.resolve([]),
-					addMediaTypeFilter !== 'series'
-						? searchTmdb(query, 'movie').catch(() => [])
-						: Promise.resolve([]),
-				])
-				if (cancelled) return
+					// Then search TMDB in background
+					const [tmdbSeries, tmdbMovies] = await Promise.all([
+						addMediaTypeFilter !== 'movie'
+							? searchTmdb(query, 'series').catch(() => [])
+							: Promise.resolve([]),
+						addMediaTypeFilter !== 'series'
+							? searchTmdb(query, 'movie').catch(() => [])
+							: Promise.resolve([]),
+					])
+					if (cancelled) return
 
-				const localTitles = new Set(localResults.map((r) => r.title.toLowerCase()))
-				const externalResults: MediaSearchOption[] = [
-					...(
-						tmdbSeries as {
-							id: number
-							name: string | null
-							poster_path: string | null
-							first_air_date: string | null
-						}[]
-					).map((r) => ({
-						id: r.id,
-						mediaItemId: null,
-						tmdbId: r.id,
-						title: r.name ?? '',
-						releaseDate: r.first_air_date,
-						posterPath: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
-						mediaType: MediaType.Series,
-						isExternal: true,
-					})),
-					...(
-						tmdbMovies as {
-							id: number
-							title: string | null
-							poster_path: string | null
-							release_date: string | null
-						}[]
-					).map((r) => ({
-						id: r.id + 1_000_000,
-						mediaItemId: null,
-						tmdbId: r.id,
-						title: r.title ?? '',
-						releaseDate: r.release_date,
-						posterPath: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
-						mediaType: MediaType.Movie,
-						isExternal: true,
-					})),
-				].filter((r) => !localTitles.has(r.title.toLowerCase()))
+					const localTitles = new Set(localResults.map((r) => r.title.toLowerCase()))
+					const externalResults: MediaSearchOption[] = [
+						...(
+							tmdbSeries as {
+								id: number
+								name: string | null
+								poster_path: string | null
+								first_air_date: string | null
+							}[]
+						).map((r) => ({
+							id: r.id,
+							mediaItemId: null,
+							tmdbId: r.id,
+							title: r.name ?? '',
+							releaseDate: r.first_air_date,
+							posterPath: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
+							mediaType: MediaType.Series,
+							isExternal: true,
+						})),
+						...(
+							tmdbMovies as {
+								id: number
+								title: string | null
+								poster_path: string | null
+								release_date: string | null
+							}[]
+						).map((r) => ({
+							id: r.id + 1_000_000,
+							mediaItemId: null,
+							tmdbId: r.id,
+							title: r.title ?? '',
+							releaseDate: r.release_date,
+							posterPath: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
+							mediaType: MediaType.Movie,
+							isExternal: true,
+						})),
+					].filter((r) => !localTitles.has(r.title.toLowerCase()))
 
-				setMediaSearchResults([...localResults.slice(0, 8), ...externalResults.slice(0, 6)])
+					setMediaSearchResults([...localResults.slice(0, 8), ...externalResults.slice(0, 6)])
+				}
 			} catch {
 				if (!cancelled) setMediaSearchResults([])
 			} finally {
@@ -480,7 +485,7 @@ const Watchlists: React.FC = () => {
 			cancelled = true
 			window.clearTimeout(timeout)
 		}
-	}, [activeProfileId, addMediaQuery, addMediaTypeFilter, addType])
+	}, [activeProfileId, addMediaQuery, addMediaTypeFilter, addMediaLibraryOnly, addType])
 
 	const refreshAll = async () => {
 		await loadIndex()
@@ -1249,6 +1254,16 @@ const Watchlists: React.FC = () => {
 															setSelectedMedia(null)
 														}}>
 														{t('import.series')}
+													</button>
+													<button
+														type='button'
+														className={`watchlist-media-type-filter__library${addMediaLibraryOnly ? ' active' : ''}`}
+														onClick={() => {
+															setAddMediaLibraryOnly(!addMediaLibraryOnly)
+															setSelectedMedia(null)
+														}}
+														title={t('watchlists.libraryOnlyTooltip')}>
+														📚 {t('watchlists.libraryOnly')}
 													</button>
 												</div>
 												{selectedMedia && (

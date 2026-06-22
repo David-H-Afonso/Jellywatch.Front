@@ -459,6 +459,8 @@
 		"watchlistBlock": "Watchlist",
 		"mediaItemId": "Media ID",
 		"mediaSearchPlaceholder": "Search media by name or ID",
+		"libraryOnly": "Library",
+		"libraryOnlyTooltip": "Show only items already in your library",
 		"noMediaResults": "No media found in your profile",
 		"chooseWatchlist": "Choose watchlist",
 		"noChildWatchlists": "No other watchlists available",

@@ -31,7 +31,10 @@ const formatRelativeDate = (
 	if (airTimeUtc) {
 		const utcDate = new Date(airTimeUtc)
 		if (!isNaN(utcDate.getTime())) {
-			if (utcDate.getTime() < now.getTime() - 12 * 60 * 60 * 1000) return ''
+			// Hide episodes from before today (user's local calendar day)
+			const airLocalDate = utcDate.toLocaleDateString('en-CA')
+			const todayDate = now.toLocaleDateString('en-CA')
+			if (airLocalDate < todayDate) return ''
 
 			const timeStr = ` ${utcDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}`
 
@@ -234,9 +237,9 @@ const Dashboard: React.FC = () => {
 						const link =
 							item.mediaType === MediaType.Movie && item.movieId
 								? `/movies/${item.movieId}`
-									: item.seriesId
-										? `/series/${item.seriesId}`
-										: null
+								: item.seriesId
+									? `/series/${item.seriesId}`
+									: null
 						const externalLink = getExternalSearchLink(item.mediaType, item.mediaTitle)
 						return (
 							<div key={item.id} className='activity-item'>

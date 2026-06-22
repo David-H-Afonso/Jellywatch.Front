@@ -537,6 +537,10 @@
 			border-color: var(--watchlist-primary);
 		}
 	}
+
+	&__library {
+		margin-left: auto;
+	}
 }
 
 .watchlist-user-search {
