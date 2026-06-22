@@ -193,7 +193,10 @@ const Dashboard: React.FC = () => {
 						ref={scrollRef}
 						onMouseDown={onMouseDown}
 						onClickCapture={onClickCapture}>
-						{upcoming.map((ep, i) => (
+						{upcoming.map((ep, i) => {
+							const badge = formatRelativeDate(ep.airDate, ep.airTime, ep.airTimeUtc, t, i18n.language)
+							if (!badge) return null
+							return (
 							<div
 								key={`${ep.mediaItemId}-${ep.seasonNumber}-${ep.episodeNumber}-${i}`}
 								className='upcoming-card'
@@ -205,7 +208,7 @@ const Dashboard: React.FC = () => {
 										className='upcoming-card__poster'
 									/>
 									<div className='upcoming-card__badge'>
-										{formatRelativeDate(ep.airDate, ep.airTime, ep.airTimeUtc, t, i18n.language)}
+										{badge}
 									</div>
 									{ep.batchCount > 1 && (
 										<span className='upcoming-card__batch'>+{ep.batchCount - 1}</span>
@@ -219,7 +222,8 @@ const Dashboard: React.FC = () => {
 									</span>
 								</div>
 							</div>
-						))}
+							)
+						})}
 					</div>
 				</div>
 			)}
