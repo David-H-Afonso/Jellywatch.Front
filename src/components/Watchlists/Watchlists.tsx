@@ -410,8 +410,10 @@ const Watchlists: React.FC = () => {
 		setMediaSearchLoading(true)
 		const timeout = window.setTimeout(async () => {
 			try {
-				// Search local media first — show results immediately
-				const params = { search: query, pageSize: 8, profileId: activeProfileId ?? undefined }
+				// When library filter is active, search ALL media in the app (no profile filter)
+				const params = addMediaLibraryOnly
+					? { search: query, pageSize: 14 }
+					: { search: query, pageSize: 8, profileId: activeProfileId ?? undefined }
 				const [series, movies] = await Promise.all([getSeries(params), getMovies(params)])
 				if (cancelled) return
 				const localResults: MediaSearchOption[] = [
