@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react'
 import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable'
 import { useAppSelector } from '@/store/hooks'
-import { selectActiveProfileId, selectProfiles } from '@/store/features/auth/selector'
+import { selectActiveProfileId } from '@/store/features/auth/selector'
 import { environment } from '@/environments'
 import { MediaPoster, ProfileSelector, AvailabilityBadge } from '@/components/elements'
 import {
@@ -287,7 +287,6 @@ const activePermissionCount = (permissions: WatchlistPermissionsDto) =>
 const Watchlists: React.FC = () => {
 	const { t } = useTranslation()
 	const activeProfileId = useAppSelector(selectActiveProfileId)
-	const profiles = useAppSelector(selectProfiles)
 	const [index, setIndex] = useState<WatchlistIndexDto | null>(null)
 	const [selectedId, setSelectedId] = useState<number | null>(null)
 	const [detail, setDetail] = useState<WatchlistDetailDto | null>(null)
@@ -1037,9 +1036,8 @@ const Watchlists: React.FC = () => {
 														try {
 															const preview = await getPlaylistSyncPreview(detail.id)
 															setSyncPreview(preview)
-															const defaultProfile = profiles.find((p) => p.jellyfinUserId)
-															if (defaultProfile)
-																setSyncTargetProfile(defaultProfile.jellyfinUserId)
+															if (preview.availableProfiles.length > 0)
+																setSyncTargetProfile(preview.availableProfiles[0].jellyfinUserId)
 														} finally {
 															setSyncLoading(false)
 														}
@@ -1098,13 +1096,11 @@ const Watchlists: React.FC = () => {
 														value={syncTargetProfile}
 														onChange={(e) => setSyncTargetProfile(e.target.value)}>
 														<option value=''>{t('watchlists.selectProfile')}</option>
-														{profiles
-															.filter((p) => p.jellyfinUserId)
-															.map((p) => (
-																<option key={p.id} value={p.jellyfinUserId}>
-																	{p.displayName}
-																</option>
-															))}
+														{syncPreview.availableProfiles.map((p) => (
+															<option key={p.jellyfinUserId} value={p.jellyfinUserId}>
+																{p.displayName} ({p.ownerUsername})
+															</option>
+														))}
 													</select>
 												</div>
 												{syncPreview.syncableItems.length > 0 && (

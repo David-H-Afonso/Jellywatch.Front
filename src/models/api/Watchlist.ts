@@ -208,6 +208,7 @@ export interface PlaylistSyncPreviewDto {
 	syncableItems: PlaylistSyncItemDto[]
 	skippedItems: PlaylistSkippedItemDto[]
 	totalWatchlistItems: number
+	availableProfiles: JellyfinTargetProfileDto[]
 }
 
 export interface PlaylistSyncItemDto {
@@ -222,4 +223,10 @@ export interface PlaylistSkippedItemDto {
 	mediaType: string
 	originalPosition: number
 	reason: string
+}
+
+export interface JellyfinTargetProfileDto {
+	jellyfinUserId: string
+	displayName: string
+	ownerUsername: string
 }
