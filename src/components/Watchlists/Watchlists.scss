@@ -511,6 +511,34 @@
 	border-left: 2px solid var(--watchlist-primary);
 }
 
+.watchlist-media-type-filter {
+	display: flex;
+	gap: 0.3rem;
+	flex-wrap: wrap;
+	padding: 0.3rem 0 0.1rem;
+
+	button {
+		padding: 0.18rem 0.6rem;
+		border: 1px solid var(--watchlist-border);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--watchlist-muted);
+		font-size: 0.72rem;
+		cursor: pointer;
+		transition:
+			background 0.15s,
+			color 0.15s,
+			border-color 0.15s;
+
+		&:hover,
+		&.active {
+			background: var(--watchlist-primary-soft);
+			color: var(--watchlist-primary);
+			border-color: var(--watchlist-primary);
+		}
+	}
+}
+
 .watchlist-user-search {
 	flex: 1 1 18rem;
 	min-width: min(100%, 18rem);

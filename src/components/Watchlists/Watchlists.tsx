@@ -294,6 +294,7 @@ const Watchlists: React.FC = () => {
 		permissionsForRole(WatchlistRole.Member)
 	)
 	const [addMediaQuery, setAddMediaQuery] = useState('')
+	const [addMediaTypeFilter, setAddMediaTypeFilter] = useState<'all' | 'movie' | 'series'>('all')
 	const [selectedMedia, setSelectedMedia] = useState<MediaSearchOption | null>(null)
 	const [mediaSearchResults, setMediaSearchResults] = useState<MediaSearchOption[]>([])
 	const [mediaSearchLoading, setMediaSearchLoading] = useState(false)
@@ -398,15 +399,19 @@ const Watchlists: React.FC = () => {
 				const [series, movies] = await Promise.all([getSeries(params), getMovies(params)])
 				if (cancelled) return
 				const localResults: MediaSearchOption[] = [
-					...series.data.map(toSeriesOption),
-					...movies.data.map(toMovieOption),
+					...(addMediaTypeFilter !== 'movie' ? series.data.map(toSeriesOption) : []),
+					...(addMediaTypeFilter !== 'series' ? movies.data.map(toMovieOption) : []),
 				]
 				setMediaSearchResults(localResults.slice(0, 8))
 
 				// Then search TMDB in background
 				const [tmdbSeries, tmdbMovies] = await Promise.all([
-					searchTmdb(query, 'series').catch(() => []),
-					searchTmdb(query, 'movie').catch(() => []),
+					addMediaTypeFilter !== 'movie'
+						? searchTmdb(query, 'series').catch(() => [])
+						: Promise.resolve([]),
+					addMediaTypeFilter !== 'series'
+						? searchTmdb(query, 'movie').catch(() => [])
+						: Promise.resolve([]),
 				])
 				if (cancelled) return
 
@@ -460,7 +465,7 @@ const Watchlists: React.FC = () => {
 			cancelled = true
 			window.clearTimeout(timeout)
 		}
-	}, [activeProfileId, addMediaQuery, addType])
+	}, [activeProfileId, addMediaQuery, addMediaTypeFilter, addType])
 
 	const refreshAll = async () => {
 		await loadIndex()
@@ -1053,6 +1058,35 @@ const Watchlists: React.FC = () => {
 													placeholder={t('watchlists.mediaSearchPlaceholder')}
 													autoComplete='off'
 												/>
+												<div className='watchlist-media-type-filter'>
+													<button
+														type='button'
+														className={addMediaTypeFilter === 'all' ? 'active' : ''}
+														onClick={() => {
+															setAddMediaTypeFilter('all')
+															setSelectedMedia(null)
+														}}>
+														{t('common.all')}
+													</button>
+													<button
+														type='button'
+														className={addMediaTypeFilter === 'movie' ? 'active' : ''}
+														onClick={() => {
+															setAddMediaTypeFilter('movie')
+															setSelectedMedia(null)
+														}}>
+														{t('import.movie')}
+													</button>
+													<button
+														type='button'
+														className={addMediaTypeFilter === 'series' ? 'active' : ''}
+														onClick={() => {
+															setAddMediaTypeFilter('series')
+															setSelectedMedia(null)
+														}}>
+														{t('import.series')}
+													</button>
+												</div>
 												{selectedMedia && (
 													<span className='watchlist-media-search__selected'>
 														{selectedMedia.posterPath && (
