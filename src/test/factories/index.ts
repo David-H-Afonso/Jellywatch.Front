@@ -460,6 +460,7 @@ export const createWatchlistSummaryDto = (
 	name: 'Weekly queue',
 	description: 'Shows for this week',
 	coverUrl: null,
+	jellyfinPlaylistId: null,
 	state: WatchlistState.Pending,
 	ownerUserId: 1,
 	ownerUsername: 'testuser',

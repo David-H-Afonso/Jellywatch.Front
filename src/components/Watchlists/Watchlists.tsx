@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react'
 import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable'
 import { useAppSelector } from '@/store/hooks'
-import { selectActiveProfileId } from '@/store/features/auth/selector'
+import { selectActiveProfileId, selectProfiles } from '@/store/features/auth/selector'
 import { environment } from '@/environments'
 import { MediaPoster, ProfileSelector, AvailabilityBadge } from '@/components/elements'
 import {
@@ -39,6 +39,10 @@ import {
 	updateWatchlistItem,
 	updateWatchlistMember,
 	uploadWatchlistCover,
+	getPlaylistSyncPreview,
+	createJellyfinPlaylist,
+	resyncJellyfinPlaylist,
+	unlinkJellyfinPlaylist,
 } from '@/services'
 import {
 	MediaType,
@@ -60,6 +64,7 @@ import type {
 	WatchlistUserOptionDto,
 	MovieListDto,
 	SeriesListDto,
+	PlaylistSyncPreviewDto,
 } from '@/models/api'
 import './Watchlists.scss'
 
@@ -200,6 +205,12 @@ const LinkIcon = () => (
 	</svg>
 )
 
+const SyncIcon = () => (
+	<svg viewBox='0 0 24 24' aria-hidden='true'>
+		<path d='M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8Zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3Z' />
+	</svg>
+)
+
 const permissionOptions: Array<keyof Omit<WatchlistPermissionsDto, 'canDeleteWatchlist'>> = [
 	'canAddItems',
 	'canRemoveItems',
@@ -276,6 +287,7 @@ const activePermissionCount = (permissions: WatchlistPermissionsDto) =>
 const Watchlists: React.FC = () => {
 	const { t } = useTranslation()
 	const activeProfileId = useAppSelector(selectActiveProfileId)
+	const profiles = useAppSelector(selectProfiles)
 	const [index, setIndex] = useState<WatchlistIndexDto | null>(null)
 	const [selectedId, setSelectedId] = useState<number | null>(null)
 	const [detail, setDetail] = useState<WatchlistDetailDto | null>(null)
@@ -303,6 +315,10 @@ const Watchlists: React.FC = () => {
 	const [addStatus, setAddStatus] = useState<WatchlistStatus>(WatchlistStatus.WantToWatch)
 	const [coverUrlInput, setCoverUrlInput] = useState('')
 	const [showCoverUrlInput, setShowCoverUrlInput] = useState(false)
+	const [syncModalOpen, setSyncModalOpen] = useState(false)
+	const [syncPreview, setSyncPreview] = useState<PlaylistSyncPreviewDto | null>(null)
+	const [syncLoading, setSyncLoading] = useState(false)
+	const [syncTargetProfile, setSyncTargetProfile] = useState<string>('')
 
 	const loadIndex = useCallback(async () => {
 		setLoading(true)
@@ -1006,6 +1022,33 @@ const Watchlists: React.FC = () => {
 											</IconButton>
 											<IconButton
 												label={
+													detail.jellyfinPlaylistId
+														? t('watchlists.jellyfinSynced')
+														: t('watchlists.syncToJellyfin')
+												}
+												variant={detail.jellyfinPlaylistId ? 'success' : 'default'}
+												onClick={async () => {
+													if (detail.jellyfinPlaylistId) {
+														setSyncModalOpen(true)
+														setSyncPreview(null)
+													} else {
+														setSyncModalOpen(true)
+														setSyncLoading(true)
+														try {
+															const preview = await getPlaylistSyncPreview(detail.id)
+															setSyncPreview(preview)
+															const defaultProfile = profiles.find((p) => p.jellyfinUserId)
+															if (defaultProfile)
+																setSyncTargetProfile(defaultProfile.jellyfinUserId)
+														} finally {
+															setSyncLoading(false)
+														}
+													}
+												}}>
+												<SyncIcon />
+											</IconButton>
+											<IconButton
+												label={
 													index.defaultWatchlistId === detail.id
 														? t('watchlists.defaultWatchlist')
 														: t('watchlists.makeDefault')
@@ -1029,6 +1072,131 @@ const Watchlists: React.FC = () => {
 												</IconButton>
 											)}
 										</div>
+									</section>
+								)}
+
+								{syncModalOpen && detail && (
+									<section className='watchlist-sync-modal'>
+										<div className='watchlist-sync-modal__header'>
+											<h3>
+												{detail.jellyfinPlaylistId
+													? t('watchlists.jellyfinLinked')
+													: t('watchlists.syncToJellyfin')}
+											</h3>
+											<button type='button' onClick={() => setSyncModalOpen(false)}>
+												<CloseIcon />
+											</button>
+										</div>
+										{syncLoading && (
+											<p className='watchlist-sync-modal__loading'>{t('common.loading')}</p>
+										)}
+										{!detail.jellyfinPlaylistId && !syncLoading && syncPreview && (
+											<div className='watchlist-sync-modal__create'>
+												<div className='watchlist-sync-modal__profile-select'>
+													<label>{t('watchlists.jellyfinTargetProfile')}</label>
+													<select
+														value={syncTargetProfile}
+														onChange={(e) => setSyncTargetProfile(e.target.value)}>
+														<option value=''>{t('watchlists.selectProfile')}</option>
+														{profiles
+															.filter((p) => p.jellyfinUserId)
+															.map((p) => (
+																<option key={p.id} value={p.jellyfinUserId}>
+																	{p.displayName}
+																</option>
+															))}
+													</select>
+												</div>
+												{syncPreview.syncableItems.length > 0 && (
+													<div className='watchlist-sync-modal__preview'>
+														<h4>
+															{t('watchlists.syncableItems', {
+																count: syncPreview.syncableItems.length,
+															})}
+														</h4>
+														<ul>
+															{syncPreview.syncableItems.map((item, i) => (
+																<li key={i} className='watchlist-sync-modal__item--ok'>
+																	<span>{item.position + 1}.</span> {item.title}
+																</li>
+															))}
+														</ul>
+													</div>
+												)}
+												{syncPreview.skippedItems.length > 0 && (
+													<div className='watchlist-sync-modal__preview'>
+														<h4>
+															{t('watchlists.skippedItems', {
+																count: syncPreview.skippedItems.length,
+															})}
+														</h4>
+														<ul>
+															{syncPreview.skippedItems.map((item, i) => (
+																<li key={i} className='watchlist-sync-modal__item--skip'>
+																	<span>{item.title}</span>
+																	<em>{item.reason}</em>
+																</li>
+															))}
+														</ul>
+													</div>
+												)}
+												<p className='watchlist-sync-modal__note'>{t('watchlists.syncAutoNote')}</p>
+												<button
+													type='button'
+													className='watchlist-sync-modal__confirm'
+													disabled={!syncTargetProfile || syncPreview.syncableItems.length === 0}
+													onClick={async () => {
+														setSyncLoading(true)
+														try {
+															await createJellyfinPlaylist(detail.id, syncTargetProfile)
+															setSyncModalOpen(false)
+															await loadDetail()
+														} finally {
+															setSyncLoading(false)
+														}
+													}}>
+													{t('watchlists.createPlaylist')}
+												</button>
+											</div>
+										)}
+										{detail.jellyfinPlaylistId && (
+											<div className='watchlist-sync-modal__linked'>
+												<p className='watchlist-sync-modal__status'>
+													{t('watchlists.playlistLinked')}
+												</p>
+												<div className='watchlist-sync-modal__actions'>
+													<button
+														type='button'
+														onClick={async () => {
+															setSyncLoading(true)
+															try {
+																await resyncJellyfinPlaylist(detail.id)
+															} finally {
+																setSyncLoading(false)
+															}
+														}}
+														disabled={syncLoading}>
+														{t('watchlists.resync')}
+													</button>
+													<button
+														type='button'
+														className='watchlist-sync-modal__unlink'
+														onClick={async () => {
+															setSyncLoading(true)
+															try {
+																await unlinkJellyfinPlaylist(detail.id)
+																setSyncModalOpen(false)
+																await loadDetail()
+															} finally {
+																setSyncLoading(false)
+															}
+														}}
+														disabled={syncLoading}>
+														{t('watchlists.unlinkPlaylist')}
+													</button>
+												</div>
+											</div>
+										)}
 									</section>
 								)}
 

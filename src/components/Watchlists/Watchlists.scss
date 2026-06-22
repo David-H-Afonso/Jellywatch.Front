@@ -1293,3 +1293,177 @@ label.btn-secondary {
 		grid-template-columns: 1fr;
 	}
 }
+// ━━━━ Jellyfin Sync Modal ━━━━
+
+.watchlist-sync-modal {
+	background: var(--watchlist-card-bg, #1a1a2e);
+	border: 1px solid var(--watchlist-border, #2a2a4a);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	margin-bottom: 1rem;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+
+		h3 {
+			margin: 0;
+			font-size: 1.1rem;
+		}
+
+		button {
+			background: none;
+			border: none;
+			color: var(--watchlist-muted);
+			cursor: pointer;
+			padding: 0.25rem;
+
+			svg {
+				width: 1.25rem;
+				height: 1.25rem;
+				fill: currentColor;
+			}
+
+			&:hover {
+				color: var(--watchlist-fg, #fff);
+			}
+		}
+	}
+
+	&__loading {
+		color: var(--watchlist-muted);
+		text-align: center;
+		padding: 1rem 0;
+	}
+
+	&__profile-select {
+		margin-bottom: 1rem;
+
+		label {
+			display: block;
+			font-size: 0.85rem;
+			color: var(--watchlist-muted);
+			margin-bottom: 0.35rem;
+		}
+
+		select {
+			width: 100%;
+			padding: 0.5rem 0.75rem;
+			border-radius: 0.5rem;
+			border: 1px solid var(--watchlist-border, #2a2a4a);
+			background: var(--watchlist-input-bg, #12121f);
+			color: var(--watchlist-fg, #fff);
+			font-size: 0.9rem;
+		}
+	}
+
+	&__preview {
+		margin-bottom: 1rem;
+
+		h4 {
+			font-size: 0.9rem;
+			margin: 0 0 0.5rem;
+			color: var(--watchlist-muted);
+		}
+
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			max-height: 200px;
+			overflow-y: auto;
+		}
+
+		li {
+			padding: 0.3rem 0;
+			font-size: 0.85rem;
+			display: flex;
+			gap: 0.5rem;
+			align-items: baseline;
+		}
+	}
+
+	&__item--ok span {
+		color: var(--watchlist-muted);
+		font-size: 0.8rem;
+		min-width: 1.5rem;
+	}
+
+	&__item--skip {
+		em {
+			color: var(--watchlist-muted);
+			font-size: 0.78rem;
+			font-style: italic;
+			margin-left: auto;
+		}
+	}
+
+	&__note {
+		font-size: 0.82rem;
+		color: var(--watchlist-muted);
+		margin: 0.75rem 0;
+		font-style: italic;
+	}
+
+	&__confirm {
+		width: 100%;
+		padding: 0.6rem 1rem;
+		border-radius: 0.5rem;
+		border: none;
+		background: var(--watchlist-accent, #6366f1);
+		color: #fff;
+		font-weight: 600;
+		font-size: 0.9rem;
+		cursor: pointer;
+
+		&:hover:not(:disabled) {
+			opacity: 0.9;
+		}
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
+		}
+	}
+
+	&__linked {
+		text-align: center;
+	}
+
+	&__status {
+		color: var(--watchlist-muted);
+		margin-bottom: 1rem;
+	}
+
+	&__actions {
+		display: flex;
+		gap: 0.75rem;
+		justify-content: center;
+
+		button {
+			padding: 0.5rem 1rem;
+			border-radius: 0.5rem;
+			border: 1px solid var(--watchlist-border, #2a2a4a);
+			background: var(--watchlist-card-bg, #1a1a2e);
+			color: var(--watchlist-fg, #fff);
+			font-size: 0.85rem;
+			cursor: pointer;
+
+			&:hover:not(:disabled) {
+				background: var(--watchlist-border, #2a2a4a);
+			}
+
+			&:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+			}
+		}
+	}
+
+	&__unlink {
+		color: var(--watchlist-danger, #ef4444) !important;
+		border-color: var(--watchlist-danger, #ef4444) !important;
+	}
+}

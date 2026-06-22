@@ -147,6 +147,9 @@ export const apiRoutes = {
 		export: (id: number) => `/api/watchlists/${id}/export`,
 		import: '/api/watchlists/import',
 		cover: (id: number) => `/api/watchlists/${id}/cover`,
+		jellyfinSync: (id: number) => `/api/watchlists/${id}/jellyfin-sync`,
+		jellyfinSyncPreview: (id: number) => `/api/watchlists/${id}/jellyfin-sync/preview`,
+		jellyfinSyncResync: (id: number) => `/api/watchlists/${id}/jellyfin-sync/resync`,
 	},
 } as const
 

@@ -4,6 +4,7 @@ import type {
 	AddWatchlistItemDto,
 	CreateWatchlistDto,
 	InviteWatchlistMemberDto,
+	PlaylistSyncPreviewDto,
 	UpdateWatchlistDto,
 	UpdateWatchlistItemDto,
 	WatchlistDetailDto,
@@ -179,4 +180,24 @@ export const setWatchlistCoverUrl = async (id: number, url: string): Promise<voi
 
 export const deleteWatchlistCover = async (id: number): Promise<void> => {
 	await customFetch<void>(apiRoutes.watchlists.cover(id), { method: 'DELETE' })
+}
+export const getPlaylistSyncPreview = async (id: number): Promise<PlaylistSyncPreviewDto> => {
+	return await customFetch<PlaylistSyncPreviewDto>(apiRoutes.watchlists.jellyfinSyncPreview(id), {
+		method: 'POST',
+	})
+}
+
+export const createJellyfinPlaylist = async (id: number, jellyfinUserId: string): Promise<void> => {
+	await customFetch<void>(apiRoutes.watchlists.jellyfinSync(id), {
+		method: 'POST',
+		body: { jellyfinUserId },
+	})
+}
+
+export const resyncJellyfinPlaylist = async (id: number): Promise<void> => {
+	await customFetch<void>(apiRoutes.watchlists.jellyfinSyncResync(id), { method: 'POST' })
+}
+
+export const unlinkJellyfinPlaylist = async (id: number): Promise<void> => {
+	await customFetch<void>(apiRoutes.watchlists.jellyfinSync(id), { method: 'DELETE' })
 }

@@ -20,6 +20,7 @@ export interface WatchlistSummaryDto {
 	name: string
 	description: string | null
 	coverUrl: string | null
+	jellyfinPlaylistId: string | null
 	state: WatchlistState
 	ownerUserId: number
 	ownerUsername: string
@@ -202,4 +203,23 @@ export interface WatchlistImportResultDto {
 	importedItems: number
 	skippedItems: number
 	errors: string[]
+}
+export interface PlaylistSyncPreviewDto {
+	syncableItems: PlaylistSyncItemDto[]
+	skippedItems: PlaylistSkippedItemDto[]
+	totalWatchlistItems: number
+}
+
+export interface PlaylistSyncItemDto {
+	title: string
+	mediaType: string
+	position: number
+	jellyfinItemId: string
+}
+
+export interface PlaylistSkippedItemDto {
+	title: string
+	mediaType: string
+	originalPosition: number
+	reason: string
 }

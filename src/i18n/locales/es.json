@@ -517,7 +517,19 @@
 		"uploadCover": "Subir portada",
 		"coverFromUrl": "Desde URL",
 		"coverUrlPlaceholder": "https://ejemplo.com/imagen.jpg",
-		"removeCover": "Quitar portada"
+		"removeCover": "Quitar portada",
+		"syncToJellyfin": "Sincronizar con Jellyfin",
+		"jellyfinSynced": "Sincronizado con Jellyfin",
+		"jellyfinLinked": "Vinculado a Playlist de Jellyfin",
+		"jellyfinTargetProfile": "Perfil de Jellyfin destino",
+		"selectProfile": "Selecciona un perfil...",
+		"syncableItems": "{{count}} items se sincronizarán",
+		"skippedItems": "{{count}} items se omitirán",
+		"syncAutoNote": "La playlist se mantendrá sincronizada automáticamente con cada cambio.",
+		"createPlaylist": "Crear Playlist",
+		"playlistLinked": "Esta watchlist está vinculada a una playlist de Jellyfin.",
+		"resync": "Re-sincronizar",
+		"unlinkPlaylist": "Desvincular playlist"
 	},
 	"backupSchedule": {
 		"title": "Programación de copias",
