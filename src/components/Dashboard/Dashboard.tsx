@@ -31,27 +31,29 @@ const formatRelativeDate = (
 	if (airTimeUtc) {
 		const utcDate = new Date(airTimeUtc)
 		if (!isNaN(utcDate.getTime())) {
-			// Hide episodes from before today (user's local calendar day)
 			const airLocalDate = utcDate.toLocaleDateString('en-CA')
 			const todayDate = now.toLocaleDateString('en-CA')
-			if (airLocalDate < todayDate) return ''
 
-			const timeStr = ` ${utcDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}`
+			// If the UTC-derived local date is in the past but airDate says today/future,
+			// fall through to the airDate-based fallback instead of hiding the badge.
+			if (airLocalDate >= todayDate) {
+				const timeStr = ` ${utcDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}`
 
-			// Compute day diff using the user-local calendar dates (noon to avoid DST issues)
-			const airLocal = new Date(utcDate.toLocaleDateString('en-CA') + 'T12:00:00')
-			const todayLocal = new Date(now.toLocaleDateString('en-CA') + 'T12:00:00')
-			const diffDays = Math.round(
-				(airLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24)
-			)
+				// Compute day diff using the user-local calendar dates (noon to avoid DST issues)
+				const airLocal = new Date(utcDate.toLocaleDateString('en-CA') + 'T12:00:00')
+				const todayLocal = new Date(now.toLocaleDateString('en-CA') + 'T12:00:00')
+				const diffDays = Math.round(
+					(airLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24)
+				)
 
-			if (diffDays <= 0) return t('dashboard.today') + timeStr
-			if (diffDays === 1) return t('dashboard.tomorrow') + timeStr
-			if (diffDays >= 2 && diffDays <= 6) {
-				const weekday = airLocal.toLocaleDateString(locale, { weekday: 'long' })
-				return weekday.charAt(0).toUpperCase() + weekday.slice(1) + timeStr
+				if (diffDays <= 0) return t('dashboard.today') + timeStr
+				if (diffDays === 1) return t('dashboard.tomorrow') + timeStr
+				if (diffDays >= 2 && diffDays <= 6) {
+					const weekday = airLocal.toLocaleDateString(locale, { weekday: 'long' })
+					return weekday.charAt(0).toUpperCase() + weekday.slice(1) + timeStr
+				}
+				return t('dashboard.inWeeks', { count: Math.round(diffDays / 7) }) + timeStr
 			}
-			return t('dashboard.inWeeks', { count: Math.round(diffDays / 7) }) + timeStr
 		}
 	}
 
