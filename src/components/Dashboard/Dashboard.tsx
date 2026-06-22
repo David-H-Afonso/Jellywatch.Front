@@ -194,34 +194,38 @@ const Dashboard: React.FC = () => {
 						onMouseDown={onMouseDown}
 						onClickCapture={onClickCapture}>
 						{upcoming.map((ep, i) => {
-							const badge = formatRelativeDate(ep.airDate, ep.airTime, ep.airTimeUtc, t, i18n.language)
+							const badge = formatRelativeDate(
+								ep.airDate,
+								ep.airTime,
+								ep.airTimeUtc,
+								t,
+								i18n.language
+							)
 							if (!badge) return null
 							return (
-							<div
-								key={`${ep.mediaItemId}-${ep.seasonNumber}-${ep.episodeNumber}-${i}`}
-								className='upcoming-card'
-								onClick={() => navigate(`/series/${ep.seriesId}`)}>
-								<div className='upcoming-card__poster-wrap'>
-									<MediaPoster
-										mediaItemId={ep.mediaItemId}
-										alt={ep.seriesTitle}
-										className='upcoming-card__poster'
-									/>
-									<div className='upcoming-card__badge'>
-										{badge}
+								<div
+									key={`${ep.mediaItemId}-${ep.seasonNumber}-${ep.episodeNumber}-${i}`}
+									className='upcoming-card'
+									onClick={() => navigate(`/series/${ep.seriesId}`)}>
+									<div className='upcoming-card__poster-wrap'>
+										<MediaPoster
+											mediaItemId={ep.mediaItemId}
+											alt={ep.seriesTitle}
+											className='upcoming-card__poster'
+										/>
+										<div className='upcoming-card__badge'>{badge}</div>
+										{ep.batchCount > 1 && (
+											<span className='upcoming-card__batch'>+{ep.batchCount - 1}</span>
+										)}
 									</div>
-									{ep.batchCount > 1 && (
-										<span className='upcoming-card__batch'>+{ep.batchCount - 1}</span>
-									)}
+									<div className='upcoming-card__info'>
+										<span className='upcoming-card__title'>{ep.seriesTitle}</span>
+										<span className='upcoming-card__episode'>
+											S{ep.seasonNumber} · E{ep.episodeNumber}
+											{ep.episodeName && ` — ${ep.episodeName}`}
+										</span>
+									</div>
 								</div>
-								<div className='upcoming-card__info'>
-									<span className='upcoming-card__title'>{ep.seriesTitle}</span>
-									<span className='upcoming-card__episode'>
-										S{ep.seasonNumber} · E{ep.episodeNumber}
-										{ep.episodeName && ` — ${ep.episodeName}`}
-									</span>
-								</div>
-							</div>
 							)
 						})}
 					</div>
