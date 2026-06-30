@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useState, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { selectActiveProfileId } from '@/store/features/auth/selector'
+import { selectActiveProfile, selectActiveProfileId } from '@/store/features/auth/selector'
 import {
 	selectProfileActivity,
 	selectProfileActivityPagination,
@@ -16,11 +16,12 @@ import {
 	Pagination,
 	MediaPoster,
 	AvailabilityBadge,
+	ExternalManageLink,
 } from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
 import { formatUserRating } from '@/utils'
 import { environment } from '@/environments'
-import { getExternalSearchLabel, getExternalSearchLink } from '@/utils/externalLinks'
+import { getExternalSearchLink } from '@/utils/externalLinks'
 import { getMovies, getSeries } from '@/services/MediaService/MediaService'
 import type { ActivityDto, MovieListDto, SeriesListDto } from '@/models/api'
 import './Activity.scss'
@@ -32,6 +33,7 @@ interface ShareImageItem {
 	key: string
 	mediaItemId: number | null
 	mediaType: MediaType
+	typeLabel: string
 	title: string
 	subtitle: string | null
 	dateLabel: string | null
@@ -41,8 +43,13 @@ interface ShareImageItem {
 
 interface ShareSearchItem extends ShareImageItem {
 	id: number
-	typeLabel: string
 	externalLink: string | null
+}
+
+interface ShareLabels {
+	movie: string
+	series: string
+	episode: string
 }
 
 const getPosterSource = (mediaItemId: number | null) =>
@@ -63,10 +70,19 @@ const loadPoster = (src: string | null): Promise<HTMLImageElement | null> =>
 		image.src = src
 	})
 
-const toActivityShareItem = (item: ActivityDto, locale: string): ShareImageItem => ({
+const toActivityShareItem = (
+	item: ActivityDto,
+	locale: string,
+	labels: ShareLabels
+): ShareImageItem => ({
 	key: `activity-${item.id}`,
 	mediaItemId: item.mediaItemId,
 	mediaType: item.mediaType,
+	typeLabel: item.episodeName
+		? labels.episode
+		: item.mediaType === MediaType.Movie
+			? labels.movie
+			: labels.series,
 	title: item.mediaTitle,
 	subtitle: item.episodeName
 		? `S${item.seasonNumber}E${item.episodeNumber} · ${item.episodeName}`
@@ -79,31 +95,31 @@ const toActivityShareItem = (item: ActivityDto, locale: string): ShareImageItem 
 	tmdbRating: item.tmdbRating,
 })
 
-const toMovieShareSearchItem = (movie: MovieListDto): ShareSearchItem => ({
+const toMovieShareSearchItem = (movie: MovieListDto, labels: ShareLabels): ShareSearchItem => ({
 	key: `movie-${movie.id}`,
 	id: movie.id,
 	mediaItemId: movie.mediaItemId,
 	mediaType: MediaType.Movie,
+	typeLabel: labels.movie,
 	title: movie.title,
 	subtitle: movie.releaseDate ? movie.releaseDate.slice(0, 4) : null,
 	dateLabel: null,
 	userRating: movie.userRating,
 	tmdbRating: movie.tmdbRating,
-	typeLabel: 'Movie',
 	externalLink: getExternalSearchLink(MediaType.Movie, movie.title),
 })
 
-const toSeriesShareSearchItem = (series: SeriesListDto): ShareSearchItem => ({
+const toSeriesShareSearchItem = (series: SeriesListDto, labels: ShareLabels): ShareSearchItem => ({
 	key: `series-${series.id}`,
 	id: series.id,
 	mediaItemId: series.mediaItemId,
 	mediaType: MediaType.Series,
+	typeLabel: labels.series,
 	title: series.title,
 	subtitle: series.releaseDate ? series.releaseDate.slice(0, 4) : null,
 	dateLabel: null,
 	userRating: series.userRating,
 	tmdbRating: series.tmdbRating,
-	typeLabel: 'Series',
 	externalLink: getExternalSearchLink(MediaType.Series, series.title),
 })
 
@@ -193,10 +209,9 @@ const drawImageCover = (
 
 const buildShareImage = async (
 	items: ShareImageItem[],
-	_locale: string,
-	footer: string
+	footer: string,
+	profileCaption: string | null
 ): Promise<string> => {
-	void _locale
 	const cols = Math.min(items.length, 5)
 	const rows = Math.ceil(items.length / cols)
 	const width = 1200
@@ -225,6 +240,12 @@ const buildShareImage = async (
 	context.fillStyle = '#f8fafc'
 	context.font = '700 48px system-ui, -apple-system, Segoe UI, sans-serif'
 	context.fillText('Jellywatch', padding, 68)
+
+	if (profileCaption) {
+		context.fillStyle = 'rgba(191, 219, 254, 0.88)'
+		context.font = '600 22px system-ui, -apple-system, Segoe UI, sans-serif'
+		context.fillText(profileCaption, padding, 100)
+	}
 
 	const posters = await Promise.all(
 		items.map((item) => loadPoster(getPosterSource(item.mediaItemId)))
@@ -288,6 +309,19 @@ const buildShareImage = async (
 			context.fillText(pill.text, pillX + 11, pillY + 19)
 		})
 
+		context.font = '800 13px system-ui, -apple-system, Segoe UI, sans-serif'
+		const typeText = item.typeLabel.toUpperCase()
+		const typePillWidth = context.measureText(typeText).width + 20
+		const typePillX = x + cardWidth - 10 - typePillWidth
+		const typePillY = y + posterHeight - 36
+		roundRect(context, typePillX, typePillY, typePillWidth, 26, 13)
+		context.fillStyle = 'rgba(15, 23, 42, 0.82)'
+		context.fill()
+		context.strokeStyle = 'rgba(255, 255, 255, 0.18)'
+		context.stroke()
+		context.fillStyle = '#e2e8f0'
+		context.fillText(typeText, typePillX + 10, typePillY + 17)
+
 		context.fillStyle = '#f8fafc'
 		context.font = '700 17px system-ui, -apple-system, Segoe UI, sans-serif'
 		drawWrappedText(context, item.title, x + 14, y + posterHeight + 28, cardWidth - 28, 21, 2)
@@ -318,6 +352,7 @@ const Activity: React.FC = () => {
 	const { t, i18n } = useTranslation()
 	const dispatch = useAppDispatch()
 	const activeProfileId = useAppSelector(selectActiveProfileId)
+	const activeProfile = useAppSelector(selectActiveProfile)
 	const activity = useAppSelector(selectProfileActivity)
 	const pagination = useAppSelector(selectProfileActivityPagination)
 	const loading = useAppSelector(selectProfileLoading)
@@ -366,14 +401,23 @@ const Activity: React.FC = () => {
 		[updateParam]
 	)
 
+	const shareLabels = useMemo<ShareLabels>(
+		() => ({
+			movie: t('activity.share.typeMovie'),
+			series: t('activity.share.typeSeries'),
+			episode: t('activity.share.typeEpisode'),
+		}),
+		[t]
+	)
+
 	const selectedItems = useMemo(
 		() => [
 			...activity
 				.filter((item) => selectedIds.includes(item.id))
-				.map((item) => toActivityShareItem(item, i18n.language)),
+				.map((item) => toActivityShareItem(item, i18n.language, shareLabels)),
 			...extraShareItems,
 		],
-		[activity, extraShareItems, i18n.language, selectedIds]
+		[activity, extraShareItems, i18n.language, selectedIds, shareLabels]
 	)
 
 	const toggleShareMode = useCallback(() => {
@@ -449,8 +493,8 @@ const Activity: React.FC = () => {
 				getSeries({ search: query, pageSize: 6, profileId: activeProfileId ?? undefined }),
 			])
 			setShareSearchResults([
-				...movies.data.map(toMovieShareSearchItem),
-				...series.data.map(toSeriesShareSearchItem),
+				...movies.data.map((movie) => toMovieShareSearchItem(movie, shareLabels)),
+				...series.data.map((series) => toSeriesShareSearchItem(series, shareLabels)),
 			])
 		} catch (error) {
 			setShareSearchError(error instanceof Error ? error.message : t('common.error'))
@@ -458,7 +502,7 @@ const Activity: React.FC = () => {
 		} finally {
 			setShareSearchLoading(false)
 		}
-	}, [activeProfileId, shareSearch, t])
+	}, [activeProfileId, shareSearch, t, shareLabels])
 
 	const copyShareImage = useCallback(async () => {
 		if (!shareImage || !('ClipboardItem' in window) || !navigator.clipboard?.write) {
@@ -559,8 +603,10 @@ const Activity: React.FC = () => {
 		setShareBusy(true)
 		buildShareImage(
 			selectedItems,
-			i18n.language,
-			t('activity.share.imageFooter', { defaultValue: 'Hecho con Jellywatch' })
+			t('activity.share.imageFooter', { defaultValue: 'Hecho con Jellywatch' }),
+			activeProfile
+				? t('activity.share.profileCaption', { name: activeProfile.displayName })
+				: null
 		)
 			.then((image) => {
 				if (!cancelled) setShareImage(image)
@@ -575,7 +621,7 @@ const Activity: React.FC = () => {
 		return () => {
 			cancelled = true
 		}
-	}, [shareMode, selectedItems, i18n.language])
+	}, [shareMode, selectedItems, i18n.language, t, activeProfile])
 
 	const getItemLink = (item: (typeof activity)[0]) => {
 		if (item.mediaType === MediaType.Movie && item.movieId) return `/movies/${item.movieId}`
@@ -758,7 +804,6 @@ const Activity: React.FC = () => {
 			<div className='activity-page__list'>
 				{activity.map((item) => {
 					const link = getItemLink(item)
-					const externalLink = getExternalSearchLink(item.mediaType, item.mediaTitle)
 					const isSelected = selectedIds.includes(item.id)
 					return (
 						<div
@@ -833,16 +878,11 @@ const Activity: React.FC = () => {
 								}
 								size='sm'
 							/>
-							{externalLink && (
-								<a
-									className='activity-page__external-link'
-									href={externalLink}
-									target='_blank'
-									rel='noreferrer'
-									title={getExternalSearchLabel(item.mediaType)}>
-									{getExternalSearchLabel(item.mediaType)}
-								</a>
-							)}
+							<ExternalManageLink
+								mediaType={item.mediaType}
+								title={item.mediaTitle}
+								className='activity-page__external-link'
+							/>
 						</div>
 					)
 				})}

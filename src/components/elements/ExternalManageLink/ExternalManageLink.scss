@@ -1,0 +1,23 @@
+.external-manage-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	align-self: flex-start;
+	margin: 0.25rem 0 0.5rem;
+	padding: 0.5rem 0.9rem;
+	border-radius: 0.5rem;
+	border: 1px solid rgba(56, 189, 248, 0.38);
+	color: #bae6fd;
+	background: rgba(14, 165, 233, 0.1);
+	font-size: 0.85rem;
+	font-weight: 700;
+	text-decoration: none;
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease;
+
+	&:hover {
+		background: rgba(14, 165, 233, 0.2);
+		border-color: rgba(56, 189, 248, 0.6);
+	}
+}

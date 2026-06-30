@@ -33,4 +33,10 @@ export const selectActiveProfileId = (state: RootState) => {
 	return user.activeProfileId ?? selectSafeProfiles(state)[0]?.id ?? null
 }
 
+export const selectActiveProfile = (state: RootState): ProfileInfo | null => {
+	const activeId = selectActiveProfileId(state)
+	if (activeId == null) return null
+	return selectSafeProfiles(state).find((profile) => profile.id === activeId) ?? null
+}
+
 export const selectProfiles = selectSafeProfiles

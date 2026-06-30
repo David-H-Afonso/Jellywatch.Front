@@ -96,7 +96,11 @@
 			"copy": "Copiar imagen",
 			"copied": "Copiada. Ya puedes pegarla en otro chat.",
 			"copyFallback": "Usa click derecho sobre la imagen y copia.",
-			"imageFooter": "Hecho con Jellywatch"
+			"imageFooter": "Hecho con Jellywatch",
+			"profileCaption": "Vistas de {{name}}",
+			"typeMovie": "Película",
+			"typeSeries": "Serie",
+			"typeEpisode": "Episodio"
 		},
 		"date": {
 			"all": "Todo",
@@ -105,6 +109,9 @@
 			"90d": "90 días",
 			"custom": "Personalizado"
 		}
+	},
+	"externalLinks": {
+		"openIn": "Abrir en {{service}}"
 	},
 	"series": {
 		"title": "Series",

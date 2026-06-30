@@ -23,12 +23,13 @@ import {
 	EpisodeToggle,
 	WatchStateBadge,
 	AvailabilityBadge,
+	ExternalManageLink,
 	PosterPickerModal,
 	StarRating,
 	CastSection,
 	AddToWatchlistModal,
 } from '@/components/elements'
-import { WatchState } from '@/models/api/Enums'
+import { WatchState, MediaType } from '@/models/api/Enums'
 import {
 	updateEpisodeState,
 	uploadCustomPoster,
@@ -567,6 +568,7 @@ const SeriesDetail: React.FC = () => {
 							showValue
 						/>
 					</div>
+					<ExternalManageLink mediaType={MediaType.Series} title={title} />
 					{overview && <p className='series-detail__overview'>{overview}</p>}
 				</div>
 			</div>

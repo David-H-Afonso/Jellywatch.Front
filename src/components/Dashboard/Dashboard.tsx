@@ -10,11 +10,10 @@ import {
 } from '@/store/features/profile'
 import { fetchProfileDetail, fetchProfileActivity } from '@/store/features/profile'
 import { getUpcoming } from '@/services/StatsService/StatsService'
-import { ProfileSelector, WatchStateBadge, MediaPoster } from '@/components/elements'
+import { ProfileSelector, WatchStateBadge, MediaPoster, ExternalManageLink } from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
 import type { UpcomingEpisodeDto } from '@/models/api'
 import { formatUserRating } from '@/utils'
-import { getExternalSearchLabel, getExternalSearchLink } from '@/utils/externalLinks'
 import './Dashboard.scss'
 
 const formatRelativeDate = (
@@ -250,7 +249,6 @@ const Dashboard: React.FC = () => {
 								: item.seriesId
 									? `/series/${item.seriesId}`
 									: null
-						const externalLink = getExternalSearchLink(item.mediaType, item.mediaTitle)
 						return (
 							<div key={item.id} className='activity-item'>
 								{link ? (
@@ -310,16 +308,11 @@ const Dashboard: React.FC = () => {
 									}
 									size='sm'
 								/>
-								{externalLink && (
-									<a
-										className='activity-item__external-link'
-										href={externalLink}
-										target='_blank'
-										rel='noreferrer'
-										title={getExternalSearchLabel(item.mediaType)}>
-										{getExternalSearchLabel(item.mediaType)}
-									</a>
-								)}
+								<ExternalManageLink
+									mediaType={item.mediaType}
+									title={item.mediaTitle}
+									className='activity-item__external-link'
+								/>
 							</div>
 						)
 					})}

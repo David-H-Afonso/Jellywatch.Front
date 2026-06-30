@@ -15,12 +15,13 @@ import {
 	MediaPoster,
 	WatchStateBadge,
 	AvailabilityBadge,
+	ExternalManageLink,
 	StarRating,
 	PosterPickerModal,
 	CastSection,
 	AddToWatchlistModal,
 } from '@/components/elements'
-import { WatchState } from '@/models/api/Enums'
+import { WatchState, MediaType } from '@/models/api/Enums'
 import {
 	updateMovieState,
 	rateMovie,
@@ -465,6 +466,8 @@ const MovieDetail: React.FC = () => {
 							</div>
 						)}
 					</div>
+
+					<ExternalManageLink mediaType={MediaType.Movie} title={title} />
 
 					{overview && <p className='movie-detail__overview'>{overview}</p>}
 				</div>
