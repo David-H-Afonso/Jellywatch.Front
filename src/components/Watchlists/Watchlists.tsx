@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react'
@@ -6,7 +6,7 @@ import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable'
 import { useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId } from '@/store/features/auth/selector'
 import { environment } from '@/environments'
-import { MediaPoster, ProfileSelector, AvailabilityBadge } from '@/components/elements'
+import { MediaPoster, ProfileSelector, AvailabilityBadge, ConfirmDialog } from '@/components/elements'
 import {
 	acceptWatchlistInvitation,
 	addMediaToProfile,
@@ -77,6 +77,14 @@ interface MediaSearchOption {
 	posterPath: string | null
 	mediaType: MediaType
 	isExternal: boolean
+}
+
+interface ConfirmRequest {
+	title: string
+	message: string
+	confirmLabel: string
+	tone?: 'danger' | 'primary'
+	onConfirm: () => void | Promise<void>
 }
 
 const statusOptions = [
@@ -319,6 +327,8 @@ const Watchlists: React.FC = () => {
 	const [syncPreview, setSyncPreview] = useState<PlaylistSyncPreviewDto | null>(null)
 	const [syncLoading, setSyncLoading] = useState(false)
 	const [syncTargetProfile, setSyncTargetProfile] = useState<string>('')
+	const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null)
+	const [confirmBusy, setConfirmBusy] = useState(false)
 
 	const loadIndex = useCallback(async () => {
 		setLoading(true)
@@ -714,6 +724,36 @@ const Watchlists: React.FC = () => {
 		}
 	}
 
+	const requestConfirm = (request: ConfirmRequest) => setConfirmRequest(request)
+
+	const requestLeaveWatchlist = () => {
+		if (!detail) return
+		requestConfirm({
+			title: t('watchlists.confirmLeaveTitle'),
+			message: t('watchlists.confirmLeaveMessage', { name: detail.name }),
+			confirmLabel: t('watchlists.leave'),
+			onConfirm: async () => {
+				await leaveWatchlist(detail.id)
+				setSelectedId(null)
+				await loadIndex()
+			},
+		})
+	}
+
+	const requestDeleteWatchlist = () => {
+		if (!detail) return
+		requestConfirm({
+			title: t('watchlists.confirmDeleteTitle'),
+			message: t('watchlists.confirmDeleteMessage', { name: detail.name }),
+			confirmLabel: t('common.delete'),
+			onConfirm: async () => {
+				await deleteWatchlist(detail.id)
+				setSelectedId(null)
+				await loadIndex()
+			},
+		})
+	}
+
 	return (
 		<div className='watchlists-page'>
 			<div className='watchlists-page__header'>
@@ -785,10 +825,19 @@ const Watchlists: React.FC = () => {
 											await acceptWatchlistInvitation(invitation.id)
 											await loadIndex()
 										}}
-										onReject={async () => {
-											await rejectWatchlistInvitation(invitation.id)
-											await loadIndex()
-										}}
+									onReject={() =>
+										requestConfirm({
+											title: t('watchlists.confirmRejectInvitationTitle'),
+											message: t('watchlists.confirmRejectInvitationMessage', {
+												name: invitation.watchlistName,
+											}),
+											confirmLabel: t('watchlists.reject'),
+											onConfirm: async () => {
+												await rejectWatchlistInvitation(invitation.id)
+												await loadIndex()
+											},
+										})
+									}
 									/>
 								))}
 							</section>
@@ -827,10 +876,19 @@ const Watchlists: React.FC = () => {
 											</button>
 											<button
 												className='btn-secondary btn-sm'
-												onClick={async () => {
-													await rejectWatchlistAccess(request.id)
-													await loadIndex()
-												}}>
+												onClick={() =>
+													requestConfirm({
+														title: t('watchlists.confirmRejectAccessTitle'),
+														message: t('watchlists.confirmRejectAccessMessage', {
+															name: request.requestingUsername,
+														}),
+														confirmLabel: t('watchlists.reject'),
+														onConfirm: async () => {
+															await rejectWatchlistAccess(request.id)
+															await loadIndex()
+														},
+													})
+												}>
 												{t('watchlists.reject')}
 											</button>
 										</div>
@@ -853,11 +911,13 @@ const Watchlists: React.FC = () => {
 											<div className='watchlist-editor__actions'>
 												<IconButton
 													label={t('watchlists.viewMode')}
+													text={t('common.close')}
 													onClick={() => setEditMode(false)}>
 													<CloseIcon />
 												</IconButton>
 												<IconButton
 													label={t('common.save')}
+													text={t('common.save')}
 													variant='primary'
 													disabled={saving || !detail.permissions.canUpdateWatchlist}
 													onClick={handleUpdateDetail}>
@@ -865,6 +925,7 @@ const Watchlists: React.FC = () => {
 												</IconButton>
 												<IconButton
 													label={t('watchlists.markCompleted')}
+													text={t('watchlists.markCompleted')}
 													variant='success'
 													disabled={saving || !detail.permissions.canUpdateWatchlist}
 													onClick={async () => {
@@ -879,6 +940,11 @@ const Watchlists: React.FC = () => {
 															? t('watchlists.defaultWatchlist')
 															: t('watchlists.makeDefault')
 													}
+													text={
+														index.defaultWatchlistId === detail.id
+															? t('watchlists.defaultWatchlist')
+															: t('watchlists.makeDefault')
+													}
 													variant={index.defaultWatchlistId === detail.id ? 'warning' : 'default'}
 													onClick={async () => {
 														await setDefaultWatchlist(detail.id)
@@ -889,24 +955,18 @@ const Watchlists: React.FC = () => {
 												{detail.role !== WatchlistRole.Owner && (
 													<IconButton
 														label={t('watchlists.leave')}
+														text={t('watchlists.leave')}
 														variant='danger'
-														onClick={async () => {
-															await leaveWatchlist(detail.id)
-															setSelectedId(null)
-															await loadIndex()
-														}}>
+														onClick={requestLeaveWatchlist}>
 														<LeaveIcon />
 													</IconButton>
 												)}
 												{detail.permissions.canDeleteWatchlist && (
 													<IconButton
 														label={t('common.delete')}
+														text={t('common.delete')}
 														variant='danger'
-														onClick={async () => {
-															await deleteWatchlist(detail.id)
-															setSelectedId(null)
-															await loadIndex()
-														}}>
+														onClick={requestDeleteWatchlist}>
 														<TrashIcon />
 													</IconButton>
 												)}
@@ -950,7 +1010,7 @@ const Watchlists: React.FC = () => {
 																small
 															/>
 														)}
-														<label className='btn-secondary btn-sm'>
+														<label className='btn-secondary btn-sm watchlist-cover-button'>
 															<ImportIcon /> {t('watchlists.uploadCover')}
 															<input
 																type='file'
@@ -960,17 +1020,19 @@ const Watchlists: React.FC = () => {
 															/>
 														</label>
 														<button
-															className='btn-secondary btn-sm'
+															type='button'
+															className='btn-secondary btn-sm watchlist-cover-button'
 															onClick={() => setShowCoverUrlInput((v) => !v)}
 															disabled={saving}>
 															<LinkIcon /> {t('watchlists.coverFromUrl')}
 														</button>
 														{detail.coverUrl && (
 															<button
-																className='btn-danger btn-sm'
+																type='button'
+																className='btn-danger btn-sm watchlist-cover-button'
 																onClick={handleCoverDelete}
 																disabled={saving}>
-																{t('watchlists.removeCover')}
+																<TrashIcon /> {t('watchlists.removeCover')}
 															</button>
 														)}
 													</div>
@@ -1011,7 +1073,11 @@ const Watchlists: React.FC = () => {
 												)}
 											</div>
 											<h2>{detail.name}</h2>
-											<p>{detail.description || t('watchlists.noDescription')}</p>
+											{detail.description ? (
+												<WatchlistDescription text={detail.description} t={t} />
+											) : (
+												<p>{t('watchlists.noDescription')}</p>
+											)}
 										</div>
 										<div className='watchlist-overview__stats'>
 											<strong>{detail.items.length}</strong>
@@ -1020,14 +1086,23 @@ const Watchlists: React.FC = () => {
 										<div className='watchlist-overview__actions'>
 											<IconButton
 												label={t('watchlists.editMode')}
+												text={t('common.edit')}
 												onClick={() => setEditMode(true)}>
 												<EditIcon />
 											</IconButton>
-											<IconButton label={t('watchlists.export')} onClick={handleExport}>
+											<IconButton
+												label={t('watchlists.export')}
+												text={t('watchlists.export')}
+												onClick={handleExport}>
 												<ExportIcon />
 											</IconButton>
 											<IconButton
 												label={
+													detail.jellyfinPlaylistId
+														? t('watchlists.jellyfinSynced')
+														: t('watchlists.syncToJellyfin')
+												}
+												text={
 													detail.jellyfinPlaylistId
 														? t('watchlists.jellyfinSynced')
 														: t('watchlists.syncToJellyfin')
@@ -1058,6 +1133,11 @@ const Watchlists: React.FC = () => {
 														? t('watchlists.defaultWatchlist')
 														: t('watchlists.makeDefault')
 												}
+												text={
+													index.defaultWatchlistId === detail.id
+														? t('watchlists.defaultWatchlist')
+														: t('watchlists.makeDefault')
+												}
 												onClick={async () => {
 													await setDefaultWatchlist(detail.id)
 													await loadIndex()
@@ -1067,12 +1147,9 @@ const Watchlists: React.FC = () => {
 											{detail.role !== WatchlistRole.Owner && (
 												<IconButton
 													label={t('watchlists.leave')}
+													text={t('watchlists.leave')}
 													variant='danger'
-													onClick={async () => {
-														await leaveWatchlist(detail.id)
-														setSelectedId(null)
-														await loadIndex()
-													}}>
+													onClick={requestLeaveWatchlist}>
 													<LeaveIcon />
 												</IconButton>
 											)}
@@ -1220,15 +1297,6 @@ const Watchlists: React.FC = () => {
 										/>
 										{addType === WatchlistItemType.MediaItem ? (
 											<div className='watchlist-media-search'>
-												<input
-													value={addMediaQuery}
-													onChange={(e) => {
-														setAddMediaQuery(e.target.value)
-														setSelectedMedia(null)
-													}}
-													placeholder={t('watchlists.mediaSearchPlaceholder')}
-													autoComplete='off'
-												/>
 												<div className='watchlist-media-type-filter'>
 													<button
 														type='button'
@@ -1268,6 +1336,15 @@ const Watchlists: React.FC = () => {
 														📚 {t('watchlists.libraryOnly')}
 													</button>
 												</div>
+												<input
+													value={addMediaQuery}
+													onChange={(e) => {
+														setAddMediaQuery(e.target.value)
+														setSelectedMedia(null)
+													}}
+													placeholder={t('watchlists.mediaSearchPlaceholder')}
+													autoComplete='off'
+												/>
 												{selectedMedia && (
 													<span className='watchlist-media-search__selected'>
 														{selectedMedia.posterPath && (
@@ -1299,7 +1376,6 @@ const Watchlists: React.FC = () => {
 																}
 																onClick={() => {
 																	setSelectedMedia(result)
-																	setAddMediaQuery(result.title)
 																	setMediaSearchResults([])
 																}}>
 																{result.posterPath && (
@@ -1375,10 +1451,19 @@ const Watchlists: React.FC = () => {
 													await updateWatchlistItem(detail.id, item.id, { status, position })
 													await refreshAll()
 												}}
-												onDelete={async () => {
-													await deleteWatchlistItem(detail.id, item.id)
-													await refreshAll()
-												}}
+												onDelete={() =>
+													requestConfirm({
+														title: t('watchlists.confirmRemoveItemTitle'),
+														message: t('watchlists.confirmRemoveItemMessage', {
+															title: item.media?.title ?? item.childWatchlist?.name ?? '',
+														}),
+														confirmLabel: t('common.remove'),
+														onConfirm: async () => {
+															await deleteWatchlistItem(detail.id, item.id)
+															await refreshAll()
+														},
+													})
+												}
 												onAddToProfile={async (mediaItemId) => {
 													if (!activeProfileId) return
 													await addMediaToProfile(activeProfileId, mediaItemId)
@@ -1411,10 +1496,19 @@ const Watchlists: React.FC = () => {
 														await updateWatchlistMember(detail.id, member.id, role, permissions)
 														await refreshAll()
 													}}
-													onRemove={async () => {
-														await removeWatchlistMember(detail.id, member.id)
-														await refreshAll()
-													}}
+													onRemove={() =>
+														requestConfirm({
+															title: t('watchlists.confirmRemoveMemberTitle'),
+															message: t('watchlists.confirmRemoveMemberMessage', {
+																name: member.username,
+															}),
+															confirmLabel: t('common.remove'),
+															onConfirm: async () => {
+																await removeWatchlistMember(detail.id, member.id)
+																await refreshAll()
+															},
+														})
+													}
 												/>
 											))}
 										</div>
@@ -1497,6 +1591,26 @@ const Watchlists: React.FC = () => {
 					</main>
 				</div>
 			)}
+
+			{confirmRequest && (
+				<ConfirmDialog
+					title={confirmRequest.title}
+					message={confirmRequest.message}
+					confirmLabel={confirmRequest.confirmLabel}
+					tone={confirmRequest.tone ?? 'danger'}
+					busy={confirmBusy}
+					onCancel={() => setConfirmRequest(null)}
+					onConfirm={async () => {
+						setConfirmBusy(true)
+						try {
+							await confirmRequest.onConfirm()
+							setConfirmRequest(null)
+						} finally {
+							setConfirmBusy(false)
+						}
+					}}
+				/>
+			)}
 		</div>
 	)
 }
@@ -1531,9 +1645,45 @@ const WatchlistCover: React.FC<WatchlistCoverProps> = ({ coverUrl, small }) => {
 	)
 }
 
+interface WatchlistDescriptionProps {
+	text: string
+	t: (key: string, opts?: Record<string, unknown>) => string
+}
+
+const WatchlistDescription: React.FC<WatchlistDescriptionProps> = ({ text, t }) => {
+	const [expanded, setExpanded] = useState(false)
+	const [overflowing, setOverflowing] = useState(false)
+	const textRef = useRef<HTMLParagraphElement>(null)
+
+	useEffect(() => {
+		const element = textRef.current
+		if (!element) return
+		setOverflowing(element.scrollHeight - element.clientHeight > 1)
+	}, [text])
+
+	return (
+		<div className='watchlist-overview__description'>
+			<p
+				ref={textRef}
+				className={`watchlist-overview__description-text${expanded ? '' : ' watchlist-overview__description-text--clamped'}`}>
+				{text}
+			</p>
+			{overflowing && (
+				<button
+					type='button'
+					className='watchlist-overview__description-toggle'
+					onClick={() => setExpanded((current) => !current)}>
+					{expanded ? t('watchlists.showLess') : t('watchlists.showMore')}
+				</button>
+			)}
+		</div>
+	)
+}
+
 interface IconButtonProps {
 	label: string
 	children: React.ReactNode
+	text?: string
 	onClick?: () => void | Promise<void>
 	disabled?: boolean
 	variant?: 'default' | 'danger' | 'primary' | 'success' | 'warning'
@@ -1542,18 +1692,20 @@ interface IconButtonProps {
 const IconButton: React.FC<IconButtonProps> = ({
 	label,
 	children,
+	text,
 	onClick,
 	disabled = false,
 	variant = 'default',
 }) => (
 	<button
 		type='button'
-		className={`watchlist-icon-button watchlist-icon-button--${variant}`}
+		className={`watchlist-icon-button watchlist-icon-button--${variant}${text ? ' watchlist-icon-button--labeled' : ''}`}
 		onClick={onClick}
 		disabled={disabled}
 		aria-label={label}
 		title={label}>
 		{children}
+		{text && <span className='watchlist-icon-button__label'>{text}</span>}
 	</button>
 )
 
@@ -1561,7 +1713,7 @@ interface InvitationCardProps {
 	invitation: WatchlistInvitationDto
 	t: (key: string, opts?: Record<string, unknown>) => string
 	onAccept: () => Promise<void>
-	onReject: () => Promise<void>
+	onReject: () => void
 }
 
 const InvitationCard: React.FC<InvitationCardProps> = ({ invitation, t, onAccept, onReject }) => {
@@ -1591,13 +1743,36 @@ const InvitationCard: React.FC<InvitationCardProps> = ({ invitation, t, onAccept
 					<button
 						type='button'
 						className='btn-secondary btn-sm'
-						onClick={() => setPreviewOpen((current) => !current)}>
-						{previewOpen ? t('watchlists.hidePreview') : t('watchlists.showPreview')}
+						onClick={() => setPreviewOpen(true)}>
+						{t('watchlists.showPreview')}
 					</button>
 				)}
 			</div>
 			{previewOpen && invitation.preview && (
-				<ChildPreview child={invitation.preview} readonly t={t} depth={0} />
+				<div
+					className='watchlist-preview-overlay'
+					onMouseDown={(event) =>
+						event.target === event.currentTarget && setPreviewOpen(false)
+					}>
+					<div className='watchlist-preview-modal'>
+						<div className='watchlist-preview-modal__header'>
+							<div>
+								<strong>{invitation.watchlistName}</strong>
+								<span>{t('watchlists.itemCount', { count: itemCount })}</span>
+							</div>
+							<button
+								type='button'
+								className='watchlist-preview-modal__close'
+								onClick={() => setPreviewOpen(false)}
+								aria-label={t('common.close')}>
+								<CloseIcon />
+							</button>
+						</div>
+						<div className='watchlist-preview-modal__body'>
+							<ChildPreview child={invitation.preview} readonly t={t} depth={0} />
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	)
@@ -1651,7 +1826,7 @@ interface MemberEditorProps {
 	detail: WatchlistDetailDto
 	t: (key: string, opts?: Record<string, unknown>) => string
 	onSave: (role: WatchlistRole, permissions: WatchlistPermissionsDto) => Promise<void>
-	onRemove: () => Promise<void>
+	onRemove: () => void
 }
 
 const MemberEditor: React.FC<MemberEditorProps> = ({ member, detail, t, onSave, onRemove }) => {
@@ -1909,7 +2084,7 @@ interface ItemRowProps {
 	activeProfileId: number | null
 	t: (key: string, opts?: Record<string, unknown>) => string
 	onUpdate: (status: WatchlistStatus, position?: number | null) => Promise<void>
-	onDelete: () => Promise<void>
+	onDelete: () => void
 	onAddToProfile: (mediaItemId: number) => Promise<void>
 	onRequestAccess: (watchlistId: number) => Promise<void>
 	onSelectWatchlist: (watchlistId: number) => void

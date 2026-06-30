@@ -247,4 +247,92 @@ describe('Watchlists page', () => {
 			)
 		)
 	})
+
+	it('asks for confirmation before rejecting an invitation and rejects only after confirming', async () => {
+		services.getWatchlists.mockResolvedValue(
+			createWatchlistIndexDto({ pendingInvitations: [createWatchlistInvitationDto()] })
+		)
+
+		renderPage()
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Reject' }))
+		expect(services.rejectWatchlistInvitation).not.toHaveBeenCalled()
+
+		const dialog = screen.getByRole('alertdialog')
+		fireEvent.click(within(dialog).getByRole('button', { name: 'Reject' }))
+
+		await waitFor(() => expect(services.rejectWatchlistInvitation).toHaveBeenCalledWith(2))
+	})
+
+	it('does not reject the invitation when the confirmation is cancelled', async () => {
+		services.getWatchlists.mockResolvedValue(
+			createWatchlistIndexDto({ pendingInvitations: [createWatchlistInvitationDto()] })
+		)
+
+		renderPage()
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Reject' }))
+		fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' }))
+
+		await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+		expect(services.rejectWatchlistInvitation).not.toHaveBeenCalled()
+	})
+
+	it('asks for confirmation before leaving a watchlist', async () => {
+		services.getWatchlist.mockResolvedValue(
+			createWatchlistDetailDto({ role: WatchlistRole.Member })
+		)
+
+		renderPage()
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Leave watchlist' }))
+		expect(services.leaveWatchlist).not.toHaveBeenCalled()
+
+		const dialog = screen.getByRole('alertdialog')
+		fireEvent.click(within(dialog).getByRole('button', { name: 'Leave watchlist' }))
+
+		await waitFor(() => expect(services.leaveWatchlist).toHaveBeenCalledWith(1))
+	})
+
+	it('asks for confirmation before deleting a watchlist', async () => {
+		renderPage()
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Edit watchlist' }))
+		fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+		expect(services.deleteWatchlist).not.toHaveBeenCalled()
+
+		const dialog = screen.getByRole('alertdialog')
+		fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+		await waitFor(() => expect(services.deleteWatchlist).toHaveBeenCalledWith(1))
+	})
+
+	it('shows the invitation preview inside a bounded modal that can be closed', async () => {
+		services.getWatchlists.mockResolvedValue(
+			createWatchlistIndexDto({ pendingInvitations: [createWatchlistInvitationDto()] })
+		)
+
+		const { container } = renderPage()
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Show preview' }))
+
+		const modal = container.querySelector('.watchlist-preview-modal') as HTMLElement
+		expect(modal).not.toBeNull()
+		expect(within(modal).getByText('House of the Dragon')).toBeVisible()
+
+		fireEvent.click(within(modal).getByRole('button', { name: 'Close' }))
+
+		await waitFor(() => expect(container.querySelector('.watchlist-preview-modal')).toBeNull())
+	})
+
+	it('labels editor and overview actions with readable text', async () => {
+		renderPage()
+
+		expect(await screen.findByText('Export watchlist')).toBeVisible()
+
+		fireEvent.click(screen.getByRole('button', { name: 'Edit watchlist' }))
+
+		expect(await screen.findByText('Mark completed')).toBeVisible()
+		expect(screen.getByText('Save')).toBeVisible()
+	})
 })

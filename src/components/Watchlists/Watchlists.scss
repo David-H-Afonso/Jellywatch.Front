@@ -188,7 +188,7 @@
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr) auto auto;
 	gap: 1rem;
-	align-items: center;
+	align-items: start;
 	padding: 1.1rem 1.2rem;
 	background:
 		linear-gradient(
@@ -230,6 +230,18 @@
 	flex-wrap: wrap;
 }
 
+.watchlist-cover-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+
+	svg {
+		width: 1rem;
+		height: 1rem;
+		fill: currentColor;
+	}
+}
+
 .watchlist-editor__cover-url {
 	display: flex;
 	align-items: center;
@@ -266,6 +278,34 @@
 		margin: 0;
 		color: var(--watchlist-muted);
 		line-height: 1.45;
+	}
+}
+
+.watchlist-overview__description {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.2rem;
+}
+
+.watchlist-overview__description-text--clamped {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.watchlist-overview__description-toggle {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--watchlist-primary);
+	font-size: 0.82rem;
+	font-weight: 700;
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: underline;
 	}
 }
 
@@ -370,6 +410,10 @@
 
 .watchlist-editor__description {
 	grid-column: 1 / -1;
+
+	textarea {
+		min-height: 8rem;
+	}
 }
 
 .watchlist-add-item {
@@ -409,7 +453,6 @@
 	min-width: 0;
 }
 
-.watchlist-media-search__selected,
 .watchlist-user-search__selected {
 	position: absolute;
 	right: 0.45rem;
@@ -429,6 +472,27 @@
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
+}
+
+.watchlist-media-search__selected {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	max-width: 100%;
+	margin-top: 0.4rem;
+	padding: 0.3rem 0.55rem;
+	border: 1px solid color-mix(in srgb, var(--watchlist-primary) 42%, var(--watchlist-border));
+	border-radius: 7px;
+	background: var(--watchlist-primary-soft);
+	color: var(--watchlist-text);
+	font-size: 0.8rem;
+	font-weight: 600;
+	line-height: 1.3;
+
+	.watchlist-media-search__poster {
+		width: 24px;
+		height: 36px;
+	}
 }
 
 .watchlist-media-search__menu,
@@ -515,7 +579,7 @@
 	display: flex;
 	gap: 0.3rem;
 	flex-wrap: wrap;
-	padding: 0.3rem 0 0.1rem;
+	padding: 0 0 0.4rem;
 
 	button {
 		padding: 0.18rem 0.6rem;
@@ -903,6 +967,18 @@
 	color: var(--watchlist-danger);
 }
 
+.watchlist-icon-button--labeled {
+	width: auto;
+	gap: 0.4rem;
+	padding: 0 0.78rem;
+	font-size: 0.83rem;
+	font-weight: 600;
+}
+
+.watchlist-icon-button__label {
+	white-space: nowrap;
+}
+
 .btn-primary svg,
 .btn-secondary svg {
 	width: 1rem;
@@ -1055,6 +1131,99 @@ label.btn-secondary {
 .child-preview__empty {
 	margin: 0;
 	color: var(--watchlist-muted);
+}
+
+.watchlist-preview-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background: rgba(0, 0, 0, 0.75);
+}
+
+.watchlist-preview-modal {
+	width: min(900px, 100%);
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--watchlist-border);
+	border-radius: 10px;
+	background: var(--watchlist-panel);
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+	overflow: hidden;
+}
+
+.watchlist-preview-modal__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid var(--watchlist-border);
+
+	strong {
+		display: block;
+		color: var(--watchlist-text);
+		font-size: 1.05rem;
+	}
+
+	span {
+		color: var(--watchlist-muted);
+		font-size: 0.82rem;
+	}
+}
+
+.watchlist-preview-modal__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 2.1rem;
+	height: 2.1rem;
+	border: 1px solid var(--watchlist-border);
+	border-radius: 7px;
+	background: var(--watchlist-bg);
+	color: var(--watchlist-muted);
+	cursor: pointer;
+
+	svg {
+		width: 1rem;
+		height: 1rem;
+		fill: currentColor;
+	}
+
+	&:hover {
+		border-color: var(--watchlist-primary);
+		color: var(--watchlist-text);
+	}
+}
+
+.watchlist-preview-modal__body {
+	overflow-y: auto;
+	padding: 1rem 1.25rem 1.25rem;
+
+	.child-preview {
+		margin-top: 0;
+		border: 0;
+		background: transparent;
+		padding: 0;
+	}
+
+	.child-preview__header {
+		display: none;
+	}
+
+	.child-preview__item-main {
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 0.5rem;
+
+		small {
+			width: auto;
+		}
+	}
 }
 
 .watchlist-members {
