@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
@@ -51,6 +52,51 @@ function buildActivity() {
 			mediaType: MediaType.Series,
 			seriesId: 300,
 			movieId: null,
+		}),
+	]
+}
+
+function buildGroupedActivity() {
+	return [
+		createActivityDto({
+			id: 1,
+			mediaTitle: 'Breaking Bad',
+			episodeName: 'Pilot',
+			seasonNumber: 1,
+			episodeNumber: 1,
+			mediaType: MediaType.Series,
+			seriesId: 100,
+			movieId: null,
+		}),
+		createActivityDto({
+			id: 2,
+			mediaTitle: 'Breaking Bad',
+			episodeName: 'Cat in the Bag',
+			seasonNumber: 1,
+			episodeNumber: 2,
+			mediaType: MediaType.Series,
+			seriesId: 100,
+			movieId: null,
+		}),
+		createActivityDto({
+			id: 3,
+			mediaTitle: 'Breaking Bad',
+			episodeName: 'Gray Matter',
+			seasonNumber: 1,
+			episodeNumber: 5,
+			mediaType: MediaType.Series,
+			seriesId: 100,
+			movieId: null,
+		}),
+		createActivityDto({
+			id: 4,
+			mediaTitle: 'Inception',
+			episodeName: null,
+			seasonNumber: null,
+			episodeNumber: null,
+			mediaType: MediaType.Movie,
+			seriesId: null,
+			movieId: 200,
 		}),
 	]
 }
@@ -190,5 +236,48 @@ describe('Activity Flow', () => {
 		// WatchStateBadge components should be present
 		const badges = document.querySelectorAll('.watch-state-badge')
 		expect(badges.length).toBe(3)
+	})
+
+	it('navigates to the media detail when the activity name is clicked', async () => {
+		const user = userEvent.setup()
+		renderActivity()
+		await waitFor(() => expect(screen.getByText('Inception')).toBeInTheDocument())
+		await user.click(screen.getByText('Inception'))
+		await waitFor(() => expect(screen.getByText('Movie Detail')).toBeInTheDocument())
+	})
+
+	it('keeps the name from navigating in share mode while selection still works', async () => {
+		const user = userEvent.setup()
+		renderActivity()
+		await waitFor(() => expect(screen.getByText('Inception')).toBeInTheDocument())
+		await user.click(screen.getByRole('button', { name: i18n.t('activity.share.open') }))
+		await user.click(screen.getByText('Inception'))
+		expect(screen.queryByText('Movie Detail')).not.toBeInTheDocument()
+		const selectButtons = screen.getAllByRole('button', { name: '+' })
+		await user.click(selectButtons[0])
+		await waitFor(() =>
+			expect(screen.getAllByRole('button', { name: '✓' }).length).toBeGreaterThan(0)
+		)
+	})
+
+	it('collapses contiguous episodes of a series and expands them on demand', async () => {
+		const user = userEvent.setup()
+		server.use(
+			http.get(`${API}/api/profile/:id/activity`, () =>
+				HttpResponse.json(
+					createPagedResult(buildGroupedActivity(), { page: 1, totalPages: 1, totalCount: 4 })
+				)
+			)
+		)
+		renderActivity()
+		await waitFor(() => expect(screen.getByText(/Pilot/)).toBeInTheDocument())
+
+		await user.click(screen.getByLabelText(i18n.t('activity.collapseBySeries')))
+
+		await waitFor(() => expect(screen.getByText('S1E1 → S1E5')).toBeInTheDocument())
+		expect(screen.queryByText(/Pilot/)).not.toBeInTheDocument()
+
+		await user.click(screen.getByRole('button', { name: i18n.t('activity.episodesCount', { count: 3 }) }))
+		await waitFor(() => expect(screen.getByText(/Pilot/)).toBeInTheDocument())
 	})
 })

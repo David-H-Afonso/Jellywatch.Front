@@ -8,6 +8,7 @@ import {
 	selectProfileActivityPagination,
 	selectProfileLoading,
 	selectProfileError,
+	setActivityRating,
 } from '@/store/features/profile'
 import { fetchProfileActivity } from '@/store/features/profile'
 import {
@@ -17,12 +18,13 @@ import {
 	MediaPoster,
 	AvailabilityBadge,
 	ExternalManageLink,
+	StarRating,
 } from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
 import { formatUserRating } from '@/utils'
 import { environment } from '@/environments'
 import { getExternalSearchLink } from '@/utils/externalLinks'
-import { getMovies, getSeries } from '@/services/MediaService/MediaService'
+import { getMovies, getSeries, rateMovie, rateSeries } from '@/services/MediaService/MediaService'
 import type { ActivityDto, MovieListDto, SeriesListDto } from '@/models/api'
 import './Activity.scss'
 
@@ -348,6 +350,59 @@ const buildShareImage = async (
 	return canvas.toDataURL('image/png')
 }
 
+type ActivityRow =
+	| { kind: 'single'; item: ActivityDto }
+	| {
+			kind: 'group'
+			key: string
+			seriesId: number
+			seriesTitle: string
+			mediaItemId: number
+			items: ActivityDto[]
+	  }
+
+const buildActivityRows = (items: ActivityDto[], collapse: boolean): ActivityRow[] => {
+	if (!collapse) return items.map((item) => ({ kind: 'single', item }))
+
+	const rows: ActivityRow[] = []
+	for (const item of items) {
+		const last = rows[rows.length - 1]
+		if (item.seriesId !== null && item.episodeName !== null) {
+			if (last && last.kind === 'group' && last.seriesId === item.seriesId) {
+				last.items.push(item)
+			} else {
+				rows.push({
+					kind: 'group',
+					key: `group-${item.seriesId}-${item.id}`,
+					seriesId: item.seriesId,
+					seriesTitle: item.mediaTitle,
+					mediaItemId: item.mediaItemId,
+					items: [item],
+				})
+			}
+		} else {
+			rows.push({ kind: 'single', item })
+		}
+	}
+
+	return rows.map((row) =>
+		row.kind === 'group' && row.items.length === 1 ? { kind: 'single', item: row.items[0] } : row
+	)
+}
+
+const formatEpisodeRange = (items: ActivityDto[]): string => {
+	const ordered = [...items].sort(
+		(a, b) =>
+			(a.seasonNumber ?? 0) - (b.seasonNumber ?? 0) ||
+			(a.episodeNumber ?? 0) - (b.episodeNumber ?? 0)
+	)
+	const code = (episode: ActivityDto) =>
+		`S${episode.seasonNumber ?? 0}E${episode.episodeNumber ?? 0}`
+	const first = code(ordered[0])
+	const last = code(ordered[ordered.length - 1])
+	return first === last ? first : `${first} → ${last}`
+}
+
 const Activity: React.FC = () => {
 	const { t, i18n } = useTranslation()
 	const dispatch = useAppDispatch()
@@ -367,6 +422,7 @@ const Activity: React.FC = () => {
 	const datePreset = searchParams.get('datePreset') || 'all'
 	const dateFrom = searchParams.get('dateFrom') || ''
 	const dateTo = searchParams.get('dateTo') || ''
+	const groupBySeries = searchParams.get('groupSeries') === '1'
 
 	// Local input state for search debouncing
 	const [searchInput, setSearchInput] = useState(search)
@@ -381,6 +437,14 @@ const Activity: React.FC = () => {
 	const [shareSearchResults, setShareSearchResults] = useState<ShareSearchItem[]>([])
 	const [shareSearchLoading, setShareSearchLoading] = useState(false)
 	const [shareSearchError, setShareSearchError] = useState<string | null>(null)
+	const [savingRatingId, setSavingRatingId] = useState<number | null>(null)
+	const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+	const collapseBySeries = groupBySeries && !shareMode
+	const rows = useMemo(
+		() => buildActivityRows(activity, collapseBySeries),
+		[activity, collapseBySeries]
+	)
 
 	const updateParam = useCallback(
 		(key: string, value: string) => {
@@ -629,6 +693,177 @@ const Activity: React.FC = () => {
 		return null
 	}
 
+	const getRatingTarget = (item: ActivityDto) => {
+		if (item.mediaType === MediaType.Movie && item.movieId)
+			return { kind: 'movie' as const, id: item.movieId }
+		if (item.seriesId && !item.episodeName) return { kind: 'series' as const, id: item.seriesId }
+		return null
+	}
+
+	const handleRate = async (item: ActivityDto, rating: number | null) => {
+		const target = getRatingTarget(item)
+		if (!target || !activeProfileId) return
+		setSavingRatingId(item.id)
+		dispatch(setActivityRating({ id: item.id, rating }))
+		try {
+			if (target.kind === 'movie') await rateMovie(target.id, activeProfileId, rating)
+			else await rateSeries(target.id, activeProfileId, rating)
+		} finally {
+			setSavingRatingId(null)
+		}
+	}
+
+	const toggleGroup = (key: string) => {
+		setExpandedGroups((prev) => {
+			const next = new Set(prev)
+			if (next.has(key)) next.delete(key)
+			else next.add(key)
+			return next
+		})
+	}
+
+	const renderItem = (item: ActivityDto) => {
+		const link = getItemLink(item)
+		const isSelected = selectedIds.includes(item.id)
+		const ratingTarget = getRatingTarget(item)
+		return (
+			<div
+				key={item.id}
+				className={`activity-page__item ${isSelected ? 'activity-page__item--selected' : ''}`}>
+				{shareMode && (
+					<button
+						className='activity-page__select-btn'
+						onClick={() => toggleShareItem(item.id)}
+						aria-pressed={isSelected}
+						disabled={!isSelected && selectedItems.length >= SHARE_LIMIT}>
+						{isSelected ? '✓' : '+'}
+					</button>
+				)}
+				{link && !shareMode ? (
+					<Link to={link} className='activity-page__poster-link'>
+						<MediaPoster
+							mediaItemId={item.mediaItemId}
+							alt={item.mediaTitle}
+							className='activity-page__poster'
+						/>
+					</Link>
+				) : (
+					<MediaPoster
+						mediaItemId={item.mediaItemId}
+						alt={item.mediaTitle}
+						className='activity-page__poster'
+					/>
+				)}
+				<div className='activity-page__info'>
+					{link && !shareMode ? (
+						<Link to={link} className='activity-page__title'>
+							{item.mediaTitle}
+						</Link>
+					) : (
+						<span className='activity-page__title'>{item.mediaTitle}</span>
+					)}
+					{item.episodeName && (
+						<span className='activity-page__episode'>
+							S{item.seasonNumber}E{item.episodeNumber} — {item.episodeName}
+						</span>
+					)}
+					<div className='activity-page__meta'>
+						<span className='activity-page__time'>
+							{new Date(item.timestamp).toLocaleString()}
+						</span>
+						{item.createdAt &&
+							new Date(item.createdAt).getFullYear() > 1 &&
+							Math.abs(
+								new Date(item.createdAt).getTime() - new Date(item.timestamp).getTime()
+							) > 60_000 && (
+								<span className='activity-page__marked-at' title={t('activity.markedAt')}>
+									({t('activity.markedAt')}: {new Date(item.createdAt).toLocaleString()})
+								</span>
+							)}
+						{ratingTarget ? (
+							<span
+								className='activity-page__rating-control'
+								onClick={(e) => e.stopPropagation()}>
+								<StarRating
+									value={item.userRating ?? null}
+									onChange={(rating) => handleRate(item, rating)}
+									saving={savingRatingId === item.id}
+									starCount={5}
+									showValue
+								/>
+							</span>
+						) : (
+							item.userRating != null && (
+								<span className='activity-page__rating' title={t('activity.userRating')}>
+									★ {formatUserRating(item.userRating)}
+								</span>
+							)
+						)}
+						{item.tmdbRating != null && (
+							<span
+								className='activity-page__rating activity-page__rating--tmdb'
+								title='TMDB'>
+								★ {item.tmdbRating.toFixed(1)}
+							</span>
+						)}
+					</div>
+				</div>
+				<AvailabilityBadge mediaItemId={item.mediaItemId} />
+				<WatchStateBadge
+					state={
+						item.eventType === 4
+							? WatchState.Unseen
+							: item.eventType === 3
+								? WatchState.Seen
+								: WatchState.InProgress
+					}
+					size='sm'
+				/>
+				<ExternalManageLink
+					mediaType={item.mediaType}
+					title={item.mediaTitle}
+					className='activity-page__external-link'
+				/>
+			</div>
+		)
+	}
+
+	const renderGroup = (group: Extract<ActivityRow, { kind: 'group' }>) => {
+		const isExpanded = expandedGroups.has(group.key)
+		const link = `/series/${group.seriesId}`
+		return (
+			<div key={group.key} className='activity-page__group'>
+				<div className='activity-page__item activity-page__item--group'>
+					<Link to={link} className='activity-page__poster-link'>
+						<MediaPoster
+							mediaItemId={group.mediaItemId}
+							alt={group.seriesTitle}
+							className='activity-page__poster'
+						/>
+					</Link>
+					<div className='activity-page__info'>
+						<Link to={link} className='activity-page__title'>
+							{group.seriesTitle}
+						</Link>
+						<span className='activity-page__episode'>{formatEpisodeRange(group.items)}</span>
+					</div>
+					<button
+						className='activity-page__group-toggle'
+						onClick={() => toggleGroup(group.key)}
+						aria-expanded={isExpanded}>
+						<span>{t('activity.episodesCount', { count: group.items.length })}</span>
+						<span aria-hidden='true' className='activity-page__group-caret'>
+							{isExpanded ? '▾' : '▸'}
+						</span>
+					</button>
+				</div>
+				{isExpanded && (
+					<div className='activity-page__group-children'>{group.items.map(renderItem)}</div>
+				)}
+			</div>
+		)
+	}
+
 	return (
 		<div className='activity-page'>
 			<div className='activity-page__header'>
@@ -665,6 +900,14 @@ const Activity: React.FC = () => {
 					<option value='newest'>{t('activity.newestFirst')}</option>
 					<option value='oldest'>{t('activity.oldestFirst')}</option>
 				</select>
+				<label className='activity-page__group-filter'>
+					<input
+						type='checkbox'
+						checked={groupBySeries}
+						onChange={() => updateParam('groupSeries', groupBySeries ? '' : '1')}
+					/>
+					{t('activity.collapseBySeries')}
+				</label>
 				<div className='activity-page__date-presets'>
 					{DATE_PRESETS.map((preset) => (
 						<button
@@ -802,90 +1045,7 @@ const Activity: React.FC = () => {
 			)}
 
 			<div className='activity-page__list'>
-				{activity.map((item) => {
-					const link = getItemLink(item)
-					const isSelected = selectedIds.includes(item.id)
-					return (
-						<div
-							key={item.id}
-							className={`activity-page__item ${isSelected ? 'activity-page__item--selected' : ''}`}>
-							{shareMode && (
-								<button
-									className='activity-page__select-btn'
-									onClick={() => toggleShareItem(item.id)}
-									aria-pressed={isSelected}
-									disabled={!isSelected && selectedItems.length >= SHARE_LIMIT}>
-									{isSelected ? '✓' : '+'}
-								</button>
-							)}
-							{link ? (
-								<Link to={link} className='activity-page__poster-link'>
-									<MediaPoster
-										mediaItemId={item.mediaItemId}
-										alt={item.mediaTitle}
-										className='activity-page__poster'
-									/>
-								</Link>
-							) : (
-								<MediaPoster
-									mediaItemId={item.mediaItemId}
-									alt={item.mediaTitle}
-									className='activity-page__poster'
-								/>
-							)}
-							<div className='activity-page__info'>
-								<span className='activity-page__title'>{item.mediaTitle}</span>
-								{item.episodeName && (
-									<span className='activity-page__episode'>
-										S{item.seasonNumber}E{item.episodeNumber} — {item.episodeName}
-									</span>
-								)}
-								<div className='activity-page__meta'>
-									<span className='activity-page__time'>
-										{new Date(item.timestamp).toLocaleString()}
-									</span>
-									{item.createdAt &&
-										new Date(item.createdAt).getFullYear() > 1 &&
-										Math.abs(
-											new Date(item.createdAt).getTime() - new Date(item.timestamp).getTime()
-										) > 60_000 && (
-											<span className='activity-page__marked-at' title={t('activity.markedAt')}>
-												({t('activity.markedAt')}: {new Date(item.createdAt).toLocaleString()})
-											</span>
-										)}
-									{item.userRating != null && (
-										<span className='activity-page__rating' title={t('activity.userRating')}>
-											★ {formatUserRating(item.userRating)}
-										</span>
-									)}
-									{item.tmdbRating != null && (
-										<span
-											className='activity-page__rating activity-page__rating--tmdb'
-											title='TMDB'>
-											★ {item.tmdbRating.toFixed(1)}
-										</span>
-									)}
-								</div>
-							</div>
-							<AvailabilityBadge mediaItemId={item.mediaItemId} />
-							<WatchStateBadge
-								state={
-									item.eventType === 4
-										? WatchState.Unseen
-										: item.eventType === 3
-											? WatchState.Seen
-											: WatchState.InProgress
-								}
-								size='sm'
-							/>
-							<ExternalManageLink
-								mediaType={item.mediaType}
-								title={item.mediaTitle}
-								className='activity-page__external-link'
-							/>
-						</div>
-					)
-				})}
+				{rows.map((row) => (row.kind === 'single' ? renderItem(row.item) : renderGroup(row)))}
 			</div>
 
 			{pagination && (
