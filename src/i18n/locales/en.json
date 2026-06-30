@@ -55,7 +55,6 @@
 	},
 	"dashboard": {
 		"title": "Dashboard",
-		"welcome": "Welcome, {{name}}",
 		"currentlyWatching": "Currently Watching",
 		"recentActivity": "Recent Activity",
 		"stats": "Stats",
@@ -82,6 +81,8 @@
 		"oldestFirst": "Oldest first",
 		"userRating": "Your rating",
 		"markedAt": "Marked",
+		"collapseBySeries": "Group episodes by series",
+		"episodesCount": "{{count}} episodes",
 		"share": {
 			"open": "Share watched",
 			"exit": "Exit sharing",

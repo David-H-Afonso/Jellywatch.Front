@@ -55,7 +55,6 @@
 	},
 	"dashboard": {
 		"title": "Panel",
-		"welcome": "Bienvenido, {{name}}",
 		"currentlyWatching": "Viendo actualmente",
 		"recentActivity": "Actividad reciente",
 		"stats": "Estadísticas",
@@ -82,6 +81,8 @@
 		"oldestFirst": "Más antiguos",
 		"userRating": "Tu puntuación",
 		"markedAt": "Marcado",
+		"collapseBySeries": "Agrupar episodios por serie",
+		"episodesCount": "{{count}} episodios",
 		"share": {
 			"open": "Compartir vistas",
 			"exit": "Salir de compartir",

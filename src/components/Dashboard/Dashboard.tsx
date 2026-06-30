@@ -2,17 +2,25 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { selectCurrentUser, selectActiveProfileId } from '@/store/features/auth/selector'
+import { selectActiveProfileId } from '@/store/features/auth/selector'
 import {
 	selectCurrentProfile,
 	selectProfileActivity,
 	selectProfileLoading,
+	setActivityRating,
 } from '@/store/features/profile'
 import { fetchProfileDetail, fetchProfileActivity } from '@/store/features/profile'
 import { getUpcoming } from '@/services/StatsService/StatsService'
-import { ProfileSelector, WatchStateBadge, MediaPoster, ExternalManageLink } from '@/components/elements'
+import { rateMovie, rateSeries } from '@/services/MediaService/MediaService'
+import {
+	ProfileSelector,
+	WatchStateBadge,
+	MediaPoster,
+	ExternalManageLink,
+	StarRating,
+} from '@/components/elements'
 import { WatchState, MediaType } from '@/models/api/Enums'
-import type { UpcomingEpisodeDto } from '@/models/api'
+import type { ActivityDto, UpcomingEpisodeDto } from '@/models/api'
 import { formatUserRating } from '@/utils'
 import './Dashboard.scss'
 
@@ -76,16 +84,47 @@ const formatRelativeDate = (
 	return t('dashboard.inWeeks', { count: Math.round(diffDays / 7) }) + timeStr
 }
 
+const formatExactDate = (
+	airDate: string,
+	airTime: string | null,
+	airTimeUtc: string | null,
+	locale: string
+): string => {
+	const utc = airTimeUtc ? new Date(airTimeUtc) : null
+	if (utc && !isNaN(utc.getTime())) {
+		return utc.toLocaleString(locale, {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false,
+		})
+	}
+	const local = new Date(`${airDate}T${airTime ?? '00:00'}`)
+	if (isNaN(local.getTime())) return ''
+	return local.toLocaleString(locale, {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+		hour: airTime ? '2-digit' : undefined,
+		minute: airTime ? '2-digit' : undefined,
+		hour12: false,
+	})
+}
+
 const Dashboard: React.FC = () => {
 	const { t, i18n } = useTranslation()
 	const navigate = useNavigate()
 	const dispatch = useAppDispatch()
-	const user = useAppSelector(selectCurrentUser)
 	const activeProfileId = useAppSelector(selectActiveProfileId)
 	const profile = useAppSelector(selectCurrentProfile)
 	const activity = useAppSelector(selectProfileActivity)
 	const loading = useAppSelector(selectProfileLoading)
 	const [upcoming, setUpcoming] = useState<UpcomingEpisodeDto[]>([])
+	const [savingRatingId, setSavingRatingId] = useState<number | null>(null)
 
 	// Drag-to-scroll
 	const scrollRef = useRef<HTMLDivElement>(null)
@@ -151,10 +190,58 @@ const Dashboard: React.FC = () => {
 		}
 	}, [dispatch, activeProfileId])
 
+	const getRatingTarget = (item: ActivityDto) => {
+		if (item.mediaType === MediaType.Movie && item.movieId)
+			return { kind: 'movie' as const, id: item.movieId }
+		if (item.seriesId && !item.episodeName) return { kind: 'series' as const, id: item.seriesId }
+		return null
+	}
+
+	const handleRate = async (item: ActivityDto, rating: number | null) => {
+		const target = getRatingTarget(item)
+		if (!target || !activeProfileId) return
+		setSavingRatingId(item.id)
+		dispatch(setActivityRating({ id: item.id, rating }))
+		try {
+			if (target.kind === 'movie') await rateMovie(target.id, activeProfileId, rating)
+			else await rateSeries(target.id, activeProfileId, rating)
+		} finally {
+			setSavingRatingId(null)
+		}
+	}
+
+	const statCards = profile
+		? [
+				{
+					key: 'seriesWatching',
+					value: profile.totalSeriesWatching,
+					label: t('dashboard.seriesWatching'),
+					to: `/series?state=${WatchState.InProgress}`,
+				},
+				{
+					key: 'seriesCompleted',
+					value: profile.totalSeriesCompleted,
+					label: t('dashboard.seriesCompleted'),
+					to: `/series?state=${WatchState.Seen}`,
+				},
+				{
+					key: 'moviesSeen',
+					value: profile.totalMoviesSeen,
+					label: t('dashboard.moviesSeen'),
+					to: '/activity?mediaType=movie',
+				},
+				{
+					key: 'episodesSeen',
+					value: profile.totalEpisodesSeen,
+					label: t('dashboard.episodesSeen'),
+					to: '/activity?mediaType=series',
+				},
+			]
+		: []
+
 	return (
 		<div className='dashboard'>
 			<div className='dashboard__header'>
-				<h1>{t('dashboard.welcome', { name: user?.username ?? '' })}</h1>
 				<ProfileSelector />
 			</div>
 
@@ -164,22 +251,16 @@ const Dashboard: React.FC = () => {
 				<div className='dashboard__stats'>
 					<h2>{t('dashboard.stats')}</h2>
 					<div className='stats-grid'>
-						<div className='stat-card'>
-							<span className='stat-card__value'>{profile.totalSeriesWatching}</span>
-							<span className='stat-card__label'>{t('dashboard.seriesWatching')}</span>
-						</div>
-						<div className='stat-card'>
-							<span className='stat-card__value'>{profile.totalSeriesCompleted}</span>
-							<span className='stat-card__label'>{t('dashboard.seriesCompleted')}</span>
-						</div>
-						<div className='stat-card'>
-							<span className='stat-card__value'>{profile.totalMoviesSeen}</span>
-							<span className='stat-card__label'>{t('dashboard.moviesSeen')}</span>
-						</div>
-						<div className='stat-card'>
-							<span className='stat-card__value'>{profile.totalEpisodesSeen}</span>
-							<span className='stat-card__label'>{t('dashboard.episodesSeen')}</span>
-						</div>
+						{statCards.map((card) => (
+							<button
+								key={card.key}
+								type='button'
+								className='stat-card'
+								onClick={() => navigate(card.to)}>
+								<span className='stat-card__value'>{card.value}</span>
+								<span className='stat-card__label'>{card.label}</span>
+							</button>
+						))}
 					</div>
 				</div>
 			)}
@@ -201,10 +282,12 @@ const Dashboard: React.FC = () => {
 								i18n.language
 							)
 							if (!badge) return null
+							const exactDate = formatExactDate(ep.airDate, ep.airTime, ep.airTimeUtc, i18n.language)
 							return (
 								<div
 									key={`${ep.mediaItemId}-${ep.seasonNumber}-${ep.episodeNumber}-${i}`}
 									className='upcoming-card'
+									title={exactDate || undefined}
 									onClick={() => navigate(`/series/${ep.seriesId}`)}>
 									<div className='upcoming-card__poster-wrap'>
 										<MediaPoster
@@ -249,6 +332,7 @@ const Dashboard: React.FC = () => {
 								: item.seriesId
 									? `/series/${item.seriesId}`
 									: null
+						const ratingTarget = getRatingTarget(item)
 						return (
 							<div key={item.id} className='activity-item'>
 								{link ? (
@@ -267,7 +351,13 @@ const Dashboard: React.FC = () => {
 									/>
 								)}
 								<div className='activity-item__info'>
-									<span className='activity-item__title'>{item.mediaTitle}</span>
+									{link ? (
+										<Link to={link} className='activity-item__title'>
+											{item.mediaTitle}
+										</Link>
+									) : (
+										<span className='activity-item__title'>{item.mediaTitle}</span>
+									)}
 									{item.episodeName && (
 										<span className='activity-item__episode'>
 											S{item.seasonNumber}E{item.episodeNumber} — {item.episodeName}
@@ -286,10 +376,24 @@ const Dashboard: React.FC = () => {
 													({t('activity.markedAt')}: {new Date(item.createdAt).toLocaleString()})
 												</span>
 											)}
-										{item.userRating != null && (
-											<span className='activity-item__rating'>
-												★ {formatUserRating(item.userRating)}
+										{ratingTarget ? (
+											<span
+												className='activity-item__rating-control'
+												onClick={(e) => e.stopPropagation()}>
+												<StarRating
+													value={item.userRating ?? null}
+													onChange={(rating) => handleRate(item, rating)}
+													saving={savingRatingId === item.id}
+													starCount={5}
+													showValue
+												/>
 											</span>
+										) : (
+											item.userRating != null && (
+												<span className='activity-item__rating'>
+													★ {formatUserRating(item.userRating)}
+												</span>
+											)
 										)}
 										{item.tmdbRating != null && (
 											<span className='activity-item__rating activity-item__rating--tmdb'>

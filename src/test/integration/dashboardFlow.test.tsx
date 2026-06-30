@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '@/i18n'
 import { http, HttpResponse } from 'msw'
@@ -9,6 +10,11 @@ import { server } from '@/test/mocks/server'
 import { createTestStore } from '@/test/utils/createTestStore'
 import Dashboard from '@/components/Dashboard/Dashboard'
 import { createProfileDetailDto, createActivityDto, createPagedResult } from '@/test/factories'
+
+function LocationDisplay() {
+	const location = useLocation()
+	return <div data-testid='location-display'>{location.pathname + location.search}</div>
+}
 
 vi.mock('@/services/AdminService/AdminService', () => ({
 	triggerMineSync: vi.fn().mockResolvedValue(undefined),
@@ -71,6 +77,8 @@ function renderDashboard() {
 					<MemoryRouter initialEntries={['/']}>
 						<Routes>
 							<Route path='/' element={<Dashboard />} />
+							<Route path='/series' element={<LocationDisplay />} />
+							<Route path='/activity' element={<LocationDisplay />} />
 							<Route path='/series/:id' element={<div>Series Detail</div>} />
 							<Route path='/movies/:id' element={<div>Movie Detail</div>} />
 						</Routes>
@@ -96,11 +104,12 @@ describe('Dashboard Flow', () => {
 		)
 	})
 
-	it('shows welcome message with username', async () => {
+	it('does not render a welcome greeting', async () => {
 		renderDashboard()
 		await waitFor(() => {
-			expect(screen.getByText(/TestUser/)).toBeInTheDocument()
+			expect(screen.getByText('Stats')).toBeInTheDocument()
 		})
+		expect(screen.queryByText(/Welcome/i)).not.toBeInTheDocument()
 	})
 
 	it('loads and displays profile stats', async () => {
@@ -161,7 +170,7 @@ describe('Dashboard Flow', () => {
 
 		await waitFor(() => {
 			expect(store.getState().profile.activity).toEqual([])
-			expect(screen.getByText(/TestUser/)).toBeInTheDocument()
+			expect(screen.getByText('Stats')).toBeInTheDocument()
 		})
 	})
 
@@ -174,7 +183,7 @@ describe('Dashboard Flow', () => {
 		renderDashboard()
 
 		await waitFor(() => {
-			expect(screen.getByText(/TestUser/)).toBeInTheDocument()
+			expect(screen.getByText('Stats')).toBeInTheDocument()
 		})
 	})
 
@@ -183,5 +192,44 @@ describe('Dashboard Flow', () => {
 		// ProfileSelector renders a SyncButton
 		const buttons = screen.getAllByRole('button')
 		expect(buttons.length).toBeGreaterThanOrEqual(1)
+	})
+
+	it.each([
+		['Series Watching', '/series?state=1'],
+		['Series Completed', '/series?state=2'],
+		['Movies Seen', '/activity?mediaType=movie'],
+		['Episodes Seen', '/activity?mediaType=series'],
+	])('stat card "%s" navigates to %s', async (label, destination) => {
+		const user = userEvent.setup()
+		renderDashboard()
+		await waitFor(() => expect(screen.getByText('Stats')).toBeInTheDocument())
+		await user.click(screen.getByRole('button', { name: new RegExp(label, 'i') }))
+		await waitFor(() =>
+			expect(screen.getByTestId('location-display')).toHaveTextContent(destination)
+		)
+	})
+
+	it('navigates to the media detail when the activity name is clicked', async () => {
+		const user = userEvent.setup()
+		renderDashboard()
+		await waitFor(() => expect(screen.getByText('Breaking Bad')).toBeInTheDocument())
+		await user.click(screen.getByText('Breaking Bad'))
+		await waitFor(() => expect(screen.getByText('Series Detail')).toBeInTheDocument())
+	})
+
+	it('rates a series from the activity item with an optimistic update', async () => {
+		const user = userEvent.setup()
+		server.use(
+			http.patch(
+				`${API}/api/media/series/:id/rating`,
+				() => new HttpResponse(null, { status: 204 })
+			)
+		)
+		const { store } = renderDashboard()
+		await waitFor(() => expect(screen.getByText('Inception')).toBeInTheDocument())
+		await user.click(screen.getByRole('button', { name: '10/10' }))
+		await waitFor(() =>
+			expect(store.getState().profile.activity.find((item) => item.id === 2)?.userRating).toBe(10)
+		)
 	})
 })
