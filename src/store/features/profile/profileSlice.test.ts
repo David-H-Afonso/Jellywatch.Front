@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import profileReducer, { clearProfile } from '@/store/features/profile/profileSlice'
+import profileReducer, { clearProfile, setActivityRating } from '@/store/features/profile/profileSlice'
 import { fetchProfileDetail, fetchProfileActivity } from '@/store/features/profile/thunk'
 import {
 	selectCurrentProfile,
@@ -30,6 +30,28 @@ describe('profileSlice – reducers', () => {
 			loading: true,
 		}
 		expect(profileReducer(prev, clearProfile())).toEqual(initial)
+	})
+
+	it('setActivityRating updates the userRating of the matching activity item', () => {
+		const prev: ProfileState = {
+			...initial,
+			activity: [
+				{ id: 1, userRating: null },
+				{ id: 2, userRating: 4 },
+			] as any,
+		}
+		const state = profileReducer(prev, setActivityRating({ id: 2, rating: 9 }))
+		expect(state.activity[1].userRating).toBe(9)
+		expect(state.activity[0].userRating).toBeNull()
+	})
+
+	it('setActivityRating ignores unknown activity ids', () => {
+		const prev: ProfileState = {
+			...initial,
+			activity: [{ id: 1, userRating: 6 }] as any,
+		}
+		const state = profileReducer(prev, setActivityRating({ id: 99, rating: 3 }))
+		expect(state.activity[0].userRating).toBe(6)
 	})
 })
 

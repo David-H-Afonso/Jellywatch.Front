@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import type { PayloadAction } from '@reduxjs/toolkit'
 import type { ProfileState } from '@/models/store/ProfileState'
 import { fetchProfileDetail, fetchProfileActivity } from './thunk'
 
@@ -20,6 +21,10 @@ const profileSlice = createSlice({
 	initialState,
 	reducers: {
 		clearProfile: () => initialState,
+		setActivityRating: (state, action: PayloadAction<{ id: number; rating: number | null }>) => {
+			const entry = state.activity.find((item) => item.id === action.payload.id)
+			if (entry) entry.userRating = action.payload.rating
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -58,5 +63,5 @@ const profileSlice = createSlice({
 	},
 })
 
-export const { clearProfile } = profileSlice.actions
+export const { clearProfile, setActivityRating } = profileSlice.actions
 export default profileSlice.reducer
