@@ -24,7 +24,7 @@ import { WatchState, MediaType } from '@/models/api/Enums'
 import { formatUserRating } from '@/utils'
 import { environment } from '@/environments'
 import { getExternalSearchLink } from '@/utils/externalLinks'
-import { getMovies, getSeries, rateMovie, rateSeries } from '@/services/MediaService/MediaService'
+import { getMovies, getSeries, rateMovie, rateSeries, rateEpisode } from '@/services/MediaService/MediaService'
 import type { ActivityDto, MovieListDto, SeriesListDto } from '@/models/api'
 import './Activity.scss'
 
@@ -696,6 +696,8 @@ const Activity: React.FC = () => {
 	const getRatingTarget = (item: ActivityDto) => {
 		if (item.mediaType === MediaType.Movie && item.movieId)
 			return { kind: 'movie' as const, id: item.movieId }
+		if (item.seriesId && item.episodeId)
+			return { kind: 'episode' as const, id: item.episodeId, seriesId: item.seriesId }
 		if (item.seriesId && !item.episodeName) return { kind: 'series' as const, id: item.seriesId }
 		return null
 	}
@@ -707,6 +709,8 @@ const Activity: React.FC = () => {
 		dispatch(setActivityRating({ id: item.id, rating }))
 		try {
 			if (target.kind === 'movie') await rateMovie(target.id, activeProfileId, rating)
+			else if (target.kind === 'episode')
+				await rateEpisode(target.seriesId, target.id, activeProfileId, rating)
 			else await rateSeries(target.id, activeProfileId, rating)
 		} finally {
 			setSavingRatingId(null)

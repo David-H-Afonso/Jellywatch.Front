@@ -264,6 +264,7 @@ export const createActivityDto = (overrides?: Partial<ActivityDto>): ActivityDto
 	seriesId: 1,
 	movieId: null,
 	mediaTitle: 'Test Series',
+	episodeId: null,
 	episodeName: 'Pilot',
 	episodeNumber: 1,
 	seasonNumber: 1,

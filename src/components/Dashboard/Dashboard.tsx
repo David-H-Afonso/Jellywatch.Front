@@ -11,7 +11,7 @@ import {
 } from '@/store/features/profile'
 import { fetchProfileDetail, fetchProfileActivity } from '@/store/features/profile'
 import { getUpcoming } from '@/services/StatsService/StatsService'
-import { rateMovie, rateSeries } from '@/services/MediaService/MediaService'
+import { rateMovie, rateSeries, rateEpisode } from '@/services/MediaService/MediaService'
 import {
 	ProfileSelector,
 	WatchStateBadge,
@@ -193,6 +193,8 @@ const Dashboard: React.FC = () => {
 	const getRatingTarget = (item: ActivityDto) => {
 		if (item.mediaType === MediaType.Movie && item.movieId)
 			return { kind: 'movie' as const, id: item.movieId }
+		if (item.seriesId && item.episodeId)
+			return { kind: 'episode' as const, id: item.episodeId, seriesId: item.seriesId }
 		if (item.seriesId && !item.episodeName) return { kind: 'series' as const, id: item.seriesId }
 		return null
 	}
@@ -204,6 +206,8 @@ const Dashboard: React.FC = () => {
 		dispatch(setActivityRating({ id: item.id, rating }))
 		try {
 			if (target.kind === 'movie') await rateMovie(target.id, activeProfileId, rating)
+			else if (target.kind === 'episode')
+				await rateEpisode(target.seriesId, target.id, activeProfileId, rating)
 			else await rateSeries(target.id, activeProfileId, rating)
 		} finally {
 			setSavingRatingId(null)

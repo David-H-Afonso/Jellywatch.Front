@@ -137,6 +137,7 @@ export interface ActivityDto {
 	seriesId: number | null
 	movieId: number | null
 	mediaTitle: string
+	episodeId: number | null
 	episodeName: string | null
 	episodeNumber: number | null
 	seasonNumber: number | null

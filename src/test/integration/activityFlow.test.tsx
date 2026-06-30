@@ -280,4 +280,52 @@ describe('Activity Flow', () => {
 		await user.click(screen.getByRole('button', { name: i18n.t('activity.episodesCount', { count: 3 }) }))
 		await waitFor(() => expect(screen.getByText(/Pilot/)).toBeInTheDocument())
 	})
+
+	it('rates an episode inline from activity through the episode rating endpoint', async () => {
+		const user = userEvent.setup()
+		const captured: { id?: string; episodeId?: string; rating?: number | null } = {}
+		server.use(
+			http.get(`${API}/api/profile/:id/activity`, () =>
+				HttpResponse.json(
+					createPagedResult(
+						[
+							createActivityDto({
+								id: 1,
+								mediaTitle: 'Breaking Bad',
+								episodeName: 'Pilot',
+								seasonNumber: 1,
+								episodeNumber: 1,
+								mediaType: MediaType.Series,
+								seriesId: 100,
+								episodeId: 555,
+								movieId: null,
+								userRating: null,
+							}),
+						],
+						{ page: 1, totalPages: 1, totalCount: 1 }
+					)
+				)
+			),
+			http.patch(
+				`${API}/api/media/series/:id/episodes/:episodeId/rating`,
+				async ({ params, request }) => {
+					const body = (await request.json()) as { rating: number | null }
+					captured.id = params.id as string
+					captured.episodeId = params.episodeId as string
+					captured.rating = body.rating
+					return HttpResponse.json({ success: true })
+				}
+			)
+		)
+		renderActivity()
+		await waitFor(() => expect(screen.getByText('Breaking Bad')).toBeInTheDocument())
+
+		const stars = document.querySelectorAll('.activity-page__rating-control button')
+		expect(stars.length).toBe(5)
+		await user.click(stars[stars.length - 1] as HTMLElement)
+
+		await waitFor(() => expect(captured.episodeId).toBe('555'))
+		expect(captured.id).toBe('100')
+		expect(captured.rating).toBe(10)
+	})
 })
