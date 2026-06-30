@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -37,6 +37,7 @@ const MoviesList: React.FC = () => {
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [importOpen, setImportOpen] = useState(false)
 	const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '')
+	const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
 	// All filter state from URL
 	const page = Number(searchParams.get('page')) || 1
@@ -88,8 +89,20 @@ const MoviesList: React.FC = () => {
 		}
 	}, [dispatch, isDataFresh, buildParams])
 
+	const handleSearchChange = useCallback(
+		(value: string) => {
+			setSearchInput(value)
+			if (debounceRef.current) clearTimeout(debounceRef.current)
+			debounceRef.current = setTimeout(() => {
+				updateParams({ q: value || null })
+			}, 400)
+		},
+		[updateParams]
+	)
+
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault()
+		if (debounceRef.current) clearTimeout(debounceRef.current)
 		updateParams({ q: searchInput || null })
 	}
 
@@ -122,7 +135,7 @@ const MoviesList: React.FC = () => {
 						className='search-input'
 						placeholder={t('common.search')}
 						value={searchInput}
-						onChange={(e) => setSearchInput(e.target.value)}
+						onChange={(e) => handleSearchChange(e.target.value)}
 					/>
 				</form>
 				<select
@@ -160,7 +173,9 @@ const MoviesList: React.FC = () => {
 
 			{error && <div className='error-message'>{error}</div>}
 
-			{loading && <div className='loading-state'>{t('common.loading')}</div>}
+			{loading && movies.length === 0 && (
+				<div className='loading-state'>{t('common.loading')}</div>
+			)}
 
 			{!loading && movies.length === 0 && <div className='empty-state'>{t('movies.noMovies')}</div>}
 
