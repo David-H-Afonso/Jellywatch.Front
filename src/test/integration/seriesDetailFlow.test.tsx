@@ -77,14 +77,14 @@ const authState = {
 	},
 }
 
-function renderSeriesDetail() {
+function renderSeriesDetail(entries: string[] = ['/series/1']) {
 	const store = createTestStore(authState)
 	return {
 		store,
 		...render(
 			<Provider store={store}>
 				<I18nextProvider i18n={i18n}>
-					<MemoryRouter initialEntries={['/series/1']}>
+					<MemoryRouter initialEntries={entries}>
 						<Routes>
 							<Route path='/series/:id' element={<SeriesDetail />} />
 							<Route path='/series' element={<div>Series List</div>} />
@@ -173,14 +173,24 @@ describe('Series Detail Flow', () => {
 		expect(screen.getByText(/Cat.s in the Bag/)).toBeInTheDocument()
 	})
 
-	it('shows back link to series list', async () => {
-		renderSeriesDetail()
+	it('returns to the previous screen when there is history', async () => {
+		const user = userEvent.setup()
+		renderSeriesDetail(['/person/5', '/series/1'])
 		await waitFor(() => {
 			expect(screen.getByText('Breaking Bad')).toBeInTheDocument()
 		})
-		const backLink = screen.getByText(/back/i)
-		expect(backLink).toBeInTheDocument()
-		expect(backLink.closest('a')?.getAttribute('href')).toBe('/series')
+		await user.click(screen.getByRole('button', { name: /back/i }))
+		expect(await screen.findByText('Person Page')).toBeInTheDocument()
+	})
+
+	it('falls back to the series list on direct entry', async () => {
+		const user = userEvent.setup()
+		renderSeriesDetail(['/series/1'])
+		await waitFor(() => {
+			expect(screen.getByText('Breaking Bad')).toBeInTheDocument()
+		})
+		await user.click(screen.getByRole('button', { name: /back/i }))
+		expect(await screen.findByText('Series List')).toBeInTheDocument()
 	})
 
 	it('stores fetched series in Redux', async () => {

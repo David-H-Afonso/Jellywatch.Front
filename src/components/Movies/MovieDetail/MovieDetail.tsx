@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId, selectIsAdmin } from '@/store/features/auth/selector'
@@ -47,6 +47,7 @@ const MovieDetail: React.FC = () => {
 	const { t, i18n } = useTranslation()
 	const dispatch = useAppDispatch()
 	const navigate = useNavigate()
+	const location = useLocation()
 	const movie = useAppSelector(selectCurrentMovie)
 	const loading = useAppSelector(selectMoviesLoading)
 	const error = useAppSelector(selectMoviesError)
@@ -223,6 +224,14 @@ const MovieDetail: React.FC = () => {
 		if (id) dispatch(fetchMovieById({ id: Number(id), profileId: activeProfileId }))
 	}
 
+	const handleBack = () => {
+		if (location.key === 'default') {
+			navigate('/movies')
+		} else {
+			navigate(-1)
+		}
+	}
+
 	if (loading) {
 		return <div className='loading-state'>{t('common.loading')}</div>
 	}
@@ -231,7 +240,9 @@ const MovieDetail: React.FC = () => {
 		return (
 			<div className='error-state'>
 				<p>{error || t('common.error')}</p>
-				<Link to='/movies'>{t('common.back')}</Link>
+				<button className='movie-detail__back' onClick={handleBack}>
+					{t('common.back')}
+				</button>
 			</div>
 		)
 	}
@@ -245,9 +256,9 @@ const MovieDetail: React.FC = () => {
 
 	return (
 		<div className='movie-detail'>
-			<div className='movie-detail__back'>
-				<Link to='/movies'>← {t('common.back')}</Link>
-			</div>
+			<button className='movie-detail__back' onClick={handleBack}>
+				← {t('common.back')}
+			</button>
 
 			<div className='movie-detail__hero'>
 				<div className='movie-detail__poster-wrap'>

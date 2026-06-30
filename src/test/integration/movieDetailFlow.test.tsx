@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
@@ -73,7 +74,7 @@ const authState = {
 	},
 }
 
-function renderMovieDetail(movieId = '42') {
+function renderMovieDetail(movieId = '42', entries: string[] = [`/movies/${movieId}`]) {
 	server.use(
 		http.get(`${API}/api/media/movies/${movieId}`, () => {
 			return HttpResponse.json(mockMovie)
@@ -88,10 +89,11 @@ function renderMovieDetail(movieId = '42') {
 		...render(
 			<Provider store={store}>
 				<I18nextProvider i18n={i18n}>
-					<MemoryRouter initialEntries={[`/movies/${movieId}`]}>
+					<MemoryRouter initialEntries={entries}>
 						<Routes>
 							<Route path='/movies/:id' element={<MovieDetail />} />
 							<Route path='/movies' element={<div>Movies List</div>} />
+							<Route path='/dashboard' element={<div>Dashboard</div>} />
 						</Routes>
 					</MemoryRouter>
 				</I18nextProvider>
@@ -168,13 +170,24 @@ describe('Movie Detail Flow', () => {
 		})
 	})
 
-	it('has back link to movies list', async () => {
-		renderMovieDetail()
+	it('returns to the previous screen when there is history', async () => {
+		const user = userEvent.setup()
+		renderMovieDetail('42', ['/dashboard', '/movies/42'])
 		await waitFor(() => {
-			const backLink = screen.getByText(/back/i)
-			expect(backLink).toBeInTheDocument()
-			expect(backLink.closest('a')).toHaveAttribute('href', '/movies')
+			expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Inception')
 		})
+		await user.click(screen.getByRole('button', { name: /back/i }))
+		expect(await screen.findByText('Dashboard')).toBeInTheDocument()
+	})
+
+	it('falls back to the movies list on direct entry', async () => {
+		const user = userEvent.setup()
+		renderMovieDetail('42', ['/movies/42'])
+		await waitFor(() => {
+			expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Inception')
+		})
+		await user.click(screen.getByRole('button', { name: /back/i }))
+		expect(await screen.findByText('Movies List')).toBeInTheDocument()
 	})
 
 	it('stores movie in Redux', async () => {

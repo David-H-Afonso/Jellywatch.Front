@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectActiveProfileId, selectIsAdmin } from '@/store/features/auth/selector'
@@ -68,6 +68,7 @@ const SeriesDetail: React.FC = () => {
 	const { t, i18n } = useTranslation()
 	const dispatch = useAppDispatch()
 	const navigate = useNavigate()
+	const location = useLocation()
 	const series = useAppSelector(selectCurrentSeries)
 	const loading = useAppSelector(selectSeriesLoading)
 	const error = useAppSelector(selectSeriesError)
@@ -344,6 +345,14 @@ const SeriesDetail: React.FC = () => {
 		}
 	}
 
+	const handleBack = () => {
+		if (location.key === 'default') {
+			navigate('/series')
+		} else {
+			navigate(-1)
+		}
+	}
+
 	if (loading) {
 		return <div className='loading-state'>{t('common.loading')}</div>
 	}
@@ -352,7 +361,9 @@ const SeriesDetail: React.FC = () => {
 		return (
 			<div className='error-state'>
 				<p>{error || t('common.error')}</p>
-				<Link to='/series'>{t('common.back')}</Link>
+				<button className='series-detail__back' onClick={handleBack}>
+					{t('common.back')}
+				</button>
 			</div>
 		)
 	}
@@ -366,9 +377,9 @@ const SeriesDetail: React.FC = () => {
 
 	return (
 		<div className='series-detail'>
-			<div className='series-detail__back'>
-				<Link to='/series'>← {t('common.back')}</Link>
-			</div>
+			<button className='series-detail__back' onClick={handleBack}>
+				← {t('common.back')}
+			</button>
 
 			<div className='series-detail__hero'>
 				<div className='series-detail__poster-wrap'>
