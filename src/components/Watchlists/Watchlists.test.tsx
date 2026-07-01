@@ -283,28 +283,40 @@ describe('Watchlists page', () => {
 			createWatchlistDetailDto({ role: WatchlistRole.Member })
 		)
 
-		renderPage()
+		const { container } = renderPage()
 
-		fireEvent.click(await screen.findByRole('button', { name: 'Leave watchlist' }))
+		// Leave is now in the overflow ActionMenu inside the overview header
+		const overview = (await screen.findByRole('button', { name: 'Edit watchlist' })).closest(
+			'.watchlist-overview'
+		) as HTMLElement
+		fireEvent.click(within(overview).getByRole('button', { name: 'More actions' }))
+		fireEvent.click(screen.getByRole('menuitem', { name: 'Leave watchlist' }))
 		expect(services.leaveWatchlist).not.toHaveBeenCalled()
 
 		const dialog = screen.getByRole('alertdialog')
 		fireEvent.click(within(dialog).getByRole('button', { name: 'Leave watchlist' }))
 
 		await waitFor(() => expect(services.leaveWatchlist).toHaveBeenCalledWith(1))
+		expect(container).toBeDefined()
 	})
 
 	it('asks for confirmation before deleting a watchlist', async () => {
-		renderPage()
+		const { container } = renderPage()
 
+		// Enter edit mode then use the overflow menu inside the editor header
 		fireEvent.click(await screen.findByRole('button', { name: 'Edit watchlist' }))
-		fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+		const editor = (await screen.findByRole('button', { name: 'Save' })).closest(
+			'.watchlist-editor'
+		) as HTMLElement
+		fireEvent.click(within(editor).getByRole('button', { name: 'More actions' }))
+		fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }))
 		expect(services.deleteWatchlist).not.toHaveBeenCalled()
 
 		const dialog = screen.getByRole('alertdialog')
 		fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
 		await waitFor(() => expect(services.deleteWatchlist).toHaveBeenCalledWith(1))
+		expect(container).toBeDefined()
 	})
 
 	it('shows the invitation preview inside a bounded modal that can be closed', async () => {
@@ -328,11 +340,22 @@ describe('Watchlists page', () => {
 	it('labels editor and overview actions with readable text', async () => {
 		renderPage()
 
-		expect(await screen.findByText('Export watchlist')).toBeVisible()
+		// Wait for overview; open the overflow menu scoped to the overview section
+		const overviewMoreBtn = (await screen.findByRole('button', { name: 'Edit watchlist' })).closest(
+			'.watchlist-overview'
+		) as HTMLElement
+		fireEvent.click(within(overviewMoreBtn).getByRole('button', { name: 'More actions' }))
+		expect(screen.getByRole('menuitem', { name: 'Export watchlist' })).toBeVisible()
 
+		// Switch to edit mode
 		fireEvent.click(screen.getByRole('button', { name: 'Edit watchlist' }))
 
-		expect(await screen.findByText('Mark completed')).toBeVisible()
-		expect(screen.getByText('Save')).toBeVisible()
+		// Open editor overflow menu
+		const editorMoreBtn = (await screen.findByRole('button', { name: 'Save' })).closest(
+			'.watchlist-editor'
+		) as HTMLElement
+		fireEvent.click(within(editorMoreBtn).getByRole('button', { name: 'More actions' }))
+		expect(screen.getByRole('menuitem', { name: 'Mark completed' })).toBeVisible()
+		expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
 	})
 })

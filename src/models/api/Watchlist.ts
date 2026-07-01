@@ -15,6 +15,13 @@ export interface WatchlistIndexDto {
 	defaultWatchlistId: number | null
 }
 
+export interface WatchlistMemberSummaryDto {
+	userId: number
+	username: string
+	role: WatchlistRole
+	avatarUrl: string | null
+}
+
 export interface WatchlistSummaryDto {
 	id: number
 	name: string
@@ -27,6 +34,7 @@ export interface WatchlistSummaryDto {
 	role: WatchlistRole
 	permissions: WatchlistPermissionsDto
 	itemCount: number
+	members: WatchlistMemberSummaryDto[]
 	createdAt: string
 	updatedAt: string
 }
@@ -47,11 +55,8 @@ export interface WatchlistPermissionsDto {
 	canDeleteWatchlist: boolean
 }
 
-export interface WatchlistMemberDto {
+export interface WatchlistMemberDto extends WatchlistMemberSummaryDto {
 	id: number
-	userId: number
-	username: string
-	role: WatchlistRole
 	permissions: WatchlistPermissionsDto
 	createdAt: string
 }

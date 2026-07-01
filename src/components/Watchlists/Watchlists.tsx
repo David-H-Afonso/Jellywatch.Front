@@ -58,6 +58,7 @@ import type {
 	WatchlistIndexDto,
 	WatchlistInvitationDto,
 	WatchlistItemDto,
+	WatchlistMemberSummaryDto,
 	WatchlistMemberDto,
 	WatchlistPermissionsDto,
 	WatchlistSummaryDto,
@@ -219,6 +220,12 @@ const SyncIcon = () => (
 	</svg>
 )
 
+const MoreIcon = () => (
+	<svg viewBox='0 0 24 24' aria-hidden='true'>
+		<path d='M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z' />
+	</svg>
+)
+
 const permissionOptions: Array<keyof Omit<WatchlistPermissionsDto, 'canDeleteWatchlist'>> = [
 	'canAddItems',
 	'canRemoveItems',
@@ -292,6 +299,50 @@ const roleKey = (role: WatchlistRole) =>
 const activePermissionCount = (permissions: WatchlistPermissionsDto) =>
 	permissionOptions.filter((permission) => permissions[permission]).length
 
+const memberInitials = (name: string) =>
+	name
+		.trim()
+		.split(/\s+/)
+		.slice(0, 2)
+		.map((part) => part.charAt(0).toUpperCase())
+		.join('') || '?'
+
+const avatarColor = (name: string) => {
+	let hash = 0
+	for (let i = 0; i < name.length; i += 1) {
+		hash = name.charCodeAt(i) + ((hash << 5) - hash)
+	}
+	return `hsl(${Math.abs(hash) % 360} 50% 42%)`
+}
+
+const MemberAvatars: React.FC<{ members: WatchlistMemberSummaryDto[]; max?: number }> = ({
+	members,
+	max = 3,
+}) => {
+	if (members.length === 0) return null
+	const shown = members.slice(0, max)
+	const extra = members.length - shown.length
+	return (
+		<span className='watchlist-avatars' title={members.map((member) => member.username).join(', ')}>
+			{shown.map((member) => (
+				<span
+					key={member.userId}
+					className='watchlist-avatars__item'
+					style={member.avatarUrl ? undefined : { background: avatarColor(member.username) }}>
+					{member.avatarUrl ? (
+						<img src={member.avatarUrl} alt='' loading='lazy' />
+					) : (
+						memberInitials(member.username)
+					)}
+				</span>
+			))}
+			{extra > 0 && (
+				<span className='watchlist-avatars__item watchlist-avatars__item--more'>+{extra}</span>
+			)}
+		</span>
+	)
+}
+
 const Watchlists: React.FC = () => {
 	const { t } = useTranslation()
 	const activeProfileId = useAppSelector(selectActiveProfileId)
@@ -299,6 +350,7 @@ const Watchlists: React.FC = () => {
 	const [selectedId, setSelectedId] = useState<number | null>(null)
 	const [detail, setDetail] = useState<WatchlistDetailDto | null>(null)
 	const [editMode, setEditMode] = useState(false)
+	const [railOpen, setRailOpen] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -754,6 +806,42 @@ const Watchlists: React.FC = () => {
 		})
 	}
 
+	const handleOpenSync = async () => {
+		if (!detail) return
+		if (detail.jellyfinPlaylistId) {
+			setSyncModalOpen(true)
+			setSyncPreview(null)
+			return
+		}
+		setSyncModalOpen(true)
+		setSyncLoading(true)
+		try {
+			const preview = await getPlaylistSyncPreview(detail.id)
+			setSyncPreview(preview)
+			if (preview.availableProfiles.length > 0)
+				setSyncTargetProfile(preview.availableProfiles[0].jellyfinUserId)
+		} finally {
+			setSyncLoading(false)
+		}
+	}
+
+	const handleMakeDefault = async () => {
+		if (!detail) return
+		await setDefaultWatchlist(detail.id)
+		await loadIndex()
+	}
+
+	const handleMarkCompleted = async () => {
+		if (!detail) return
+		await completeWatchlist(detail.id)
+		await refreshAll()
+	}
+
+	const isDefault = Boolean(detail && index?.defaultWatchlistId === detail.id)
+	const isSynced = Boolean(detail?.jellyfinPlaylistId)
+	const sharedMembers = detail?.members ?? []
+	const isShared = sharedMembers.length > 1
+
 	return (
 		<div className='watchlists-page'>
 			<div className='watchlists-page__header'>
@@ -811,8 +899,23 @@ const Watchlists: React.FC = () => {
 			)}
 
 			{index && (
-				<div className='watchlists-shell'>
+				<div className={`watchlists-shell ${railOpen ? 'watchlists-shell--rail-open' : ''}`}>
+					<button
+						type='button'
+						className='watchlists-rail-backdrop'
+						aria-hidden={!railOpen}
+						tabIndex={-1}
+						onClick={() => setRailOpen(false)}
+					/>
 					<aside className='watchlists-sidebar'>
+						<div className='watchlists-sidebar__close'>
+							<button
+								type='button'
+								onClick={() => setRailOpen(false)}
+								aria-label={t('common.close')}>
+								<CloseIcon />
+							</button>
+						</div>
 						{index.pendingInvitations.length > 0 && (
 							<section className='watchlists-panel'>
 								<h2>{t('watchlists.pendingInvitations')}</h2>
@@ -845,17 +948,57 @@ const Watchlists: React.FC = () => {
 
 						<section className='watchlists-panel'>
 							<h2>{t('watchlists.myWatchlists')}</h2>
-							{index.watchlists.map((watchlist: WatchlistSummaryDto) => (
-								<button
-									key={watchlist.id}
-									className={`watchlist-nav ${selectedId === watchlist.id ? 'watchlist-nav--active' : ''}`}
-									onClick={() => setSelectedId(watchlist.id)}>
-									<span>{watchlist.name}</span>
-									<small>
-										{watchlist.itemCount} {t('common.items')} · {t(roleKey(watchlist.role))}
-									</small>
-								</button>
-							))}
+							{index.watchlists.map((watchlist: WatchlistSummaryDto) => {
+								const isActive = selectedId === watchlist.id
+								const synced = Boolean(watchlist.jellyfinPlaylistId)
+								const isShared = watchlist.members.length > 1
+								return (
+									<button
+										key={watchlist.id}
+										type='button'
+										className={`watchlist-nav ${isActive ? 'watchlist-nav--active' : ''}`}
+										aria-current={isActive ? 'page' : undefined}
+										onClick={() => {
+											setSelectedId(watchlist.id)
+											setRailOpen(false)
+										}}>
+										<span className='watchlist-nav__cover'>
+											{watchlist.coverUrl ? (
+												<img src={watchlist.coverUrl} alt='' loading='lazy' />
+											) : (
+												<ListIcon />
+											)}
+										</span>
+										<span className='watchlist-nav__body'>
+											<span className='watchlist-nav__name'>{watchlist.name}</span>
+											<span className='watchlist-nav__meta'>
+												<span>
+													{watchlist.itemCount} {t('common.items')}
+												</span>
+												{index.defaultWatchlistId === watchlist.id && (
+													<span className='watchlist-nav__tag watchlist-nav__tag--default'>
+														{t('watchlists.default')}
+													</span>
+												)}
+												{watchlist.role !== WatchlistRole.Owner && (
+													<span className='watchlist-nav__tag'>{t(roleKey(watchlist.role))}</span>
+												)}
+											</span>
+										</span>
+										<span className='watchlist-nav__signals'>
+											{synced && (
+												<span
+													className='watchlist-nav__sync'
+													title={t('watchlists.syncedWithJellyfin')}
+													aria-label={t('watchlists.syncedWithJellyfin')}>
+													<SyncIcon />
+												</span>
+											)}
+											{isShared && <MemberAvatars members={watchlist.members} />}
+										</span>
+									</button>
+								)
+							})}
 						</section>
 
 						{index.incomingAccessRequests.length > 0 && (
@@ -899,12 +1042,19 @@ const Watchlists: React.FC = () => {
 					</aside>
 
 					<main className='watchlists-detail'>
+						<div className='watchlists-mobile-switch'>
+							<button type='button' onClick={() => setRailOpen(true)}>
+								<ListIcon />
+								<span>{detail ? detail.name : t('watchlists.myWatchlists')}</span>
+								<ChevronIcon />
+							</button>
+						</div>
 						{detail ? (
 							<>
 								{editMode ? (
 									<section className='watchlist-editor'>
 										<header className='watchlist-editor__header'>
-											<div>
+											<div className='watchlist-editor__heading'>
 												<span>{t('watchlists.editMode')}</span>
 												<h2>{detail.name}</h2>
 											</div>
@@ -923,93 +1073,57 @@ const Watchlists: React.FC = () => {
 													onClick={handleUpdateDetail}>
 													<SaveIcon />
 												</IconButton>
-												<IconButton
-													label={t('watchlists.markCompleted')}
-													text={t('watchlists.markCompleted')}
-													variant='success'
-													disabled={saving || !detail.permissions.canUpdateWatchlist}
-													onClick={async () => {
-														await completeWatchlist(detail.id)
-														await refreshAll()
-													}}>
-													<CheckIcon />
-												</IconButton>
-												<IconButton
-													label={
-														index.defaultWatchlistId === detail.id
-															? t('watchlists.defaultWatchlist')
-															: t('watchlists.makeDefault')
+												<ActionMenu
+													label={t('watchlists.moreActions')}
+													actions={
+														[
+															detail.permissions.canUpdateWatchlist && {
+																key: 'complete',
+																label: t('watchlists.markCompleted'),
+																icon: <CheckIcon />,
+																onSelect: handleMarkCompleted,
+															},
+															{
+																key: 'default',
+																label: isDefault
+																	? t('watchlists.defaultWatchlist')
+																	: t('watchlists.makeDefault'),
+																icon: <StarIcon />,
+																onSelect: handleMakeDefault,
+																active: isDefault,
+															},
+															detail.role !== WatchlistRole.Owner && {
+																key: 'leave',
+																label: t('watchlists.leave'),
+																icon: <LeaveIcon />,
+																onSelect: requestLeaveWatchlist,
+																tone: 'danger',
+															},
+															detail.permissions.canDeleteWatchlist && {
+																key: 'delete',
+																label: t('common.delete'),
+																icon: <TrashIcon />,
+																onSelect: requestDeleteWatchlist,
+																tone: 'danger',
+															},
+														].filter(Boolean) as MenuAction[]
 													}
-													text={
-														index.defaultWatchlistId === detail.id
-															? t('watchlists.defaultWatchlist')
-															: t('watchlists.makeDefault')
-													}
-													variant={index.defaultWatchlistId === detail.id ? 'warning' : 'default'}
-													onClick={async () => {
-														await setDefaultWatchlist(detail.id)
-														await loadIndex()
-													}}>
-													<StarIcon />
-												</IconButton>
-												{detail.role !== WatchlistRole.Owner && (
-													<IconButton
-														label={t('watchlists.leave')}
-														text={t('watchlists.leave')}
-														variant='danger'
-														onClick={requestLeaveWatchlist}>
-														<LeaveIcon />
-													</IconButton>
-												)}
-												{detail.permissions.canDeleteWatchlist && (
-													<IconButton
-														label={t('common.delete')}
-														text={t('common.delete')}
-														variant='danger'
-														onClick={requestDeleteWatchlist}>
-														<TrashIcon />
-													</IconButton>
-												)}
+												/>
 											</div>
 										</header>
 										<div className='watchlist-editor__body'>
-											<label>
-												<span>{t('watchlists.name')}</span>
-												<input
-													value={detail.name}
-													disabled={!detail.permissions.canUpdateWatchlist}
-													onChange={(e) => setDetail({ ...detail, name: e.target.value })}
-												/>
-											</label>
-											<label>
-												<span>{t('media.status')}</span>
-												<WatchlistStateSelect
-													value={detail.state}
-													disabled={!detail.permissions.canUpdateWatchlist}
-													t={t}
-													onChange={(state) => setDetail({ ...detail, state })}
-												/>
-											</label>
-											<label className='watchlist-editor__description'>
-												<span>{t('watchlists.description')}</span>
-												<textarea
-													value={detail.description ?? ''}
-													disabled={!detail.permissions.canUpdateWatchlist}
-													onChange={(e) => setDetail({ ...detail, description: e.target.value })}
-													placeholder={t('watchlists.description')}
-												/>
-											</label>
 											{detail.permissions.canUpdateWatchlist && (
 												<div className='watchlist-editor__cover'>
-													<span>{t('watchlists.cover')}</span>
-													<div className='watchlist-editor__cover-controls'>
-														{detail.coverUrl && (
-															<WatchlistCover
-																watchlistId={detail.id}
-																coverUrl={detail.coverUrl}
-																small
-															/>
+													<div className='watchlist-editor__cover-preview'>
+														{detail.coverUrl ? (
+															<WatchlistCover watchlistId={detail.id} coverUrl={detail.coverUrl} />
+														) : (
+															<span className='watchlist-editor__cover-placeholder'>
+																<ListIcon />
+															</span>
 														)}
+													</div>
+													<div className='watchlist-editor__cover-controls'>
 														<label className='btn-secondary btn-sm watchlist-cover-button'>
 															<ImportIcon /> {t('watchlists.uploadCover')}
 															<input
@@ -1057,6 +1171,36 @@ const Watchlists: React.FC = () => {
 													)}
 												</div>
 											)}
+											<div className='watchlist-editor__fields'>
+												<div className='watchlist-editor__row'>
+													<label>
+														<span>{t('watchlists.name')}</span>
+														<input
+															value={detail.name}
+															disabled={!detail.permissions.canUpdateWatchlist}
+															onChange={(e) => setDetail({ ...detail, name: e.target.value })}
+														/>
+													</label>
+													<label>
+														<span>{t('media.status')}</span>
+														<WatchlistStateSelect
+															value={detail.state}
+															disabled={!detail.permissions.canUpdateWatchlist}
+															t={t}
+															onChange={(state) => setDetail({ ...detail, state })}
+														/>
+													</label>
+												</div>
+												<label className='watchlist-editor__description'>
+													<span>{t('watchlists.description')}</span>
+													<textarea
+														value={detail.description ?? ''}
+														disabled={!detail.permissions.canUpdateWatchlist}
+														onChange={(e) => setDetail({ ...detail, description: e.target.value })}
+														placeholder={t('watchlists.description')}
+													/>
+												</label>
+											</div>
 										</div>
 									</section>
 								) : (
@@ -1068,91 +1212,93 @@ const Watchlists: React.FC = () => {
 											<div className='watchlist-overview__eyebrow'>
 												<span>{t(roleKey(detail.role))}</span>
 												<span>{t(watchlistStateKey(detail.state))}</span>
-												{index.defaultWatchlistId === detail.id && (
-													<span>{t('watchlists.defaultWatchlist')}</span>
+												{isDefault && (
+													<span className='watchlist-overview__eyebrow-default'>
+														{t('watchlists.default')}
+													</span>
 												)}
 											</div>
 											<h2>{detail.name}</h2>
+											<div className='watchlist-overview__facts'>
+												<span className='watchlist-fact'>
+													<strong>{detail.items.length}</strong> {t('common.items')}
+												</span>
+												{isSynced && (
+													<span className='watchlist-fact watchlist-fact--sync'>
+														<SyncIcon />
+														{t('watchlists.jellyfinSynced')}
+													</span>
+												)}
+												{isShared && (
+													<span
+														className='watchlist-fact watchlist-fact--shared'
+														title={t('watchlists.sharedWith', {
+															names: sharedMembers.map((m) => m.username).join(', '),
+														})}>
+														<MemberAvatars members={sharedMembers} max={4} />
+														{t('watchlists.membersLabel', { count: sharedMembers.length })}
+													</span>
+												)}
+											</div>
 											{detail.description ? (
 												<WatchlistDescription text={detail.description} t={t} />
 											) : (
-												<p>{t('watchlists.noDescription')}</p>
+												<p className='watchlist-overview__empty-desc'>
+													{t('watchlists.noDescription')}
+												</p>
 											)}
-										</div>
-										<div className='watchlist-overview__stats'>
-											<strong>{detail.items.length}</strong>
-											<span>{t('common.items')}</span>
 										</div>
 										<div className='watchlist-overview__actions'>
 											<IconButton
 												label={t('watchlists.editMode')}
 												text={t('common.edit')}
+												variant='primary'
 												onClick={() => setEditMode(true)}>
 												<EditIcon />
 											</IconButton>
 											<IconButton
-												label={t('watchlists.export')}
-												text={t('watchlists.export')}
-												onClick={handleExport}>
-												<ExportIcon />
-											</IconButton>
-											<IconButton
-												label={
-													detail.jellyfinPlaylistId
-														? t('watchlists.jellyfinSynced')
-														: t('watchlists.syncToJellyfin')
-												}
-												text={
-													detail.jellyfinPlaylistId
-														? t('watchlists.jellyfinSynced')
-														: t('watchlists.syncToJellyfin')
-												}
-												variant={detail.jellyfinPlaylistId ? 'success' : 'default'}
-												onClick={async () => {
-													if (detail.jellyfinPlaylistId) {
-														setSyncModalOpen(true)
-														setSyncPreview(null)
-													} else {
-														setSyncModalOpen(true)
-														setSyncLoading(true)
-														try {
-															const preview = await getPlaylistSyncPreview(detail.id)
-															setSyncPreview(preview)
-															if (preview.availableProfiles.length > 0)
-																setSyncTargetProfile(preview.availableProfiles[0].jellyfinUserId)
-														} finally {
-															setSyncLoading(false)
-														}
-													}
-												}}>
+												label={isSynced ? t('watchlists.jellyfinSynced') : t('watchlists.syncToJellyfin')}
+												text={isSynced ? t('watchlists.jellyfinSynced') : t('watchlists.syncToJellyfin')}
+												variant={isSynced ? 'success' : 'default'}
+												onClick={handleOpenSync}>
 												<SyncIcon />
 											</IconButton>
-											<IconButton
-												label={
-													index.defaultWatchlistId === detail.id
-														? t('watchlists.defaultWatchlist')
-														: t('watchlists.makeDefault')
+											<ActionMenu
+												label={t('watchlists.moreActions')}
+												actions={
+													[
+														{
+															key: 'export',
+															label: t('watchlists.export'),
+															icon: <ExportIcon />,
+															onSelect: handleExport,
+														},
+														{
+															key: 'default',
+															label: isDefault
+																? t('watchlists.defaultWatchlist')
+																: t('watchlists.makeDefault'),
+															icon: <StarIcon />,
+															onSelect: handleMakeDefault,
+															active: isDefault,
+														},
+														detail.role !== WatchlistRole.Owner && {
+															key: 'leave',
+															label: t('watchlists.leave'),
+															icon: <LeaveIcon />,
+															onSelect: requestLeaveWatchlist,
+															tone: 'danger',
+														},
+														detail.permissions.canDeleteWatchlist && {
+															key: 'delete',
+															label: t('common.delete'),
+															icon: <TrashIcon />,
+															onSelect: requestDeleteWatchlist,
+															tone: 'danger',
+														},
+													].filter(Boolean) as MenuAction[]
 												}
-												text={
-													index.defaultWatchlistId === detail.id
-														? t('watchlists.defaultWatchlist')
-														: t('watchlists.makeDefault')
-												}
-												onClick={async () => {
-													await setDefaultWatchlist(detail.id)
-													await loadIndex()
-												}}>
-												<StarIcon />
-											</IconButton>
-											{detail.role !== WatchlistRole.Owner && (
-												<IconButton
-													label={t('watchlists.leave')}
-													text={t('watchlists.leave')}
-													variant='danger'
-													onClick={requestLeaveWatchlist}>
-													<LeaveIcon />
-												</IconButton>
-											)}
+											/>
 										</div>
 									</section>
 								)}
@@ -1709,6 +1855,84 @@ const IconButton: React.FC<IconButtonProps> = ({
 	</button>
 )
 
+interface MenuAction {
+	key: string
+	label: string
+	icon?: React.ReactNode
+	onSelect: () => void | Promise<void>
+	tone?: 'default' | 'danger'
+	active?: boolean
+	disabled?: boolean
+}
+
+interface ActionMenuProps {
+	label: string
+	actions: MenuAction[]
+	size?: 'md' | 'sm'
+}
+
+const ActionMenu: React.FC<ActionMenuProps> = ({ label, actions, size = 'md' }) => {
+	const [open, setOpen] = useState(false)
+	const rootRef = useRef<HTMLDivElement>(null)
+
+	useEffect(() => {
+		if (!open) return
+		const handlePointer = (event: PointerEvent) => {
+			if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+		}
+		const handleKey = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') setOpen(false)
+		}
+		document.addEventListener('pointerdown', handlePointer)
+		document.addEventListener('keydown', handleKey)
+		return () => {
+			document.removeEventListener('pointerdown', handlePointer)
+			document.removeEventListener('keydown', handleKey)
+		}
+	}, [open])
+
+	if (actions.length === 0) return null
+
+	return (
+		<div className={`watchlist-menu ${open ? 'watchlist-menu--open' : ''}`} ref={rootRef}>
+			<button
+				type='button'
+				className={`watchlist-icon-button watchlist-menu__trigger${size === 'sm' ? ' watchlist-menu__trigger--sm' : ''}`}
+				aria-haspopup='menu'
+				aria-expanded={open}
+				aria-label={label}
+				title={label}
+				onClick={() => setOpen((current) => !current)}>
+				<MoreIcon />
+			</button>
+			{open && (
+				<div className='watchlist-menu__list' role='menu'>
+					{actions.map((action) => (
+						<button
+							key={action.key}
+							type='button'
+							role='menuitem'
+							disabled={action.disabled}
+							className={`watchlist-menu__item${action.tone === 'danger' ? ' watchlist-menu__item--danger' : ''}${action.active ? ' watchlist-menu__item--active' : ''}`}
+							onClick={() => {
+								setOpen(false)
+								void action.onSelect()
+							}}>
+							{action.icon && <span className='watchlist-menu__icon'>{action.icon}</span>}
+							<span className='watchlist-menu__label'>{action.label}</span>
+							{action.active && (
+								<span className='watchlist-menu__check'>
+									<CheckIcon />
+								</span>
+							)}
+						</button>
+					))}
+				</div>
+			)}
+		</div>
+	)
+}
+
 interface InvitationCardProps {
 	invitation: WatchlistInvitationDto
 	t: (key: string, opts?: Record<string, unknown>) => string
@@ -2184,6 +2408,7 @@ const WatchlistItemRow: React.FC<ItemRowProps> = ({
 						<span className='watchlist-item__meta'>
 							{media.mediaType === MediaType.Series ? t('import.series') : t('import.movie')}
 							{media.releaseDate && ` · ${media.releaseDate.slice(0, 4)}`}
+							{item.addedByUsername && ` · ${t('watchlists.addedBy', { name: item.addedByUsername })}`}
 						</span>
 						<AvailabilityBadge mediaItemId={media.mediaItemId} />
 						{media.canAddToProfile && activeProfileId && (
@@ -2253,14 +2478,19 @@ const WatchlistItemRow: React.FC<ItemRowProps> = ({
 					onChange={(status) => detail.permissions.canUpdateItemStatus && onUpdate(status)}
 				/>
 				{detail.permissions.canRemoveItems && (
-					<button
-						type='button'
-						className='watchlist-icon-button watchlist-icon-button--danger'
-						onClick={onDelete}
-						aria-label={t('common.remove')}
-						title={t('common.remove')}>
-						<TrashIcon />
-					</button>
+					<ActionMenu
+						label={t('watchlists.moreActions')}
+						size='sm'
+						actions={[
+							{
+								key: 'remove',
+								label: t('common.remove'),
+								icon: <TrashIcon />,
+								onSelect: onDelete,
+								tone: 'danger',
+							},
+						]}
+					/>
 				)}
 			</div>
 		</article>
