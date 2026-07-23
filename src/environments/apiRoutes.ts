@@ -4,6 +4,9 @@ export const apiRoutes = {
 		logout: '/api/auth/logout',
 		me: '/api/auth/me',
 	},
+	integrations: {
+		householdAuthorize: '/api/integrations/household/v1/authorize',
+	},
 	profile: {
 		base: '/api/profile',
 		byId: (id: number) => `/api/profile/${id}`,

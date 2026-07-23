@@ -16,6 +16,7 @@ import { RouteError, NotFound } from '@/components/errors'
 
 const Admin = React.lazy(() => import('@/components/Admin/Admin'))
 const Person = React.lazy(() => import('@/components/Person/Person'))
+const HouseholdAuthorize = React.lazy(() => import('@/components/Integrations/HouseholdAuthorize'))
 
 const protectedRoute = (element: React.ReactNode) => (
 	<ProtectedRoute>
@@ -32,6 +33,19 @@ export const router = createHashRouter([
 					<Login />
 				</EmptyLayout>
 			</PublicRoute>
+		),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/integrations/household/authorize',
+		element: (
+			<ProtectedRoute>
+				<EmptyLayout>
+					<React.Suspense fallback={<div>Loading...</div>}>
+						<HouseholdAuthorize />
+					</React.Suspense>
+				</EmptyLayout>
+			</ProtectedRoute>
 		),
 		errorElement: <RouteError />,
 	},

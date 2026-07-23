@@ -5,12 +5,15 @@ import { selectAuthLoading, selectAuthError } from '@/store/features/auth/select
 import { invalidateMovieCache } from '@/store/features/movies'
 import { invalidateCache as invalidateSeriesCache } from '@/store/features/series'
 import { triggerMineSync } from '@/services/AdminService/AdminService'
+import { useLocation, useNavigate } from 'react-router-dom'
 import './Login.scss'
 
 export const Login: React.FC = () => {
 	const dispatch = useAppDispatch()
 	const loading = useAppSelector(selectAuthLoading)
 	const error = useAppSelector(selectAuthError)
+	const location = useLocation()
+	const navigate = useNavigate()
 
 	const [serverUrl, setServerUrl] = useState(import.meta.env.VITE_JELLYFIN_DEFAULT_URL ?? '')
 	const [username, setUsername] = useState('')
@@ -23,6 +26,12 @@ export const Login: React.FC = () => {
 			triggerMineSync().catch(() => {})
 			dispatch(invalidateMovieCache())
 			dispatch(invalidateSeriesCache())
+			const requestedReturn = (location.state as { returnTo?: unknown } | null)?.returnTo
+			const returnTo =
+				typeof requestedReturn === 'string' && requestedReturn.startsWith('/')
+					? requestedReturn
+					: '/'
+			navigate(returnTo, { replace: true })
 		}
 	}
 

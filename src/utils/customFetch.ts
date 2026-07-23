@@ -57,6 +57,8 @@ const handleUnauthorizedAccess = () => {
 	}
 
 	console.warn('Session expired - redirecting to login')
+	const currentHashRoute = (globalThis.location?.hash ?? '').replace(/^#/, '')
+	const returnTo = currentHashRoute.startsWith('/') ? currentHashRoute : undefined
 
 	if (refs.store && refs.forceLogout) {
 		refs.store.dispatch(refs.forceLogout())
@@ -72,7 +74,11 @@ const handleUnauthorizedAccess = () => {
 
 	setTimeout(() => {
 		refs.handlingUnauthorized = false
-		router.navigate('/login')
+		if (returnTo) {
+			router.navigate('/login', { state: { returnTo } })
+		} else {
+			router.navigate('/login')
+		}
 	}, 100)
 }
 

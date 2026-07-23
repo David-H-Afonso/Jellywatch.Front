@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Provider } from 'react-redux'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/Auth/ProtectedRoute'
 import { PublicRoute } from '@/components/Auth/PublicRoute'
 import { createTestStore } from '@/test/utils/createTestStore'
@@ -41,7 +41,15 @@ function renderRoutes(preloadedState: any, initialRoute = '/') {
 		<Provider store={store}>
 			<MemoryRouter initialEntries={[initialRoute]}>
 				<Routes>
-					<Route path='/login' element={<div>Login Page</div>} />
+					<Route path='/login' element={<LoginProbe />} />
+					<Route
+						path='/integrations/household/authorize'
+						element={
+							<ProtectedRoute>
+								<div>Household Consent</div>
+							</ProtectedRoute>
+						}
+					/>
 					<Route
 						path='/'
 						element={
@@ -64,6 +72,12 @@ function renderRoutes(preloadedState: any, initialRoute = '/') {
 	)
 }
 
+function LoginProbe() {
+	const location = useLocation()
+	const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
+	return <div>Login Page{returnTo ? ` — ${returnTo}` : ''}</div>
+}
+
 describe('ProtectedRoute', () => {
 	it('renders children when authenticated', () => {
 		renderRoutes(authenticatedState)
@@ -73,7 +87,14 @@ describe('ProtectedRoute', () => {
 	it('redirects to /login when not authenticated', () => {
 		renderRoutes(unauthenticatedState)
 		expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
-		expect(screen.getByText('Login Page')).toBeInTheDocument()
+		expect(screen.getByText(/^Login Page/)).toBeInTheDocument()
+	})
+
+	it('preserves the complete Household authorization route and query through login', () => {
+		const request =
+			'/integrations/household/authorize?client_id=household&state=state-123&scope=profile.read'
+		renderRoutes(unauthenticatedState, request)
+		expect(screen.getByText(`Login Page — ${request}`)).toBeInTheDocument()
 	})
 })
 
