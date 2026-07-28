@@ -24,6 +24,15 @@ import type { ActivityDto, UpcomingEpisodeDto } from '@/models/api'
 import { formatUserRating } from '@/utils'
 import './Dashboard.scss'
 
+const upcomingTimestamp = (episode: UpcomingEpisodeDto): number => {
+	const timestamp = episode.airTimeUtc ? Date.parse(episode.airTimeUtc) : NaN
+	if (!Number.isNaN(timestamp)) return timestamp
+
+	const fallbackTime = episode.airTime ?? (/^\d{1,2}:\d{2}/.test(episode.airTimeUtc ?? '') ? episode.airTimeUtc : null)
+	const fallback = Date.parse(`${episode.airDate}T${fallbackTime ?? '00:00'}`)
+	return Number.isNaN(fallback) ? Number.MAX_SAFE_INTEGER : fallback
+}
+
 const formatRelativeDate = (
 	airDate: string,
 	airTime: string | null,
@@ -185,7 +194,7 @@ const Dashboard: React.FC = () => {
 			dispatch(fetchProfileDetail(activeProfileId))
 			dispatch(fetchProfileActivity({ profileId: activeProfileId, params: { pageSize: 10 } }))
 			getUpcoming(activeProfileId, 30)
-				.then((result) => setUpcoming(Array.isArray(result) ? result : []))
+				.then((result) => setUpcoming(Array.isArray(result) ? [...result].sort((a, b) => upcomingTimestamp(a) - upcomingTimestamp(b)) : []))
 				.catch(() => setUpcoming([]))
 		}
 	}, [dispatch, activeProfileId])
