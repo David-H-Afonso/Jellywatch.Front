@@ -143,6 +143,22 @@ export const refreshMediaItem = async (
 	})
 }
 
+export const identifyMediaItem = async (id: number, tmdbId: number): Promise<{
+	mediaItemId: number
+	seriesId: number
+	tmdbId: number
+	title: string
+	movedWatchStates: number
+	mergedWatchStates: number
+	movedWatchEvents: number
+	mergedWatchEvents: number
+}> => {
+	return await customFetch(apiRoutes.admin.mediaIdentify(id), {
+		method: 'POST',
+		body: { tmdbId },
+	})
+}
+
 export const getPosterOptions = async (id: number): Promise<PosterOptionDto[]> => {
 	return await customFetch<PosterOptionDto[]>(apiRoutes.admin.mediaPosterOptions(id))
 }

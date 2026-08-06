@@ -44,6 +44,7 @@ import {
 import {
 	deleteMediaItem,
 	forcePropagateSeriesFromParents,
+	identifyMediaItem,
 	refreshMediaItem,
 	refreshSeriesWatchDates,
 } from '@/services/AdminService/AdminService'
@@ -79,6 +80,10 @@ const SeriesDetail: React.FC = () => {
 	const [refreshing, setRefreshing] = useState(false)
 	const [refreshingImages, setRefreshingImages] = useState(false)
 	const [refreshingDates, setRefreshingDates] = useState(false)
+	const [identifying, setIdentifying] = useState(false)
+	const [showIdentifyForm, setShowIdentifyForm] = useState(false)
+	const [identifyTmdbId, setIdentifyTmdbId] = useState('')
+	const [identifyError, setIdentifyError] = useState<string | null>(null)
 	const [forcingParentSync, setForcingParentSync] = useState(false)
 	const [showPosterPicker, setShowPosterPicker] = useState(false)
 	const [showLogoPicker, setShowLogoPicker] = useState(false)
@@ -309,6 +314,27 @@ const SeriesDetail: React.FC = () => {
 		}
 	}
 
+	const handleIdentify = async () => {
+		if (!series) return
+		const tmdbId = Number.parseInt(identifyTmdbId, 10)
+		if (!Number.isInteger(tmdbId) || tmdbId <= 0) {
+			setIdentifyError(t('admin.identifyInvalidId'))
+			return
+		}
+		setIdentifying(true)
+		setIdentifyError(null)
+		try {
+			const result = await identifyMediaItem(series.mediaItemId, tmdbId)
+			setShowIdentifyForm(false)
+			setIdentifyTmdbId('')
+			navigate(`/series/${result.seriesId}`, { replace: true })
+		} catch (error) {
+			setIdentifyError(error instanceof Error ? error.message : t('admin.identifyFailed'))
+		} finally {
+			setIdentifying(false)
+		}
+	}
+
 	const handleForceParentSync = async () => {
 		if (!series || !activeProfileId) return
 		setForcingParentSync(true)
@@ -428,8 +454,18 @@ const SeriesDetail: React.FC = () => {
 											<circle cx='19' cy='12' r='2' />
 										</svg>
 									</button>
-									{showMenu && (
+							{showMenu && (
 										<div className='series-detail__admin-menu'>
+											{isAdmin && (
+												<button
+													onClick={() => {
+													setIdentifyError(null)
+													setShowIdentifyForm(true)
+													setShowMenu(false)
+												}}>
+												{t('admin.identifyMedia')}
+												</button>
+											)}
 											{isAdmin && (
 												<button
 													onClick={() => {
@@ -1032,6 +1068,34 @@ const SeriesDetail: React.FC = () => {
 					mediaTitle={title}
 					onClose={() => setShowWatchlistModal(false)}
 				/>
+			)}
+			{showIdentifyForm && (
+				<div className='confirm-modal-overlay' role='presentation'>
+					<div className='confirm-modal series-detail__identify-modal' role='dialog' aria-modal='true' aria-labelledby='identify-title'>
+						<h2 id='identify-title'>{t('admin.identifyMedia')}</h2>
+						<p>{t('admin.identifyDescription')}</p>
+						<label htmlFor='identify-tmdb-id'>{t('admin.tmdbId')}</label>
+						<input
+							id='identify-tmdb-id'
+							type='number'
+							min='1'
+							value={identifyTmdbId}
+							onChange={(event) => setIdentifyTmdbId(event.target.value)}
+							onKeyDown={(event) => {
+								if (event.key === 'Enter') void handleIdentify()
+							}}
+						/>
+						{identifyError && <p className='series-detail__identify-error'>{identifyError}</p>}
+						<div className='confirm-modal__actions'>
+							<button className='btn-secondary' onClick={() => setShowIdentifyForm(false)} disabled={identifying}>
+								{t('common.cancel')}
+							</button>
+							<button className='btn-secondary' onClick={() => void handleIdentify()} disabled={identifying}>
+								{identifying ? t('common.loading') : t('admin.identify')}
+							</button>
+						</div>
+					</div>
+				</div>
 			)}
 			{showConfirmDelete && (
 				<div className='confirm-modal-overlay'>

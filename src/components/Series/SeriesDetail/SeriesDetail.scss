@@ -579,6 +579,37 @@
 	color: var(--color-text-secondary);
 }
 
+.series-detail__identify-modal {
+	max-width: 420px;
+
+	h2 {
+		margin-top: 0;
+	}
+
+	p {
+		color: var(--color-text-secondary);
+	}
+
+label {
+		display: block;
+		margin-bottom: 0.35rem;
+	}
+
+input {
+		width: 100%;
+		box-sizing: border-box;
+		padding: 0.65rem 0.75rem;
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		background: var(--color-background);
+		color: var(--color-text);
+	}
+}
+
+.series-detail__identify-error {
+	color: var(--color-error, #e74c3c) !important;
+}
+
 .season-bulk-btn {
 	width: 22px;
 	height: 22px;

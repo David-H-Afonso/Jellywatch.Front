@@ -88,6 +88,7 @@ export const apiRoutes = {
 		media: '/api/admin/media',
 		mediaById: (id: number) => `/api/admin/media/${id}`,
 		mediaRefresh: (id: number) => `/api/admin/media/${id}/refresh`,
+		mediaIdentify: (id: number) => `/api/admin/media/${id}/identify`,
 		mediaPosterOptions: (id: number) => `/api/admin/media/${id}/poster-options`,
 		mediaSelectPoster: (id: number) => `/api/admin/media/${id}/select-poster`,
 		mediaLogoOptions: (id: number) => `/api/admin/media/${id}/logo-options`,
