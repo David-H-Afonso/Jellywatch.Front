@@ -302,7 +302,18 @@
 		"confirmCreateUser": "¿Crear una cuenta de usuario para el perfil \"{{name}}\"? Esto le permitirá usar las funciones de copia de seguridad."
 	},
 	"filters": {
+		"title": "Filtros de biblioteca",
 		"all": "Todos los estados",
+		"status": "Estado",
+		"genre": "Género",
+		"allGenres": "Todos los géneros",
+		"actor": "Actor",
+		"allActors": "Todos los actores",
+		"director": "Director",
+		"allDirectors": "Todos los directores",
+		"pageSize": "Por página",
+		"show": "Mostrar filtros",
+		"hide": "Ocultar filtros",
 		"unseen": "No visto",
 		"inProgress": "En progreso",
 		"seen": "Visto",

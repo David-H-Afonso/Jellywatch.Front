@@ -82,6 +82,9 @@ export const handlers = [
 	http.get(`${API}/api/profile/:profileId/blocks`, () => HttpResponse.json([])),
 
 	// ── Series ───────────────────────────────────────────────────
+	http.get(`${API}/api/media/series/filters`, () =>
+		HttpResponse.json({ genres: [], actors: [], directors: [] })
+	),
 	http.get(`${API}/api/media/series`, () =>
 		HttpResponse.json(createPagedResult([createSeriesListDto()]))
 	),
@@ -100,6 +103,9 @@ export const handlers = [
 	),
 
 	// ── Movies ───────────────────────────────────────────────────
+	http.get(`${API}/api/media/movies/filters`, () =>
+		HttpResponse.json({ genres: [], actors: [], directors: [] })
+	),
 	http.get(`${API}/api/media/movies`, () =>
 		HttpResponse.json(createPagedResult([createMovieListDto()]))
 	),

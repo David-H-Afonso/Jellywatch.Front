@@ -302,7 +302,18 @@
 		"confirmCreateUser": "Create a user account for profile \"{{name}}\"? This will allow them to use backup features."
 	},
 	"filters": {
+		"title": "Library filters",
 		"all": "All States",
+		"status": "Status",
+		"genre": "Genre",
+		"allGenres": "All genres",
+		"actor": "Actor",
+		"allActors": "All actors",
+		"director": "Director",
+		"allDirectors": "All directors",
+		"pageSize": "Per page",
+		"show": "Show filters",
+		"hide": "Hide filters",
 		"unseen": "Unseen",
 		"inProgress": "In Progress",
 		"seen": "Seen",

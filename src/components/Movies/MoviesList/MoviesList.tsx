@@ -18,9 +18,10 @@ import {
 	MediaPoster,
 	ProfileSelector,
 	ImportMediaModal,
+	MediaFilterBar,
 } from '@/components/elements'
-import type { MediaQueryParameters } from '@/models/api'
-import { WatchState } from '@/models/api/Enums'
+import type { MediaFilterOptionsDto, MediaQueryParameters } from '@/models/api'
+import { getMovieFilterOptions } from '@/services/MediaService/MediaService'
 import { formatUserRating } from '@/utils'
 import './MoviesList.scss'
 
@@ -33,10 +34,12 @@ const MoviesList: React.FC = () => {
 	const pagination = useAppSelector(selectMoviesPagination)
 	const isDataFresh = useAppSelector(selectMoviesIsDataFresh)
 	const activeProfileId = useAppSelector(selectActiveProfileId)
+	const displayError = error?.includes('HTTP 500') ? t('common.error') : error
 
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [importOpen, setImportOpen] = useState(false)
 	const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '')
+	const [filterOptions, setFilterOptions] = useState<MediaFilterOptionsDto>({ genres: [], actors: [], directors: [] })
 	const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
 	// All filter state from URL
@@ -46,6 +49,9 @@ const MoviesList: React.FC = () => {
 	const sortBy = searchParams.get('sort') ?? 'title'
 	const sortDesc = searchParams.get('desc') === '1'
 	const pageSize = Number(searchParams.get('size')) || 20
+	const genre = searchParams.get('genre') ?? ''
+	const actor = searchParams.get('actor') ?? ''
+	const director = searchParams.get('director') ?? ''
 
 	const updateParams = useCallback(
 		(updates: Record<string, string | null>, resetPage = true) => {
@@ -75,13 +81,20 @@ const MoviesList: React.FC = () => {
 		const params: MediaQueryParameters = { page, pageSize, sortBy, sortDescending: sortDesc }
 		if (search) params.search = search
 		if (stateFilter) params.state = stateFilter
+		if (genre) params.genre = genre
+		if (actor) params.actor = actor
+		if (director) params.director = director
 		if (activeProfileId) params.profileId = activeProfileId
 		return params
-	}, [page, search, stateFilter, sortBy, sortDesc, activeProfileId, pageSize])
+	}, [page, search, stateFilter, genre, actor, director, sortBy, sortDesc, activeProfileId, pageSize])
 
 	useEffect(() => {
 		dispatch(fetchMovies(buildParams()))
 	}, [dispatch, buildParams])
+
+	useEffect(() => {
+		getMovieFilterOptions(activeProfileId ?? undefined).then(setFilterOptions).catch(() => setFilterOptions({ genres: [], actors: [], directors: [] }))
+	}, [activeProfileId])
 
 	useEffect(() => {
 		if (!isDataFresh) {
@@ -110,6 +123,10 @@ const MoviesList: React.FC = () => {
 		updateParams({ page: String(newPage) }, false)
 	}
 
+	const handleFilterChange = (key: string, value: string | null) => {
+		updateParams({ [key]: value })
+	}
+
 	const handleAdded = () => {
 		dispatch(invalidateMovieCache())
 	}
@@ -128,50 +145,22 @@ const MoviesList: React.FC = () => {
 				</div>
 			</div>
 
-			<div className='movies-list-page__filters'>
-				<form className='search-form' onSubmit={handleSearch}>
-					<input
-						type='text'
-						className='search-input'
-						placeholder={t('common.search')}
-						value={searchInput}
-						onChange={(e) => handleSearchChange(e.target.value)}
-					/>
-				</form>
-				<select
-					className='state-filter'
-					value={stateFilter}
-					onChange={(e) => updateParams({ state: e.target.value || null })}>
-					<option value=''>{t('filters.all')}</option>
-					<option value={String(WatchState.Unseen)}>{t('filters.unseen')}</option>
-					<option value={String(WatchState.InProgress)}>{t('filters.inProgress')}</option>
-					<option value={String(WatchState.Seen)}>{t('filters.seen')}</option>
-				</select>
-				<select
-					className='state-filter'
-					value={sortBy}
-					onChange={(e) => updateParams({ sort: e.target.value })}>
-					<option value='title'>{t('filters.name')}</option>
-					<option value='release'>{t('filters.releaseDate')}</option>
-					<option value='grade'>{t('filters.grade')}</option>
-					<option value='top'>{t('filters.top')}</option>
-				</select>
-				<button
-					className='btn-secondary btn-sm'
-					onClick={() => updateParams({ desc: sortDesc ? '0' : '1' })}>
-					{sortDesc ? '↓' : '↑'}
-				</button>
-				<select
-					className='state-filter'
-					value={pageSize}
-					onChange={(e) => updateParams({ size: e.target.value })}>
-					<option value={20}>20</option>
-					<option value={50}>50</option>
-					<option value={100}>100</option>
-				</select>
-			</div>
+			<MediaFilterBar
+				searchInput={searchInput}
+				stateFilter={stateFilter}
+				sortBy={sortBy}
+				sortDesc={sortDesc}
+				pageSize={pageSize}
+				genre={genre}
+				actor={actor}
+				director={director}
+				options={filterOptions}
+				onSearchChange={handleSearchChange}
+				onSearch={handleSearch}
+				onChange={handleFilterChange}
+			/>
 
-			{error && <div className='error-message'>{error}</div>}
+			{displayError && <div className='error-message' role='alert'>{displayError}</div>}
 
 			{loading && movies.length === 0 && (
 				<div className='loading-state'>{t('common.loading')}</div>

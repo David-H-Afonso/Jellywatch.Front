@@ -13,6 +13,7 @@ export interface SeriesListDto {
 	releaseDate: string | null
 	userRating: number | null
 	tmdbRating: number | null
+	genres: string | null
 }
 
 export interface SeriesDetailDto {
@@ -52,6 +53,7 @@ export interface MovieListDto {
 	releaseDate: string | null
 	userRating: number | null
 	tmdbRating: number | null
+	genres: string | null
 }
 
 export interface MovieDetailDto {

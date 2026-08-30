@@ -17,6 +17,7 @@ import type {
 	CastMemberDto,
 	PersonCreditsDto,
 	MediaAvailabilityResponse,
+	MediaFilterOptionsDto,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -32,6 +33,12 @@ export const getSeries = async (
 
 export const getSeriesById = async (id: number, profileId?: number): Promise<SeriesDetailDto> => {
 	return await customFetch<SeriesDetailDto>(apiRoutes.series.byId(id), {
+		params: profileId !== undefined ? { profileId } : undefined,
+	})
+}
+
+export const getSeriesFilterOptions = async (profileId?: number): Promise<MediaFilterOptionsDto> => {
+	return await customFetch<MediaFilterOptionsDto>(`${apiRoutes.series.base}/filters`, {
 		params: profileId !== undefined ? { profileId } : undefined,
 	})
 }
@@ -55,6 +62,12 @@ export const getMovies = async (
 
 export const getMovieById = async (id: number, profileId?: number): Promise<MovieDetailDto> => {
 	return await customFetch<MovieDetailDto>(apiRoutes.movies.byId(id), {
+		params: profileId !== undefined ? { profileId } : undefined,
+	})
+}
+
+export const getMovieFilterOptions = async (profileId?: number): Promise<MediaFilterOptionsDto> => {
+	return await customFetch<MediaFilterOptionsDto>(`${apiRoutes.movies.base}/filters`, {
 		params: profileId !== undefined ? { profileId } : undefined,
 	})
 }

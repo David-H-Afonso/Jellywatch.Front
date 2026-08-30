@@ -149,6 +149,7 @@ export const createSeriesListDto = (overrides?: Partial<SeriesListDto>): SeriesL
 	releaseDate: '2023-01-15',
 	userRating: null,
 	tmdbRating: 8.5,
+	genres: 'Drama, Sci-Fi',
 	...overrides,
 })
 
@@ -233,6 +234,7 @@ export const createMovieListDto = (overrides?: Partial<MovieListDto>): MovieList
 	releaseDate: '2024-06-15',
 	userRating: null,
 	tmdbRating: 7.5,
+	genres: 'Action, Thriller',
 	...overrides,
 })
 

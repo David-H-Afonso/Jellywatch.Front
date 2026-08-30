@@ -17,6 +17,15 @@ export interface QueryParameters {
 export interface MediaQueryParameters extends QueryParameters {
 	state?: string
 	profileId?: number
+	genre?: string
+	actor?: string
+	director?: string
+}
+
+export interface MediaFilterOptionsDto {
+	genres: string[]
+	actors: string[]
+	directors: string[]
 }
 
 export interface ActivityQueryParameters extends QueryParameters {
