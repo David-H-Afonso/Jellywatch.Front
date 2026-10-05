@@ -53,6 +53,7 @@ describe('Header', () => {
 		expect(screen.getByText(/dashboard/i)).toBeInTheDocument()
 		expect(screen.getByText(/series/i)).toBeInTheDocument()
 		expect(screen.getByText(/movies/i)).toBeInTheDocument()
+		expect(screen.getByRole('link', { name: /settings/i })).toHaveAttribute('href', '/settings')
 	})
 
 	it('shows username', () => {

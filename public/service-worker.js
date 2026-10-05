@@ -19,7 +19,9 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
 	event.notification.close()
 	const requested = event.notification.data?.url || '/'
-	const target = new URL(requested, self.location.origin)
+	// Jellywatch uses createHashRouter; opening /series/123 without the hash
+	// loads the SPA but leaves it on its dashboard instead of the series detail.
+	const target = new URL(`/#${requested}`, self.location.origin)
 	if (target.origin !== self.location.origin) target.href = new URL('/', self.location.origin).href
 	event.waitUntil((async () => {
 		const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })

@@ -44,6 +44,7 @@ import {
 } from '@/store/features/settings'
 import { SyncButton, Pagination } from '@/components/elements'
 import BackupScheduleAdmin from '@/components/DataManager/BackupScheduleAdmin'
+import NotificationSettings from '@/components/Settings/NotificationSettings'
 import {
 	triggerFullSync,
 	getAllProfiles,
@@ -338,6 +339,7 @@ const Admin: React.FC = () => {
 
 			{/* Settings */}
 			<CollapsibleSection title={t('settings.title')}>
+				<NotificationSettings />
 				{settingsLoading ? (
 					<div className='loading-state'>{t('common.loading')}</div>
 				) : (

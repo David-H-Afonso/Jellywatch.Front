@@ -90,6 +90,7 @@ function renderAdmin() {
 			HttpResponse.json(createPagedResult(mockWebhookLogs))
 		),
 		http.get(`${API}/api/settings/providers`, () => HttpResponse.json(mockProviders)),
+		http.get(`${API}/api/notifications/preferences`, () => HttpResponse.json({ seasonUpdates: true })),
 		http.get(`${API}/api/settings/propagation`, () => HttpResponse.json(mockRules))
 	)
 	const store = createTestStore(authState)
@@ -110,6 +111,15 @@ function renderAdmin() {
 }
 
 describe('Admin Flow', () => {
+	it('exposes season notification preferences in the real admin configuration section', async () => {
+		const user = userEvent.setup()
+		renderAdmin()
+		await user.click(await screen.findByRole('button', { name: /settings/i }))
+		const preference = await screen.findByRole('checkbox', { name: /new seasons and premieres/i })
+		await waitFor(() => expect(preference).toBeEnabled())
+		expect(preference).toBeChecked()
+		expect(screen.getByRole('heading', { name: /season premiere notifications/i })).toBeInTheDocument()
+	})
 	it('renders admin heading', async () => {
 		renderAdmin()
 		await waitFor(() => {

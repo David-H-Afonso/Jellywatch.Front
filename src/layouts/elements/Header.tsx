@@ -73,6 +73,9 @@ export const Header: React.FC = () => {
 							{t('nav.admin')}
 						</Link>
 					)}
+					<Link to='/settings' className={`nav-link ${isActive('/settings') ? 'active' : ''}`}>
+						{t('nav.settings')}
+					</Link>
 					<div className='header-user header-user--mobile'>
 						<LanguageSwitcher />
 						{user && <span className='user-name'>{user.username}</span>}

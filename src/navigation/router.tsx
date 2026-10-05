@@ -11,6 +11,7 @@ import Wrapped from '@/components/Wrapped/Wrapped'
 import Calendar from '@/components/Calendar/Calendar'
 import DataManager from '@/components/DataManager/DataManager'
 import Watchlists from '@/components/Watchlists/Watchlists'
+import { NotificationSettingsPage } from '@/components/Settings/NotificationSettings'
 import { Login, ProtectedRoute, PublicRoute } from '@/components/Auth'
 import { RouteError, NotFound } from '@/components/errors'
 
@@ -115,6 +116,11 @@ export const router = createHashRouter([
 				<Admin />
 			</React.Suspense>
 		),
+		errorElement: <RouteError />,
+	},
+	{
+		path: '/settings',
+		element: protectedRoute(<NotificationSettingsPage />),
 		errorElement: <RouteError />,
 	},
 	{
