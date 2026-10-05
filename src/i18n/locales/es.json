@@ -276,6 +276,14 @@
 		"tmdbId": "ID de TMDB",
 		"refreshImages": "Actualizar imágenes",
 		"refreshAllMetadata": "Actualizar todos los metadatos",
+		"metadataStatus": {
+			"Pending": "Actualización en cola",
+			"Running": "Actualizando metadatos en segundo plano",
+			"Completed": "Actualización completada",
+			"CompletedWithErrors": "Actualización terminada con errores"
+		},
+		"metadataResult": "{{succeeded}} correctos, {{failed}} fallidos",
+		"metadataStatusError": "No se pudo consultar el progreso. El trabajo puede seguir ejecutándose; se reintentará automáticamente.",
 		"refreshAllImages": "Actualizar todas las imágenes",
 		"bulkRefreshing": "Actualizando todo...",
 		"pageSize": "Elementos por página",

@@ -54,6 +54,8 @@ import {
 	purgeProfileMedia,
 	deleteProfile,
 	createUserForProfile,
+	getMetadataRefreshStatus,
+	type BulkMetadataJobDto,
 } from '@/services/AdminService/AdminService'
 import { SyncJobType, SyncJobStatus } from '@/models/api/Enums'
 
@@ -121,6 +123,9 @@ const Admin: React.FC = () => {
 		reason: '',
 	})
 	const [refreshingId, setRefreshingId] = useState<number | null>(null)
+	const [metadataJob, setMetadataJob] = useState<BulkMetadataJobDto | null>(null)
+	const [metadataStatusError, setMetadataStatusError] = useState(false)
+	const metadataRunning = metadataJob?.status === 'Pending' || metadataJob?.status === 'Running'
 	const [forceTmdbInput, setForceTmdbInput] = useState<Record<number, string>>({})
 	const [mediaPage, setMediaPage] = useState(1)
 	const [importQueuePage, setImportQueuePage] = useState(1)
@@ -228,9 +233,34 @@ const Admin: React.FC = () => {
 	}
 
 	const handleRefreshAllMetadata = async () => {
-		await dispatch(doRefreshAllMetadata())
-		dispatch(fetchMediaLibrary({ page: mediaPage, pageSize }))
+		const result = await dispatch(doRefreshAllMetadata())
+		if (doRefreshAllMetadata.fulfilled.match(result)) setMetadataJob(result.payload)
 	}
+
+	useEffect(() => {
+		if (!isAdmin) return
+		let active = true
+		let checking = false
+		const refresh = async () => {
+			if (checking) return
+			checking = true
+			try {
+				const job = await getMetadataRefreshStatus()
+				if (!active) return
+				setMetadataJob(job)
+				setMetadataStatusError(false)
+			} catch { if (active) setMetadataStatusError(true) }
+			finally { checking = false }
+		}
+		void refresh()
+		const interval = setInterval(() => { void refresh() }, 5000)
+		return () => { active = false; clearInterval(interval) }
+	}, [isAdmin])
+
+	useEffect(() => {
+		if (metadataJob?.status === 'Completed' || metadataJob?.status === 'CompletedWithErrors')
+			dispatch(fetchMediaLibrary({ page: mediaPage, pageSize }))
+	}, [dispatch, metadataJob?.status, mediaPage, pageSize])
 
 	const handleRefreshAllImages = async () => {
 		await dispatch(doRefreshAllImages())
@@ -632,13 +662,19 @@ const Admin: React.FC = () => {
 					<button
 						className='btn-secondary'
 						onClick={handleRefreshAllMetadata}
-						disabled={bulkRefreshing}>
-						{bulkRefreshing ? t('admin.bulkRefreshing') : t('admin.refreshAllMetadata')}
+						disabled={bulkRefreshing || metadataRunning}>
+						{bulkRefreshing || metadataRunning ? t('admin.bulkRefreshing') : t('admin.refreshAllMetadata')}
 					</button>
+					{metadataJob && <div role='status' aria-live='polite'>
+						{t(`admin.metadataStatus.${metadataJob.status}`)} — {metadataJob.processed}/{metadataJob.total}
+						{' · '}{t('admin.metadataResult', { succeeded: metadataJob.succeeded, failed: metadataJob.failed })}
+						{metadataJob.lastError && <p>{metadataJob.lastError}</p>}
+					</div>}
+					{metadataStatusError && <p role='alert'>{t('admin.metadataStatusError')}</p>}
 					<button
 						className='btn-secondary'
 						onClick={handleRefreshAllImages}
-						disabled={bulkRefreshing}>
+						disabled={bulkRefreshing || metadataRunning}>
 						{bulkRefreshing ? t('admin.bulkRefreshing') : t('admin.refreshAllImages')}
 					</button>
 				</div>

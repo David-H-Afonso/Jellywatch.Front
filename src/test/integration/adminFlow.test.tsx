@@ -80,6 +80,7 @@ const authState = {
 function renderAdmin() {
 	server.use(
 		http.get(`${API}/api/admin/users`, () => HttpResponse.json(mockUsers)),
+		http.get(`${API}/api/admin/media/refresh-all-metadata/status`, () => HttpResponse.json(null)),
 		http.get(`${API}/api/admin/media`, () => HttpResponse.json(createPagedResult(mockMedia))),
 		http.get(`${API}/api/admin/blacklist`, () => HttpResponse.json(mockBlacklist)),
 		http.get(`${API}/api/admin/import-queue`, () =>
@@ -111,6 +112,17 @@ function renderAdmin() {
 }
 
 describe('Admin Flow', () => {
+	it('queues a metadata refresh and shows durable progress instead of waiting for completion', async () => {
+		const user = userEvent.setup()
+		server.use(http.post(`${API}/api/admin/media/refresh-all-metadata`, () => HttpResponse.json({
+			id: 12, status: 'Pending', total: 50, processed: 0, succeeded: 0, failed: 0, lastError: null,
+		}, { status: 202 })))
+		renderAdmin()
+		await user.click(await screen.findByRole('button', { name: /sync controls/i }))
+		await user.click(screen.getByRole('button', { name: 'Refresh all metadata' }))
+		await screen.findByText(/Refresh queued — 0\/50/)
+		expect(screen.getByRole('button', { name: 'Refreshing all...' })).toBeDisabled()
+	})
 	it('exposes season notification preferences in the real admin configuration section', async () => {
 		const user = userEvent.setup()
 		renderAdmin()

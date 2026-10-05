@@ -100,6 +100,7 @@ export const apiRoutes = {
 		mediaLogoOptions: (id: number) => `/api/admin/media/${id}/logo-options`,
 		mediaSelectLogo: (id: number) => `/api/admin/media/${id}/select-logo`,
 		refreshAllMetadata: '/api/admin/media/refresh-all-metadata',
+		metadataRefreshStatus: '/api/admin/media/refresh-all-metadata/status',
 		refreshAllImages: '/api/admin/media/refresh-all-images',
 		blacklist: '/api/admin/blacklist',
 		blacklistById: (id: number) => `/api/admin/blacklist/${id}`,

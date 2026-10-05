@@ -157,4 +157,5 @@ export interface UpcomingEpisodeDto {
 	airTime: string | null
 	airTimeUtc: string | null
 	batchCount: number
+	isFullSeasonRelease?: boolean
 }

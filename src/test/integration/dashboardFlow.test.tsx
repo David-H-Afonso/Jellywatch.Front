@@ -112,6 +112,19 @@ describe('Dashboard Flow', () => {
 		expect(screen.queryByText(/Welcome/i)).not.toBeInTheDocument()
 	})
 
+	it('shows a full-season drop as Season 4 with its total +8 episode badge', async () => {
+		server.use(http.get(`${API}/api/stats/:id/upcoming`, () => HttpResponse.json([{
+			mediaItemId: 42, seriesId: 7, seriesTitle: 'The Diplomat', seasonNumber: 4,
+			episodeNumber: 1, episodeName: 'Episode 1', batchCount: 8, isFullSeasonRelease: true,
+			airDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10), airTime: null, airTimeUtc: null,
+		}])))
+		renderDashboard()
+		await screen.findByText('The Diplomat')
+		expect(screen.getByText('Season 4')).toBeInTheDocument()
+		expect(screen.getByText('+8')).toBeInTheDocument()
+		expect(screen.queryByText(/S4 · E1/)).not.toBeInTheDocument()
+	})
+
 	it('loads and displays profile stats', async () => {
 		renderDashboard()
 		await waitFor(() => {

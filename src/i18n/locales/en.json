@@ -276,6 +276,14 @@
 		"tmdbId": "TMDB ID",
 		"refreshImages": "Refresh images",
 		"refreshAllMetadata": "Refresh all metadata",
+		"metadataStatus": {
+			"Pending": "Refresh queued",
+			"Running": "Refreshing metadata in the background",
+			"Completed": "Refresh completed",
+			"CompletedWithErrors": "Refresh finished with errors"
+		},
+		"metadataResult": "{{succeeded}} successful, {{failed}} failed",
+		"metadataStatusError": "Could not check progress. The job may still be running; checking will retry automatically.",
 		"refreshAllImages": "Refresh all images",
 		"bulkRefreshing": "Refreshing all...",
 		"pageSize": "Items per page",

@@ -194,8 +194,21 @@ export const purgeProfileMedia = async (
 	return await customFetch(apiRoutes.admin.purgeProfileMedia(profileId), { method: 'DELETE' })
 }
 
-export const refreshAllMetadata = async (): Promise<{ count: number }> => {
-	return await customFetch<{ count: number }>(apiRoutes.admin.refreshAllMetadata, {
+export interface BulkMetadataJobDto {
+	id: number
+	status: 'Pending' | 'Running' | 'Completed' | 'CompletedWithErrors'
+	total: number
+	processed: number
+	succeeded: number
+	failed: number
+	lastError: string | null
+}
+
+export const getMetadataRefreshStatus = (): Promise<BulkMetadataJobDto | null> =>
+	customFetch<BulkMetadataJobDto | null>(apiRoutes.admin.metadataRefreshStatus)
+
+export const refreshAllMetadata = async (): Promise<BulkMetadataJobDto> => {
+	return await customFetch<BulkMetadataJobDto>(apiRoutes.admin.refreshAllMetadata, {
 		method: 'POST',
 	})
 }

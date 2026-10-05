@@ -310,14 +310,15 @@ const Dashboard: React.FC = () => {
 										/>
 										<div className='upcoming-card__badge'>{badge}</div>
 										{ep.batchCount > 1 && (
-											<span className='upcoming-card__batch'>+{ep.batchCount - 1}</span>
+											<span className='upcoming-card__batch'>+{ep.isFullSeasonRelease ? ep.batchCount : ep.batchCount - 1}</span>
 										)}
 									</div>
 									<div className='upcoming-card__info'>
 										<span className='upcoming-card__title'>{ep.seriesTitle}</span>
 										<span className='upcoming-card__episode'>
-											S{ep.seasonNumber} · E{ep.episodeNumber}
-											{ep.episodeName && ` — ${ep.episodeName}`}
+											{ep.isFullSeasonRelease
+												? t('series.season', { number: ep.seasonNumber })
+												: <>S{ep.seasonNumber} · E{ep.episodeNumber}{ep.episodeName && ` — ${ep.episodeName}`}</>}
 										</span>
 									</div>
 								</div>
