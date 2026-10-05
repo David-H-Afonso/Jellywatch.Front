@@ -15,7 +15,16 @@ import {
 } from '@/store/features/settings'
 import { getAllProfiles, rePropagate, deleteProfile } from '@/services/AdminService/AdminService'
 import type { ProfileDto } from '@/models/api'
+import {
+	disablePush,
+	enablePush,
+	getNotificationPreferences,
+	getPushStatus,
+	setNotificationPreferences,
+} from '@/services/NotificationService/NotificationService'
 import './Settings.scss'
+
+type PushStatus = 'unsupported' | 'disabled' | 'denied' | 'enabled' | 'ready' | 'loading' | 'error'
 
 const Settings: React.FC = () => {
 	const { t } = useTranslation()
@@ -29,6 +38,10 @@ const Settings: React.FC = () => {
 	const currentUser = useAppSelector(selectCurrentUser)
 	const [allProfiles, setAllProfiles] = useState<ProfileDto[]>([])
 	const [deletingProfileId, setDeletingProfileId] = useState<number | null>(null)
+	const [pushStatus, setPushStatus] = useState<PushStatus>('loading')
+	const [pushBusy, setPushBusy] = useState(false)
+	const [seasonUpdatesEnabled, setSeasonUpdatesEnabled] = useState(true)
+	const [seasonPreferenceBusy, setSeasonPreferenceBusy] = useState(false)
 
 	const [newSourceId, setNewSourceId] = useState<number | ''>('')
 	const [newTargetId, setNewTargetId] = useState<number | ''>('')
@@ -45,6 +58,44 @@ const Settings: React.FC = () => {
 				.catch(() => {})
 		}
 	}, [isAdmin])
+
+	useEffect(() => {
+		let active = true
+		void getPushStatus()
+			.then((status) => { if (active) setPushStatus(status) })
+			.catch(() => { if (active) setPushStatus('error') })
+		void getNotificationPreferences()
+			.then((preferences) => { if (active) setSeasonUpdatesEnabled(preferences.seasonUpdates) })
+			.catch(() => { if (active) setSeasonUpdatesEnabled(true) })
+		return () => { active = false }
+	}, [])
+
+	const handleSeasonUpdatesChange = async (enabled: boolean) => {
+		setSeasonPreferenceBusy(true)
+		try {
+			const preferences = await setNotificationPreferences(enabled)
+			setSeasonUpdatesEnabled(preferences.seasonUpdates)
+		} finally {
+			setSeasonPreferenceBusy(false)
+		}
+	}
+
+	const handleTogglePush = async () => {
+		setPushBusy(true)
+		try {
+			if (pushStatus === 'enabled') {
+				await disablePush()
+				setPushStatus('ready')
+			} else {
+				await enablePush()
+				setPushStatus('enabled')
+			}
+		} catch (reason) {
+			setPushStatus(reason instanceof Error && reason.message === 'push_denied' ? 'denied' : 'error')
+		} finally {
+			setPushBusy(false)
+		}
+	}
 
 	const profileList = isAdmin && allProfiles.length > 0 ? allProfiles : profiles
 
@@ -99,6 +150,28 @@ const Settings: React.FC = () => {
 			<h1>{t('settings.title')}</h1>
 
 			{error && <div className='settings-page__error'>{error}</div>}
+
+			<section className='settings-section'>
+				<h2>{t('settings.pushTitle')}</h2>
+				<p className='settings-section__desc'>{t('settings.pushDescription')}</p>
+				<div className='push-notifications__row'>
+					<span role='status' aria-live='polite'>{t(`settings.pushStatus.${pushStatus}`)}</span>
+					{(pushStatus === 'ready' || pushStatus === 'enabled') && (
+						<button className='btn-primary' type='button' onClick={handleTogglePush} disabled={pushBusy}>
+							{pushBusy ? t('common.loading') : pushStatus === 'enabled' ? t('settings.pushDisable') : t('settings.pushEnable')}
+						</button>
+					)}
+				</div>
+				<label className='push-notifications__preference'>
+					<input
+						type='checkbox'
+						checked={seasonUpdatesEnabled}
+						disabled={seasonPreferenceBusy}
+						onChange={(event) => { void handleSeasonUpdatesChange(event.target.checked) }}
+					/>
+					<span>{t('settings.seasonUpdatesPreference')}</span>
+				</label>
+			</section>
 
 			<section className='settings-section'>
 				<h2>{t('settings.providers')}</h2>

@@ -196,6 +196,20 @@
 	},
 	"settings": {
 		"title": "Configuración",
+		"pushTitle": "Notificaciones de estrenos",
+		"pushDescription": "Recibe avisos cuando se detecte una temporada nueva de una serie que sigues y el día que se estrene su primer episodio.",
+		"pushEnable": "Activar notificaciones",
+		"pushDisable": "Desactivar notificaciones",
+		"seasonUpdatesPreference": "Recibir avisos de nuevas temporadas y estrenos de series que sigo",
+		"pushStatus": {
+			"unsupported": "Este navegador o contexto no admite notificaciones push. Usa HTTPS e instala la aplicación si es necesario.",
+			"disabled": "Las notificaciones push no están configuradas en el servidor.",
+			"denied": "El permiso de notificaciones está bloqueado en el navegador.",
+			"enabled": "Notificaciones activadas en este dispositivo.",
+			"ready": "Puedes activar las notificaciones en este dispositivo.",
+			"loading": "Comprobando notificaciones…",
+			"error": "No se pudo comprobar o cambiar la configuración de notificaciones."
+		},
 		"providers": "Proveedores de metadatos",
 		"providersDescription": "Las claves API se configuran mediante variables de entorno (archivo .env o configuración de CasaOS). El estado a continuación muestra qué proveedores están activos.",
 		"configured": "Configurado",

@@ -196,6 +196,20 @@
 	},
 	"settings": {
 		"title": "Settings",
+		"pushTitle": "Season premiere notifications",
+		"pushDescription": "Get notified when a new season is detected for a series you follow and on the day its first episode premieres.",
+		"pushEnable": "Enable notifications",
+		"pushDisable": "Disable notifications",
+		"seasonUpdatesPreference": "Notify me about new seasons and premieres for series I follow",
+		"pushStatus": {
+			"unsupported": "This browser or context does not support push notifications. Use HTTPS and install the app if needed.",
+			"disabled": "Push notifications are not configured on the server.",
+			"denied": "Notification permission is blocked in the browser.",
+			"enabled": "Notifications are enabled on this device.",
+			"ready": "You can enable notifications on this device.",
+			"loading": "Checking notifications…",
+			"error": "Notification settings could not be checked or changed."
+		},
 		"providers": "Metadata Providers",
 		"providersDescription": "API keys are configured via environment variables (.env file or CasaOS config). The status below shows which providers are active.",
 		"configured": "Configured",

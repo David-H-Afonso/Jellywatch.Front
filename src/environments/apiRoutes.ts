@@ -65,6 +65,12 @@ export const apiRoutes = {
 		propagation: '/api/settings/propagation',
 		propagationById: (id: number) => `/api/settings/propagation/${id}`,
 	},
+	notifications: {
+		config: '/api/notifications/config',
+		preferences: '/api/notifications/preferences',
+		subscription: '/api/notifications/subscription',
+		subscriptionStatus: '/api/notifications/subscription/status',
+	},
 	sync: {
 		trigger: '/api/sync/trigger',
 		triggerMine: '/api/sync/trigger-mine',
