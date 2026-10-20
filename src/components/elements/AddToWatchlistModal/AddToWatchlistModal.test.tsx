@@ -57,7 +57,8 @@ describe('AddToWatchlistModal', () => {
 		await waitFor(() =>
 			expect(services.addWatchlistItem).toHaveBeenCalledWith(
 				1,
-				expect.objectContaining({ mediaItemId: 100, status: WatchlistStatus.Watching })
+				expect.objectContaining({ mediaItemId: 100, status: WatchlistStatus.Watching }),
+				10
 			)
 		)
 	})

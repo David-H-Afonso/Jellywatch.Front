@@ -25,7 +25,14 @@ import { formatUserRating } from '@/utils'
 import { environment } from '@/environments'
 import { getExternalSearchLink } from '@/utils/externalLinks'
 import { getMovies, getSeries, rateMovie, rateSeries, rateEpisode } from '@/services/MediaService/MediaService'
-import type { ActivityDto, MovieListDto, SeriesListDto } from '@/models/api'
+import type {
+	ActivityDto,
+	ActivityTitleDto,
+	ActivityTitleQueryParameters,
+	MovieListDto,
+	SeriesListDto,
+} from '@/models/api'
+import { getProfileActivityTitles } from '@/services/ProfileService/ProfileService'
 import './Activity.scss'
 
 const DATE_PRESETS = ['all', '7d', '30d', '90d', 'custom'] as const
@@ -413,12 +420,27 @@ const Activity: React.FC = () => {
 	const loading = useAppSelector(selectProfileLoading)
 	const error = useAppSelector(selectProfileError)
 	const [searchParams, setSearchParams] = useSearchParams()
+	const [titleActivity, setTitleActivity] = useState<ActivityTitleDto[]>([])
+	const [titlePagination, setTitlePagination] = useState({
+		page: 1,
+		pageSize: 30,
+		totalCount: 0,
+		totalPages: 0,
+	})
+	const [titleLoading, setTitleLoading] = useState(false)
+	const [titleError, setTitleError] = useState<string | null>(null)
 
 	// Read filters from URL params
 	const page = Number(searchParams.get('page')) || 1
+	const viewMode = searchParams.get('view') === 'titles' ? 'titles' : 'events'
 	const mediaType = searchParams.get('mediaType') || ''
 	const search = searchParams.get('search') || ''
 	const sortBy = searchParams.get('sortBy') || 'newest'
+	const ratingStatusParam = searchParams.get('ratingStatus')
+	const ratingStatus: ActivityTitleQueryParameters['ratingStatus'] | '' =
+		ratingStatusParam === 'rated' || ratingStatusParam === 'pending' || ratingStatusParam === 'unrated'
+			? ratingStatusParam
+			: ''
 	const datePreset = searchParams.get('datePreset') || 'all'
 	const dateFrom = searchParams.get('dateFrom') || ''
 	const dateTo = searchParams.get('dateTo') || ''
@@ -427,7 +449,9 @@ const Activity: React.FC = () => {
 	// Local input state for search debouncing
 	const [searchInput, setSearchInput] = useState(search)
 	const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
-	const [shareMode, setShareMode] = useState(searchParams.get('share') === '1')
+	const [shareMode, setShareMode] = useState(
+		searchParams.get('share') === '1' && viewMode === 'events'
+	)
 	const [selectedIds, setSelectedIds] = useState<number[]>([])
 	const [extraShareItems, setExtraShareItems] = useState<ShareSearchItem[]>([])
 	const [shareImage, setShareImage] = useState<string | null>(null)
@@ -440,7 +464,7 @@ const Activity: React.FC = () => {
 	const [savingRatingId, setSavingRatingId] = useState<number | null>(null)
 	const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
-	const collapseBySeries = groupBySeries && !shareMode
+	const collapseBySeries = groupBySeries && !shareMode && viewMode === 'events'
 	const rows = useMemo(
 		() => buildActivityRows(activity, collapseBySeries),
 		[activity, collapseBySeries]
@@ -454,6 +478,27 @@ const Activity: React.FC = () => {
 				else next.set(key, value)
 				// Reset page when changing filters
 				if (key !== 'page') next.delete('page')
+				return next
+			})
+		},
+		[setSearchParams]
+	)
+
+	const changeView = useCallback(
+		(view: 'events' | 'titles') => {
+			setShareMode(false)
+			setSelectedIds([])
+			setExtraShareItems([])
+			setShareImage(null)
+			setSearchParams((prev) => {
+				const next = new URLSearchParams(prev)
+				if (view === 'titles') next.set('view', 'titles')
+				else {
+					next.delete('view')
+					next.delete('ratingStatus')
+				}
+				next.delete('page')
+				next.delete('share')
 				return next
 			})
 		},
@@ -628,7 +673,7 @@ const Activity: React.FC = () => {
 	}, [datePreset, dateFrom, dateTo])
 
 	useEffect(() => {
-		if (!activeProfileId) return
+		if (!activeProfileId || viewMode !== 'events') return
 		const range = getDateRange()
 		dispatch(
 			fetchProfileActivity({
@@ -647,6 +692,7 @@ const Activity: React.FC = () => {
 	}, [
 		dispatch,
 		activeProfileId,
+		viewMode,
 		page,
 		search,
 		mediaType,
@@ -655,6 +701,62 @@ const Activity: React.FC = () => {
 		dateFrom,
 		dateTo,
 		getDateRange,
+	])
+
+	useEffect(() => {
+		if (!activeProfileId || viewMode !== 'titles') return
+
+		let cancelled = false
+		setTitleLoading(true)
+		setTitleError(null)
+		const range = getDateRange()
+		const params: ActivityTitleQueryParameters = {
+			page,
+			pageSize: 30,
+			search: search || undefined,
+			mediaType: mediaType || undefined,
+			sortBy,
+			dateFrom: range.dateFrom || undefined,
+			dateTo: range.dateTo || undefined,
+			ratingStatus: ratingStatus || undefined,
+		}
+
+		getProfileActivityTitles(activeProfileId, params)
+			.then((result) => {
+				if (cancelled) return
+				setTitleActivity(Array.isArray(result?.data) ? result.data : [])
+				setTitlePagination({
+					page: result?.page ?? 1,
+					pageSize: result?.pageSize ?? 30,
+					totalCount: result?.totalCount ?? 0,
+					totalPages: result?.totalPages ?? 0,
+				})
+			})
+			.catch((err) => {
+				if (cancelled) return
+				setTitleActivity([])
+				setTitleError(err instanceof Error ? err.message : t('common.error'))
+			})
+			.finally(() => {
+				if (!cancelled) setTitleLoading(false)
+			})
+
+		return () => {
+			cancelled = true
+		}
+	}, [
+		activeProfileId,
+		viewMode,
+		page,
+		search,
+		mediaType,
+		sortBy,
+		ratingStatus,
+		datePreset,
+		dateFrom,
+		dateTo,
+		getDateRange,
+		t,
 	])
 
 	useEffect(() => {
@@ -868,16 +970,101 @@ const Activity: React.FC = () => {
 		)
 	}
 
+	const renderTitleItem = (item: ActivityTitleDto) => {
+		const link = item.mediaType === MediaType.Movie && item.movieId
+			? `/movies/${item.movieId}`
+			: item.seriesId
+				? `/series/${item.seriesId}`
+				: null
+		const episodeCode = item.lastEpisodeNumber != null
+			? `S${item.lastSeasonNumber ?? 0}E${item.lastEpisodeNumber}`
+			: null
+		const lastEpisode = [episodeCode, item.lastEpisodeName].filter(Boolean).join(' — ')
+
+		return (
+			<div key={item.mediaItemId} className='activity-page__item activity-page__title-item'>
+				{link ? (
+					<Link to={link} className='activity-page__poster-link'>
+						<MediaPoster
+							mediaItemId={item.mediaItemId}
+							alt={item.mediaTitle}
+							className='activity-page__poster'
+						/>
+					</Link>
+				) : (
+					<MediaPoster
+						mediaItemId={item.mediaItemId}
+						alt={item.mediaTitle}
+						className='activity-page__poster'
+					/>
+				)}
+				<div className='activity-page__info'>
+					{link ? (
+						<Link to={link} className='activity-page__title'>
+							{item.mediaTitle}
+						</Link>
+					) : (
+						<span className='activity-page__title'>{item.mediaTitle}</span>
+					)}
+					{lastEpisode && <span className='activity-page__episode'>{lastEpisode}</span>}
+					<div className='activity-page__meta'>
+						<span className='activity-page__time'>
+							{t('activity.lastWatched')}: {new Date(item.lastWatchedAt).toLocaleString(i18n.language)}
+						</span>
+						{item.userRating != null && (
+							<span className='activity-page__rating' title={t('activity.userRating')}>
+								★ {formatUserRating(item.userRating)}
+							</span>
+						)}
+						{item.mediaType === MediaType.Series
+							&& item.ratingStatus === 'pending'
+							&& item.totalSeasonCount > 0 && (
+								<span className='activity-page__rating-progress'>
+									{t('activity.ratingProgress', {
+										rated: item.ratedSeasonCount,
+										total: item.totalSeasonCount,
+									})}
+								</span>
+							)}
+					</div>
+				</div>
+				<span
+					className={`activity-page__rating-status activity-page__rating-status--${item.ratingStatus}`}>
+					{t(`activity.ratingStatus.${item.ratingStatus}`)}
+				</span>
+			</div>
+		)
+	}
+
 	return (
 		<div className='activity-page'>
 			<div className='activity-page__header'>
 				<h1>{t('activity.title')}</h1>
 				<div className='activity-page__header-actions'>
-					<button className='activity-page__share-toggle' onClick={toggleShareMode}>
-						{shareMode ? t('activity.share.exit') : t('activity.share.open')}
-					</button>
+					{viewMode === 'events' && (
+						<button className='activity-page__share-toggle' onClick={toggleShareMode}>
+							{shareMode ? t('activity.share.exit') : t('activity.share.open')}
+						</button>
+					)}
 					<ProfileSelector />
 				</div>
+			</div>
+
+			<div className='activity-page__view-switch' role='group' aria-label={t('activity.viewLabel')}>
+				<button
+					type='button'
+					aria-pressed={viewMode === 'events'}
+					className={viewMode === 'events' ? 'activity-page__view-button activity-page__view-button--active' : 'activity-page__view-button'}
+					onClick={() => changeView('events')}>
+					{t('activity.eventsView')}
+				</button>
+				<button
+					type='button'
+					aria-pressed={viewMode === 'titles'}
+					className={viewMode === 'titles' ? 'activity-page__view-button activity-page__view-button--active' : 'activity-page__view-button'}
+					onClick={() => changeView('titles')}>
+					{t('activity.titlesView')}
+				</button>
 			</div>
 
 			{/* Filters bar */}
@@ -894,7 +1081,9 @@ const Activity: React.FC = () => {
 					value={mediaType}
 					onChange={(e) => updateParam('mediaType', e.target.value)}>
 					<option value=''>{t('activity.allTypes')}</option>
-					<option value='series'>{t('activity.episodesOnly')}</option>
+					<option value='series'>
+						{viewMode === 'titles' ? t('activity.seriesOnly') : t('activity.episodesOnly')}
+					</option>
 					<option value='movie'>{t('activity.moviesOnly')}</option>
 				</select>
 				<select
@@ -904,14 +1093,27 @@ const Activity: React.FC = () => {
 					<option value='newest'>{t('activity.newestFirst')}</option>
 					<option value='oldest'>{t('activity.oldestFirst')}</option>
 				</select>
-				<label className='activity-page__group-filter'>
-					<input
-						type='checkbox'
-						checked={groupBySeries}
-						onChange={() => updateParam('groupSeries', groupBySeries ? '' : '1')}
-					/>
-					{t('activity.collapseBySeries')}
-				</label>
+				{viewMode === 'events' ? (
+					<label className='activity-page__group-filter'>
+						<input
+							type='checkbox'
+							checked={groupBySeries}
+							onChange={() => updateParam('groupSeries', groupBySeries ? '' : '1')}
+						/>
+						{t('activity.collapseBySeries')}
+					</label>
+				) : (
+					<select
+						className='activity-page__filter-select'
+						aria-label={t('activity.ratingFilter')}
+						value={ratingStatus}
+						onChange={(e) => updateParam('ratingStatus', e.target.value)}>
+						<option value=''>{t('activity.ratingStatus.all')}</option>
+						<option value='rated'>{t('activity.ratingStatus.rated')}</option>
+						<option value='pending'>{t('activity.ratingStatus.pending')}</option>
+						<option value='unrated'>{t('activity.ratingStatus.unrated')}</option>
+					</select>
+				)}
 				<div className='activity-page__date-presets'>
 					{DATE_PRESETS.map((preset) => (
 						<button
@@ -939,7 +1141,7 @@ const Activity: React.FC = () => {
 				)}
 			</div>
 
-			{shareMode && (
+			{viewMode === 'events' && shareMode && (
 				<div className='activity-page__share-panel'>
 					<div className='activity-page__share-tools'>
 						<div>
@@ -1040,25 +1242,40 @@ const Activity: React.FC = () => {
 				</div>
 			)}
 
-			{loading && <div className='loading-state'>{t('common.loading')}</div>}
-
-			{!loading && error && <p className='error-state'>{error}</p>}
-
-			{!loading && !error && activity.length === 0 && (
-				<p className='empty-state'>{t('dashboard.noActivity')}</p>
-			)}
-
-			<div className='activity-page__list'>
-				{rows.map((row) => (row.kind === 'single' ? renderItem(row.item) : renderGroup(row)))}
-			</div>
-
-			{pagination && (
-				<Pagination
-					page={pagination.page}
-					totalPages={pagination.totalPages}
-					totalCount={pagination.totalCount}
-					onPageChange={setPage}
-				/>
+			{viewMode === 'events' ? (
+				<>
+					{loading && <div className='loading-state'>{t('common.loading')}</div>}
+					{!loading && error && <p className='error-state'>{error}</p>}
+					{!loading && !error && activity.length === 0 && (
+						<p className='empty-state'>{t('dashboard.noActivity')}</p>
+					)}
+					<div className='activity-page__list'>
+						{rows.map((row) => (row.kind === 'single' ? renderItem(row.item) : renderGroup(row)))}
+					</div>
+					<Pagination
+						page={pagination.page}
+						totalPages={pagination.totalPages}
+						totalCount={pagination.totalCount}
+						onPageChange={setPage}
+					/>
+				</>
+			) : (
+				<>
+					{titleLoading && <div className='loading-state'>{t('common.loading')}</div>}
+					{!titleLoading && titleError && <p className='error-state'>{titleError}</p>}
+					{!titleLoading && !titleError && titleActivity.length === 0 && (
+						<p className='empty-state'>{t('activity.noTitleActivity')}</p>
+					)}
+					<div className='activity-page__list'>
+						{titleActivity.map(renderTitleItem)}
+					</div>
+					<Pagination
+						page={titlePagination.page}
+						totalPages={titlePagination.totalPages}
+						totalCount={titlePagination.totalCount}
+						onPageChange={setPage}
+					/>
+				</>
 			)}
 		</div>
 	)

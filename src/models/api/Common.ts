@@ -34,3 +34,7 @@ export interface ActivityQueryParameters extends QueryParameters {
 	dateFrom?: string
 	dateTo?: string
 }
+
+export interface ActivityTitleQueryParameters extends ActivityQueryParameters {
+	ratingStatus?: 'rated' | 'pending' | 'unrated'
+}

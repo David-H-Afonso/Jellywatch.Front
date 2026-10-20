@@ -71,8 +71,10 @@ describe('WatchlistService', () => {
 
 	it('adds a media item to a watchlist', async () => {
 		let body: unknown = null
+		let capturedUrl = ''
 		server.use(
 			http.post(`${BASE}/api/watchlists/7/items`, async ({ request }) => {
+				capturedUrl = request.url
 				body = await request.json()
 				return new HttpResponse(null, { status: 204 })
 			})
@@ -82,9 +84,10 @@ describe('WatchlistService', () => {
 			itemType: WatchlistItemType.MediaItem,
 			mediaItemId: 12,
 			status: WatchlistStatus.WantToWatch,
-		})
+		}, 10)
 
 		expect(body).toMatchObject({ mediaItemId: 12, status: WatchlistStatus.WantToWatch })
+		expect(capturedUrl).toContain('profileId=10')
 	})
 
 	it('reorders items with the complete id list', async () => {

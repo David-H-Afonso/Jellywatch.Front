@@ -28,6 +28,7 @@ import type {
 	SeasonDto,
 	EpisodeDto,
 	ActivityDto,
+	ActivityTitleDto,
 	CastMemberDto,
 	PersonCreditsDto,
 	ExternalRatingDto,
@@ -182,6 +183,7 @@ export const createSeasonDto = (overrides?: Partial<SeasonDto>): SeasonDto => ({
 	tmdbRating: 8.0,
 	episodesSeen: 0,
 	userRating: null,
+	userRatingIsAutomatic: false,
 	episodes: [createEpisodeDto(), createEpisodeDto({ episodeNumber: 2, name: 'Episode 2' })],
 	...overrides,
 })
@@ -278,6 +280,27 @@ export const createActivityDto = (overrides?: Partial<ActivityDto>): ActivityDto
 	posterPath: '/poster.jpg',
 	userRating: null,
 	tmdbRating: 8.0,
+	...overrides,
+})
+
+export const createActivityTitleDto = (
+	overrides?: Partial<ActivityTitleDto>
+): ActivityTitleDto => ({
+	mediaItemId: nextId(),
+	seriesId: 1,
+	movieId: null,
+	mediaTitle: 'Test Series',
+	mediaType: MediaType.Series,
+	lastWatchedAt: '2025-01-15T20:00:00Z',
+	lastEpisodeId: 100,
+	lastEpisodeName: 'Pilot',
+	lastEpisodeNumber: 1,
+	lastSeasonNumber: 1,
+	posterPath: '/poster.jpg',
+	userRating: null,
+	ratingStatus: 'unrated',
+	ratedSeasonCount: 0,
+	totalSeasonCount: 3,
 	...overrides,
 })
 

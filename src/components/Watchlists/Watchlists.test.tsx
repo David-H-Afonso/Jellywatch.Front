@@ -173,9 +173,10 @@ describe('Watchlists page', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Add' }))
 
 		await waitFor(() =>
-			expect(services.addWatchlistItem).toHaveBeenCalledWith(
+				expect(services.addWatchlistItem).toHaveBeenCalledWith(
 				1,
-				expect.objectContaining({ mediaItemId: 321 })
+				expect.objectContaining({ mediaItemId: 321 }),
+				10
 			)
 		)
 	})

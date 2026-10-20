@@ -88,6 +88,7 @@ export interface SeasonDto {
 	tmdbRating: number | null
 	episodesSeen: number
 	userRating: number | null
+	userRatingIsAutomatic: boolean
 	episodes: EpisodeDto[]
 }
 
@@ -151,6 +152,26 @@ export interface ActivityDto {
 	posterPath: string | null
 	userRating: number | null
 	tmdbRating: number | null
+}
+
+export type ActivityRatingStatus = 'rated' | 'pending' | 'unrated'
+
+export interface ActivityTitleDto {
+	mediaItemId: number
+	seriesId: number | null
+	movieId: number | null
+	mediaTitle: string
+	mediaType: MediaType
+	lastWatchedAt: string
+	lastEpisodeId: number | null
+	lastEpisodeName: string | null
+	lastEpisodeNumber: number | null
+	lastSeasonNumber: number | null
+	posterPath: string | null
+	userRating: number | null
+	ratingStatus: ActivityRatingStatus
+	ratedSeasonCount: number
+	totalSeasonCount: number
 }
 
 // TMDB Search result DTOs — property names match backend JsonPropertyName attributes (snake_case)

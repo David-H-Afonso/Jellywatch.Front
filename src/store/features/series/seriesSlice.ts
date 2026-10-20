@@ -1,8 +1,22 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { SeriesState } from '@/models/store/SeriesState'
-import type { MediaQueryParameters } from '@/models/api'
+import type { MediaQueryParameters, SeasonDto } from '@/models/api'
 import type { WatchState } from '@/models/api/Enums'
 import { fetchSeries, fetchSeriesById } from './thunk'
+
+const refreshAutomaticSeasonRating = (season: SeasonDto) => {
+	if (season.userRating !== null && !season.userRatingIsAutomatic) return
+
+	const expectedCount = Math.max(season.episodeCount ?? 0, season.episodes.length)
+	const complete = expectedCount > 0
+		&& season.episodes.length >= expectedCount
+		&& season.episodes.every((episode) => episode.userRating != null)
+	season.userRating = complete
+		? season.episodes.reduce((total, episode) => total + (episode.userRating ?? 0), 0)
+			/ season.episodes.length
+		: null
+	season.userRatingIsAutomatic = complete
+}
 
 const initialState: SeriesState = {
 	series: [],
@@ -62,6 +76,7 @@ const seriesSlice = createSlice({
 				const ep = season.episodes.find((e) => e.id === action.payload.episodeId)
 				if (ep) {
 					ep.userRating = action.payload.rating
+					refreshAutomaticSeasonRating(season)
 					break
 				}
 			}
@@ -72,7 +87,17 @@ const seriesSlice = createSlice({
 		) => {
 			if (!state.currentSeries) return
 			const season = state.currentSeries.seasons.find((s) => s.id === action.payload.seasonId)
-			if (season) season.userRating = action.payload.rating
+			if (!season) return
+
+			if (action.payload.rating !== null) {
+				season.userRating = action.payload.rating
+				season.userRatingIsAutomatic = false
+				return
+			}
+
+			season.userRating = null
+			season.userRatingIsAutomatic = false
+			refreshAutomaticSeasonRating(season)
 		},
 		updateSeriesRating: (state, action: PayloadAction<number | null>) => {
 			if (!state.currentSeries) return

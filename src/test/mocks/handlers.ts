@@ -10,6 +10,7 @@ import {
 	createProfile,
 	createProfileDetailDto,
 	createActivityDto,
+	createActivityTitleDto,
 	createPropagationRuleDto,
 	createProviderSettingsDto,
 	createSyncJobDto,
@@ -42,6 +43,9 @@ export const handlers = [
 	http.delete(`${API}/api/profile/:id`, () => new HttpResponse(null, { status: 204 })),
 	http.get(`${API}/api/profile/:profileId/activity`, () =>
 		HttpResponse.json(createPagedResult([createActivityDto()]))
+	),
+	http.get(`${API}/api/profile/:profileId/activity/titles`, () =>
+		HttpResponse.json(createPagedResult([createActivityTitleDto()]))
 	),
 	http.patch(
 		`${API}/api/profile/:profileId/episodes/:episodeId/state`,

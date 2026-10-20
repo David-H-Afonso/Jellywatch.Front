@@ -439,6 +439,13 @@
 			height: 16px;
 		}
 	}
+
+	&__rating-source {
+		display: block;
+		margin-top: 0.25rem;
+		color: var(--color-text-secondary);
+		font-size: 0.72rem;
+	}
 }
 
 .episode-row {

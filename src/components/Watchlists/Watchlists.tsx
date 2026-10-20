@@ -630,7 +630,7 @@ const Watchlists: React.FC = () => {
 				mediaItemId: addType === WatchlistItemType.MediaItem ? mediaId : null,
 				childWatchlistId: addType === WatchlistItemType.Watchlist ? childId : null,
 				status: addStatus,
-			})
+			}, activeProfileId)
 			setAddMediaQuery('')
 			setSelectedMedia(null)
 			setMediaSearchResults([])
@@ -718,7 +718,7 @@ const Watchlists: React.FC = () => {
 				return
 			}
 			setSaving(true)
-			const result = await importWatchlist(json)
+			const result = await importWatchlist(json, activeProfileId)
 			await loadIndex()
 			setSelectedId(result.watchlistId)
 			if (result.errors.length > 0) {

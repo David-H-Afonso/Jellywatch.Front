@@ -128,10 +128,54 @@ describe('seriesSlice – episode/season/series watch state reducers', () => {
 		expect(ep.userRating).toBeNull()
 	})
 
+	it('rating the final expected episode creates the automatic season average', () => {
+		const currentSeries = createSeriesDetailDto({
+			seasons: [
+				createSeasonDto({
+					id: 1,
+					episodeCount: 2,
+					episodes: [
+						createEpisodeDto({ id: 100, userRating: 8 }),
+						createEpisodeDto({ id: 101, episodeNumber: 2, userRating: null }),
+					],
+				}),
+			],
+		})
+		const state = seriesReducer(
+			{ ...initial, currentSeries },
+			updateEpisodeRating({ episodeId: 101, rating: 6 })
+		)
+		expect(state.currentSeries!.seasons[0].userRating).toBe(7)
+		expect(state.currentSeries!.seasons[0].userRatingIsAutomatic).toBe(true)
+	})
+
 	it('updateSeasonRating sets season rating', () => {
 		const prev: SeriesState = { ...initial, currentSeries: detail }
 		const state = seriesReducer(prev, updateSeasonRating({ seasonId: 1, rating: 9 }))
 		expect(state.currentSeries!.seasons[0].userRating).toBe(9)
+		expect(state.currentSeries!.seasons[0].userRatingIsAutomatic).toBe(false)
+	})
+
+	it('clearing a season override restores the full-episode average', () => {
+		const currentSeries = createSeriesDetailDto({
+			seasons: [
+				createSeasonDto({
+					id: 1,
+					episodeCount: 2,
+					userRating: 9,
+					episodes: [
+						createEpisodeDto({ id: 100, userRating: 8 }),
+						createEpisodeDto({ id: 101, episodeNumber: 2, userRating: 6 }),
+					],
+				}),
+			],
+		})
+		const state = seriesReducer(
+			{ ...initial, currentSeries },
+			updateSeasonRating({ seasonId: 1, rating: null })
+		)
+		expect(state.currentSeries!.seasons[0].userRating).toBe(7)
+		expect(state.currentSeries!.seasons[0].userRatingIsAutomatic).toBe(true)
 	})
 
 	it('updateSeriesRating sets series rating', () => {

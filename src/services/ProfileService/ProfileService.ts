@@ -4,8 +4,10 @@ import type {
 	ProfileDto,
 	ProfileDetailDto,
 	ActivityDto,
+	ActivityTitleDto,
 	PagedResult,
 	ActivityQueryParameters,
+	ActivityTitleQueryParameters,
 	ProfileBlockedItemDto,
 } from '@/models/api'
 
@@ -35,6 +37,16 @@ export const removeMediaFromProfile = async (
 ): Promise<void> => {
 	await customFetch<void>(apiRoutes.profile.removeMedia(profileId, mediaItemId), {
 		method: 'DELETE',
+	})
+}
+
+export const getProfileActivityTitles = async (
+	profileId: number,
+	params?: ActivityTitleQueryParameters
+): Promise<PagedResult<ActivityTitleDto>> => {
+	return await customFetch<PagedResult<ActivityTitleDto>>(apiRoutes.profile.activityTitles(profileId), {
+		method: 'GET',
+		params: params as Record<string, string | number | boolean>,
 	})
 }
 

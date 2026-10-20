@@ -9,7 +9,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/test/mocks/server'
 import { createTestStore } from '@/test/utils/createTestStore'
 import Activity from '@/components/Activity/Activity'
-import { createActivityDto, createPagedResult } from '@/test/factories'
+import { createActivityDto, createActivityTitleDto, createPagedResult } from '@/test/factories'
 import { MediaType, WatchEventType } from '@/models/api/Enums'
 
 vi.mock('@/services/AdminService/AdminService', () => ({
@@ -120,14 +120,14 @@ const authState = {
 	},
 }
 
-function renderActivity() {
+function renderActivity(initialEntry = '/activity') {
 	const store = createTestStore(authState)
 	return {
 		store,
 		...render(
 			<Provider store={store}>
 				<I18nextProvider i18n={i18n}>
-					<MemoryRouter initialEntries={['/activity']}>
+					<MemoryRouter initialEntries={[initialEntry]}>
 						<Routes>
 							<Route path='/activity' element={<Activity />} />
 							<Route path='/series/:id' element={<div>Series Detail</div>} />
@@ -279,6 +279,70 @@ describe('Activity Flow', () => {
 
 		await user.click(screen.getByRole('button', { name: i18n.t('activity.episodesCount', { count: 3 }) }))
 		await waitFor(() => expect(screen.getByText(/Pilot/)).toBeInTheDocument())
+	})
+
+	it('shows one row per series or movie in the title history view', async () => {
+		const rows = [
+			createActivityTitleDto({
+				mediaItemId: 20,
+				seriesId: null,
+				movieId: 200,
+				mediaTitle: 'Arrival',
+				mediaType: MediaType.Movie,
+				lastWatchedAt: '2025-02-03T20:00:00Z',
+				ratingStatus: 'unrated',
+				totalSeasonCount: 0,
+			}),
+			createActivityTitleDto({
+				mediaItemId: 10,
+				seriesId: 100,
+				movieId: null,
+				mediaTitle: 'The Wire',
+				mediaType: MediaType.Series,
+				lastWatchedAt: '2025-02-02T20:00:00Z',
+				lastSeasonNumber: 3,
+				lastEpisodeNumber: 7,
+				lastEpisodeName: 'Back Burners',
+				ratingStatus: 'pending',
+				ratedSeasonCount: 2,
+				totalSeasonCount: 3,
+			}),
+		]
+		server.use(
+			http.get(`${API}/api/profile/:profileId/activity/titles`, () =>
+				HttpResponse.json(createPagedResult(rows, { page: 1, totalPages: 1, totalCount: rows.length }))
+			)
+		)
+
+		renderActivity('/activity?view=titles')
+
+		expect(await screen.findByText('Arrival')).toBeVisible()
+		expect(screen.getByText('The Wire')).toBeVisible()
+		expect(screen.getByText('S3E7 — Back Burners')).toBeVisible()
+		expect(screen.getByText('2 of 3 seasons rated')).toBeVisible()
+		expect(screen.getAllByText(/Last watched:/)).toHaveLength(2)
+		expect(document.querySelectorAll('.activity-page__title-item')).toHaveLength(2)
+	})
+
+	it('filters title history by pending rating status', async () => {
+		const user = userEvent.setup()
+		let requestedRatingStatus: string | null = null
+		server.use(
+			http.get(`${API}/api/profile/:profileId/activity/titles`, ({ request }) => {
+				requestedRatingStatus = new URL(request.url).searchParams.get('ratingStatus')
+				return HttpResponse.json(
+					createPagedResult([
+						createActivityTitleDto({ ratingStatus: 'pending', mediaTitle: 'Pending Series' }),
+					])
+				)
+			})
+		)
+
+		renderActivity('/activity?view=titles')
+		await screen.findByText('Pending Series')
+		await user.selectOptions(screen.getByRole('combobox', { name: i18n.t('activity.ratingFilter') }), 'pending')
+
+		await waitFor(() => expect(requestedRatingStatus).toBe('pending'))
 	})
 
 	it('rates an episode inline from activity through the episode rating endpoint', async () => {

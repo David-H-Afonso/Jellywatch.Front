@@ -108,7 +108,7 @@ export const AddToWatchlistModal: React.FC<Props> = ({
 				itemType: WatchlistItemType.MediaItem,
 				mediaItemId,
 				status,
-			})
+			}, activeProfileId)
 			onChanged?.()
 			const detail = await getWatchlist(watchlistId, activeProfileId)
 			setDetails((prev) => ({ ...prev, [watchlistId]: detail }))

@@ -975,6 +975,11 @@ const SeriesDetail: React.FC = () => {
 										label={`${t('series.season', { number: season.seasonNumber })}:`}
 										showValue
 									/>
+									{season.userRatingIsAutomatic && (
+										<span className='season-episodes__rating-source'>
+											{t('series.ratingCalculatedFromEpisodes')}
+										</span>
+									)}
 								</div>
 								{season.episodes.map((ep) => (
 									<div key={ep.id} className='episode-row'>

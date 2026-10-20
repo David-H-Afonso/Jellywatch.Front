@@ -69,8 +69,16 @@ export const completeWatchlist = async (id: number): Promise<void> => {
 	await customFetch<void>(apiRoutes.watchlists.complete(id), { method: 'POST' })
 }
 
-export const addWatchlistItem = async (id: number, data: AddWatchlistItemDto): Promise<void> => {
-	await customFetch<void>(apiRoutes.watchlists.items(id), { method: 'POST', body: data })
+export const addWatchlistItem = async (
+	id: number,
+	data: AddWatchlistItemDto,
+	profileId?: number | null
+): Promise<void> => {
+	await customFetch<void>(apiRoutes.watchlists.items(id), {
+		method: 'POST',
+		params: profileId ? { profileId } : undefined,
+		body: data,
+	})
 }
 
 export const updateWatchlistItem = async (
@@ -154,10 +162,12 @@ export const exportWatchlist = async (id: number): Promise<WatchlistExportDto> =
 }
 
 export const importWatchlist = async (
-	data: WatchlistImportDto
+	data: WatchlistImportDto,
+	profileId?: number | null
 ): Promise<WatchlistImportResultDto> => {
 	return await customFetch<WatchlistImportResultDto>(apiRoutes.watchlists.import, {
 		method: 'POST',
+		params: profileId ? { profileId } : undefined,
 		body: data,
 	})
 }

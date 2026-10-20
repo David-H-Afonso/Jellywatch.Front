@@ -68,6 +68,10 @@ describe('apiRoutes – profile dynamic', () => {
 		expect(apiRoutes.profile.activity(3)).toBe('/api/profile/3/activity')
 	})
 
+	it('activity titles', () => {
+		expect(apiRoutes.profile.activityTitles(3)).toBe('/api/profile/3/activity/titles')
+	})
+
 	it('episodeState', () => {
 		expect(apiRoutes.profile.episodeState(1, 42)).toBe('/api/profile/1/episodes/42/state')
 	})

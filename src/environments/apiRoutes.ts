@@ -11,6 +11,7 @@ export const apiRoutes = {
 		base: '/api/profile',
 		byId: (id: number) => `/api/profile/${id}`,
 		activity: (profileId: number) => `/api/profile/${profileId}/activity`,
+		activityTitles: (profileId: number) => `/api/profile/${profileId}/activity/titles`,
 		episodeState: (profileId: number, episodeId: number) =>
 			`/api/profile/${profileId}/episodes/${episodeId}/state`,
 		movieState: (profileId: number, movieId: number) =>
