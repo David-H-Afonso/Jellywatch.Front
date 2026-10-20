@@ -4,6 +4,10 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
 
+# Node 20 bundles npm 10, which has an upstream Arborist peer-resolution crash ("edgesOut").
+# Pin npm 11.21.1, which contains the fix, before installing from the lockfile.
+RUN npm install --global npm@11.21.1 --no-audit --no-fund && npm --version
+
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then \
       npm ci --no-audit --no-fund; \
