@@ -45,6 +45,7 @@ import {
 import { SyncButton, Pagination } from '@/components/elements'
 import BackupScheduleAdmin from '@/components/DataManager/BackupScheduleAdmin'
 import NotificationSettings from '@/components/Settings/NotificationSettings'
+import MetadataFailuresModal from './MetadataFailuresModal'
 import {
 	triggerFullSync,
 	getAllProfiles,
@@ -124,6 +125,7 @@ const Admin: React.FC = () => {
 	})
 	const [refreshingId, setRefreshingId] = useState<number | null>(null)
 	const [metadataJob, setMetadataJob] = useState<BulkMetadataJobDto | null>(null)
+	const [showMetadataFailures, setShowMetadataFailures] = useState(false)
 	const [metadataStatusError, setMetadataStatusError] = useState(false)
 	const metadataRunning = metadataJob?.status === 'Pending' || metadataJob?.status === 'Running'
 	const [forceTmdbInput, setForceTmdbInput] = useState<Record<number, string>>({})
@@ -668,7 +670,14 @@ const Admin: React.FC = () => {
 					{metadataJob && <div role='status' aria-live='polite'>
 						{t(`admin.metadataStatus.${metadataJob.status}`)} — {metadataJob.processed}/{metadataJob.total}
 						{' · '}{t('admin.metadataResult', { succeeded: metadataJob.succeeded, failed: metadataJob.failed })}
-						{metadataJob.lastError && <p>{metadataJob.lastError}</p>}
+						{metadataJob.failed > 0 && (
+							<button
+								type='button'
+								className='admin-metadata-failures-trigger'
+								onClick={() => setShowMetadataFailures(true)}>
+								{t('admin.viewMetadataFailures', { count: metadataJob.failed })}
+							</button>
+						)}
 					</div>}
 					{metadataStatusError && <p role='alert'>{t('admin.metadataStatusError')}</p>}
 					<button
@@ -944,6 +953,13 @@ const Admin: React.FC = () => {
 						<BackupScheduleAdmin />
 					</CollapsibleSection>
 				</>
+			)}
+			{showMetadataFailures && metadataJob && (
+				<MetadataFailuresModal
+					failures={metadataJob.failures ?? []}
+					failedCount={metadataJob.failed}
+					onClose={() => setShowMetadataFailures(false)}
+				/>
 			)}
 		</div>
 	)

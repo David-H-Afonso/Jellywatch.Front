@@ -44,6 +44,7 @@ describe('apiRoutes – static paths', () => {
 		expect(apiRoutes.admin.addProfile).toBe('/api/admin/add-profile')
 		expect(apiRoutes.admin.importQueue).toBe('/api/admin/import-queue')
 		expect(apiRoutes.admin.media).toBe('/api/admin/media')
+		expect(apiRoutes.admin.mediaBulkMetadataRefresh(6)).toBe('/api/admin/media/6/bulk-metadata-refresh')
 		expect(apiRoutes.admin.refreshAllMetadata).toBe('/api/admin/media/refresh-all-metadata')
 		expect(apiRoutes.admin.refreshAllImages).toBe('/api/admin/media/refresh-all-images')
 		expect(apiRoutes.admin.blacklist).toBe('/api/admin/blacklist')

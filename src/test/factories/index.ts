@@ -213,6 +213,7 @@ export const createSeriesDetailDto = (overrides?: Partial<SeriesDetailDto>): Ser
 	includeInDashboard: false,
 	excludeFromDashboard: false,
 	isInDashboard: false,
+	skipBulkMetadataRefresh: false,
 	...overrides,
 })
 
@@ -258,6 +259,7 @@ export const createMovieDetailDto = (overrides?: Partial<MovieDetailDto>): Movie
 	spanishTranslation: null,
 	isBlocked: false,
 	watchedAt: null,
+	skipBulkMetadataRefresh: false,
 	...overrides,
 })
 

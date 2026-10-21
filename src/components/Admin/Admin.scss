@@ -181,6 +181,27 @@
 	}
 }
 
+.admin-metadata-failures-trigger {
+	margin-left: 0.65rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--color-primary);
+	font: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--color-text);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 3px;
+	}
+}
+
 .status-chip {
 	display: inline-block;
 	padding: 0.15rem 0.5rem;

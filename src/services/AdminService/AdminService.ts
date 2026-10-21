@@ -14,6 +14,7 @@ import type {
 	JellyfinUserDto,
 	AddProfileRequest,
 	AdminProfileBlockDto,
+	MediaType,
 } from '@/models/api'
 
 const { apiRoutes } = environment
@@ -202,6 +203,16 @@ export interface BulkMetadataJobDto {
 	succeeded: number
 	failed: number
 	lastError: string | null
+	failures: BulkMetadataFailureDto[]
+}
+
+export interface BulkMetadataFailureDto {
+	mediaItemId: number
+	seriesId: number | null
+	movieId: number | null
+	mediaType: MediaType | null
+	mediaTitle: string
+	error: string
 }
 
 export const getMetadataRefreshStatus = (): Promise<BulkMetadataJobDto | null> =>
@@ -210,6 +221,16 @@ export const getMetadataRefreshStatus = (): Promise<BulkMetadataJobDto | null> =
 export const refreshAllMetadata = async (): Promise<BulkMetadataJobDto> => {
 	return await customFetch<BulkMetadataJobDto>(apiRoutes.admin.refreshAllMetadata, {
 		method: 'POST',
+	})
+}
+
+export const setBulkMetadataRefreshIgnored = async (
+	mediaItemId: number,
+	ignored: boolean
+): Promise<void> => {
+	await customFetch<void>(apiRoutes.admin.mediaBulkMetadataRefresh(mediaItemId), {
+		method: 'PATCH',
+		body: { ignored },
 	})
 }
 

@@ -11,6 +11,7 @@ import { createTestStore } from '@/test/utils/createTestStore'
 import MovieDetail from '@/components/Movies/MovieDetail/MovieDetail'
 import { createMovieDetailDto, createExternalRatingDto } from '@/test/factories'
 import { WatchState, ExternalProvider } from '@/models/api/Enums'
+import { setBulkMetadataRefreshIgnored } from '@/services/AdminService/AdminService'
 
 vi.mock('@/services/MediaService/MediaService', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@/services/MediaService/MediaService')>()),
@@ -23,6 +24,7 @@ vi.mock('@/services/AdminService/AdminService', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@/services/AdminService/AdminService')>()),
 	deleteMediaItem: vi.fn().mockResolvedValue(undefined),
 	refreshMediaItem: vi.fn().mockResolvedValue(undefined),
+	setBulkMetadataRefreshIgnored: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('@/services/ProfileService/ProfileService', async (importOriginal) => ({
@@ -103,6 +105,18 @@ function renderMovieDetail(movieId = '42', entries: string[] = [`/movies/${movie
 }
 
 describe('Movie Detail Flow', () => {
+	it('lets an admin exclude a movie from future bulk metadata refreshes', async () => {
+		const user = userEvent.setup()
+		renderMovieDetail()
+
+		await user.click(await screen.findByRole('button', { name: /more options/i }))
+		await user.click(
+			screen.getByRole('button', { name: /exclude from future bulk metadata refreshes/i })
+		)
+
+		await waitFor(() => expect(setBulkMetadataRefreshIgnored).toHaveBeenCalledWith(100, true))
+	})
+
 	it('displays movie title', async () => {
 		renderMovieDetail()
 		await waitFor(() => {

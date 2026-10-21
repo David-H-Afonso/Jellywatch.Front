@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
@@ -77,8 +77,14 @@ const authState = {
 	},
 }
 
-function renderSeriesDetail(entries: string[] = ['/series/1']) {
-	const store = createTestStore(authState)
+function renderSeriesDetail(entries: string[] = ['/series/1'], isAdmin = false) {
+	const store = createTestStore({
+		...authState,
+		auth: {
+			...authState.auth,
+			user: { ...authState.auth.user, isAdmin },
+		},
+	})
 	return {
 		store,
 		...render(
@@ -98,6 +104,25 @@ function renderSeriesDetail(entries: string[] = ['/series/1']) {
 }
 
 describe('Series Detail Flow', () => {
+	it('lets an admin exclude a series from future bulk metadata refreshes', async () => {
+		const user = userEvent.setup()
+		const requestBody = vi.fn()
+		server.use(
+			http.patch(`${API}/api/admin/media/1001/bulk-metadata-refresh`, async ({ request }) => {
+				requestBody(await request.json())
+				return HttpResponse.json({ mediaItemId: 1001, ignored: true })
+			})
+		)
+		renderSeriesDetail(['/series/1'], true)
+
+		await user.click(await screen.findByRole('button', { name: /more options/i }))
+		await user.click(
+			screen.getByRole('button', { name: /exclude from future bulk metadata refreshes/i })
+		)
+
+		await waitFor(() => expect(requestBody).toHaveBeenCalledWith({ ignored: true }))
+	})
+
 	beforeEach(() => {
 		server.use(
 			http.get(`${API}/api/media/series/:id`, () => {

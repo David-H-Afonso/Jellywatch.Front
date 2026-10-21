@@ -1,0 +1,138 @@
+.metadata-failures-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1200;
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	background: rgba(2, 6, 23, 0.76);
+}
+
+.metadata-failures-dialog {
+	width: min(100%, 680px);
+	max-height: min(80vh, 760px);
+	display: flex;
+	flex-direction: column;
+	padding: 1.2rem;
+	border: 1px solid var(--color-border, #334155);
+	border-radius: 0.75rem;
+	background: var(--color-surface, #1e293b);
+	color: var(--color-text, #e2e8f0);
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+
+	&:focus {
+		outline: none;
+	}
+
+	&__header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1rem;
+
+		h2 {
+			margin: 0;
+			font-size: 1.1rem;
+		}
+
+		p {
+			margin: 0.3rem 0 0;
+			color: var(--color-text-secondary, #94a3b8);
+			font-size: 0.85rem;
+		}
+	}
+
+	&__close {
+		width: 36px;
+		height: 36px;
+		flex: 0 0 36px;
+		border: 1px solid var(--color-border, #475569);
+		border-radius: 0.5rem;
+		background: transparent;
+		color: inherit;
+		font-size: 1.35rem;
+		line-height: 1;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--color-surface-hover, #334155);
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+		margin: 0;
+		padding: 0 0.2rem 0 0;
+		overflow-y: auto;
+		list-style: none;
+	}
+
+	&__empty,
+	&__note {
+		margin: 0.5rem 0 0;
+		color: var(--color-text-secondary, #94a3b8);
+		font-size: 0.82rem;
+	}
+
+	&__note {
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--color-border, #334155);
+	}
+}
+
+.metadata-failure-item {
+	padding: 0.75rem;
+	border: 1px solid var(--color-border, #334155);
+	border-radius: 0.55rem;
+	background: rgba(15, 23, 42, 0.55);
+
+	&__heading {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
+
+		strong,
+		a {
+			min-width: 0;
+			color: inherit;
+			font-weight: 700;
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
+		span {
+			flex: 0 0 auto;
+			color: var(--color-text-secondary, #94a3b8);
+			font-size: 0.75rem;
+		}
+	}
+
+	p {
+		margin: 0.4rem 0 0;
+		color: #fca5a5;
+		font-size: 0.8rem;
+		line-height: 1.45;
+		overflow-wrap: anywhere;
+	}
+}
+
+@media (max-width: 540px) {
+	.metadata-failures-overlay {
+		align-items: end;
+		padding: 0;
+	}
+
+	.metadata-failures-dialog {
+		width: 100%;
+		max-height: 88vh;
+		padding: 1rem;
+		border-radius: 0.9rem 0.9rem 0 0;
+	}
+}

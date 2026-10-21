@@ -41,6 +41,7 @@ export interface SeriesDetailDto {
 	includeInDashboard: boolean
 	excludeFromDashboard: boolean
 	isInDashboard: boolean
+	skipBulkMetadataRefresh: boolean
 }
 
 export interface MovieListDto {
@@ -74,6 +75,7 @@ export interface MovieDetailDto {
 	spanishTranslation: TranslationDto | null
 	isBlocked: boolean
 	watchedAt: string | null
+	skipBulkMetadataRefresh: boolean
 }
 
 export interface SeasonDto {

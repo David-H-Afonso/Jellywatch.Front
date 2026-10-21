@@ -47,6 +47,7 @@ import {
 	identifyMediaItem,
 	refreshMediaItem,
 	refreshSeriesWatchDates,
+	setBulkMetadataRefreshIgnored,
 } from '@/services/AdminService/AdminService'
 import {
 	removeMediaFromProfile,
@@ -80,6 +81,8 @@ const SeriesDetail: React.FC = () => {
 	const [refreshing, setRefreshing] = useState(false)
 	const [refreshingImages, setRefreshingImages] = useState(false)
 	const [refreshingDates, setRefreshingDates] = useState(false)
+	const [updatingBulkRefreshPreference, setUpdatingBulkRefreshPreference] = useState(false)
+	const [bulkRefreshPreferenceError, setBulkRefreshPreferenceError] = useState(false)
 	const [identifying, setIdentifying] = useState(false)
 	const [showIdentifyForm, setShowIdentifyForm] = useState(false)
 	const [identifyTmdbId, setIdentifyTmdbId] = useState('')
@@ -335,6 +338,21 @@ const SeriesDetail: React.FC = () => {
 		}
 	}
 
+	const handleToggleBulkMetadataRefresh = async () => {
+		if (!series) return
+		setUpdatingBulkRefreshPreference(true)
+		setBulkRefreshPreferenceError(false)
+		try {
+			await setBulkMetadataRefreshIgnored(series.mediaItemId, !series.skipBulkMetadataRefresh)
+			setShowMenu(false)
+			if (id) dispatch(fetchSeriesById({ id: Number(id), profileId: activeProfileId }))
+		} catch {
+			setBulkRefreshPreferenceError(true)
+		} finally {
+			setUpdatingBulkRefreshPreference(false)
+		}
+	}
+
 	const handleForceParentSync = async () => {
 		if (!series || !activeProfileId) return
 		setForcingParentSync(true)
@@ -435,7 +453,7 @@ const SeriesDetail: React.FC = () => {
 									+ {t('watchlists.addToWatchlist')}
 								</button>
 							)}
-							{activeProfileId && (
+							{(activeProfileId || isAdmin) && (
 								<div className='series-detail__admin-menu-wrap' ref={menuRef}>
 									<input
 										ref={posterInputRef}
@@ -446,8 +464,12 @@ const SeriesDetail: React.FC = () => {
 									/>
 									<button
 										className='series-detail__menu-btn'
-										onClick={() => setShowMenu((v) => !v)}
-										title='More options'>
+										onClick={() => {
+											setBulkRefreshPreferenceError(false)
+											setShowMenu((v) => !v)
+										}}
+										aria-label={t('common.moreOptions')}
+										aria-expanded={showMenu}>
 										<svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
 											<circle cx='5' cy='12' r='2' />
 											<circle cx='12' cy='12' r='2' />
@@ -475,7 +497,7 @@ const SeriesDetail: React.FC = () => {
 													{t('admin.pickPoster')}
 												</button>
 											)}
-											{series.isInLibrary && (
+											{activeProfileId && series.isInLibrary && (
 												<button
 													onClick={() => {
 														setShowConfirmRemove(true)
@@ -484,7 +506,7 @@ const SeriesDetail: React.FC = () => {
 													{t('admin.removeFromList')}
 												</button>
 											)}
-											{series.isInLibrary && (
+											{activeProfileId && series.isInLibrary && (
 												<button
 													onClick={async () => {
 														setShowMenu(false)
@@ -535,19 +557,37 @@ const SeriesDetail: React.FC = () => {
 														{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
 													</button>
 													<button
-														onClick={() => {
-															handleRefreshWatchDates()
-															setShowMenu(false)
-														}}
-														disabled={refreshingDates}>
-														{refreshingDates
-															? t('admin.refreshingDates')
-															: t('admin.refreshWatchDates')}
+														onClick={handleToggleBulkMetadataRefresh}
+														disabled={updatingBulkRefreshPreference}>
+														{updatingBulkRefreshPreference
+															? t('admin.updatingBulkMetadataRefreshPreference')
+															: t(
+																series.skipBulkMetadataRefresh
+																	? 'admin.includeBulkMetadataRefresh'
+																	: 'admin.ignoreBulkMetadataRefresh'
+															)}
 													</button>
+													{activeProfileId && (
+														<button
+															onClick={() => {
+																handleRefreshWatchDates()
+																setShowMenu(false)
+															}}
+														disabled={refreshingDates}>
+															{refreshingDates
+																? t('admin.refreshingDates')
+																: t('admin.refreshWatchDates')}
+														</button>
+													)}
 												</>
 											)}
+											{bulkRefreshPreferenceError && (
+												<p className='series-detail__admin-menu__error' role='alert'>
+													{t('admin.bulkMetadataRefreshPreferenceFailed')}
+												</p>
+											)}
 											<div className='series-detail__admin-menu__separator' />
-											{series.isBlocked ? (
+											{activeProfileId && (series.isBlocked ? (
 												<button
 													className='series-detail__admin-menu__delete'
 													onClick={async () => {
@@ -565,7 +605,7 @@ const SeriesDetail: React.FC = () => {
 													}}>
 													{t('admin.blockMedia')}
 												</button>
-											)}
+											))}
 											{isAdmin && (
 												<button
 													className='series-detail__admin-menu__delete'

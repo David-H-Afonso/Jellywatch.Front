@@ -28,7 +28,11 @@ import {
 	uploadCustomPoster,
 	getMovieCredits,
 } from '@/services/MediaService/MediaService'
-import { deleteMediaItem, refreshMediaItem } from '@/services/AdminService/AdminService'
+import {
+	deleteMediaItem,
+	refreshMediaItem,
+	setBulkMetadataRefreshIgnored,
+} from '@/services/AdminService/AdminService'
 import {
 	removeMediaFromProfile,
 	blockMediaForProfile,
@@ -57,6 +61,8 @@ const MovieDetail: React.FC = () => {
 	const [uploadError, setUploadError] = useState<string | null>(null)
 	const [refreshing, setRefreshing] = useState(false)
 	const [refreshingImages, setRefreshingImages] = useState(false)
+	const [updatingBulkRefreshPreference, setUpdatingBulkRefreshPreference] = useState(false)
+	const [bulkRefreshPreferenceError, setBulkRefreshPreferenceError] = useState(false)
 	const [showPosterPicker, setShowPosterPicker] = useState(false)
 	const [posterVersion, setPosterVersion] = useState(0)
 	const posterInputRef = useRef<HTMLInputElement>(null)
@@ -191,6 +197,21 @@ const MovieDetail: React.FC = () => {
 		}
 	}
 
+	const handleToggleBulkMetadataRefresh = async () => {
+		if (!movie) return
+		setUpdatingBulkRefreshPreference(true)
+		setBulkRefreshPreferenceError(false)
+		try {
+			await setBulkMetadataRefreshIgnored(movie.mediaItemId, !movie.skipBulkMetadataRefresh)
+			setShowMenu(false)
+			if (id) dispatch(fetchMovieById({ id: Number(id), profileId: activeProfileId }))
+		} catch {
+			setBulkRefreshPreferenceError(true)
+		} finally {
+			setUpdatingBulkRefreshPreference(false)
+		}
+	}
+
 	const handlePosterSelected = () => {
 		setShowPosterPicker(false)
 		setPosterVersion((v) => v + 1)
@@ -280,7 +301,7 @@ const MovieDetail: React.FC = () => {
 								+ {t('watchlists.addToWatchlist')}
 							</button>
 						)}
-						{activeProfileId && (
+						{(activeProfileId || isAdmin) && (
 							<div className='movie-detail__admin-menu-wrap' ref={menuRef}>
 								<input
 									ref={posterInputRef}
@@ -291,8 +312,12 @@ const MovieDetail: React.FC = () => {
 								/>
 								<button
 									className='movie-detail__menu-btn'
-									onClick={() => setShowMenu((v) => !v)}
-									title='More options'>
+									onClick={() => {
+										setBulkRefreshPreferenceError(false)
+										setShowMenu((v) => !v)
+									}}
+									aria-label={t('common.moreOptions')}
+									aria-expanded={showMenu}>
 									<svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
 										<circle cx='5' cy='12' r='2' />
 										<circle cx='12' cy='12' r='2' />
@@ -310,13 +335,15 @@ const MovieDetail: React.FC = () => {
 												{t('admin.pickPoster')}
 											</button>
 										)}
-										<button
-											onClick={() => {
-												setShowConfirmRemove(true)
-												setShowMenu(false)
-											}}>
-											{t('admin.removeFromList')}
-										</button>
+										{activeProfileId && (
+											<button
+												onClick={() => {
+													setShowConfirmRemove(true)
+													setShowMenu(false)
+												}}>
+												{t('admin.removeFromList')}
+											</button>
+										)}
 										{isAdmin && (
 											<>
 												<button
@@ -342,10 +369,26 @@ const MovieDetail: React.FC = () => {
 													disabled={refreshing || refreshingImages}>
 													{refreshing ? t('admin.refreshingMedia') : t('admin.refreshMedia')}
 												</button>
+												<button
+													onClick={handleToggleBulkMetadataRefresh}
+													disabled={updatingBulkRefreshPreference}>
+													{updatingBulkRefreshPreference
+														? t('admin.updatingBulkMetadataRefreshPreference')
+														: t(
+															movie.skipBulkMetadataRefresh
+																? 'admin.includeBulkMetadataRefresh'
+																: 'admin.ignoreBulkMetadataRefresh'
+														)}
+												</button>
 											</>
 										)}
+										{bulkRefreshPreferenceError && (
+											<p className='movie-detail__admin-menu__error' role='alert'>
+												{t('admin.bulkMetadataRefreshPreferenceFailed')}
+											</p>
+										)}
 										<div className='movie-detail__admin-menu__separator' />
-										{movie.isBlocked ? (
+										{activeProfileId && (movie.isBlocked ? (
 											<button
 												className='movie-detail__admin-menu__delete'
 												onClick={async () => {
@@ -363,7 +406,7 @@ const MovieDetail: React.FC = () => {
 												}}>
 												{t('admin.blockMedia')}
 											</button>
-										)}
+										))}
 										{isAdmin && (
 											<button
 												className='movie-detail__admin-menu__delete'
